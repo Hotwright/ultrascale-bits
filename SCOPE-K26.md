@@ -321,12 +321,59 @@ Note also that prjuray gates on Vivado `v2019.2` exactly, and silently sets
 bypass is documented there, with the warning that prjxray's `cfg` fuzzer broke
 in precisely this way on a newer Vivado and solved nothing while exiting 0.
 
+## CORRECTION: there is no FASM path for UltraScale+
+
+An earlier draft of this document drew the flow as
+`yosys -> nextpnr-xilinx -> FASM -> prjuray -> .bit`. **That path does not
+exist.** Established by reading the `nextpnr-xilinx` fork itself, now cloned at
+`nextpnr-xilinx/`. Its README states the split outright:
+
+> - UltraScale+ with RapidWright database generation, bitstream generation
+>   using RapidWight and Vivado
+> - [7-series] using FASM and Project Xray (no Vivado anywhere in the flow)
+
+The shipped `xilinx/examples/zcu104` (a ZU7EV, the closest thing to a K26 in
+the tree) confirms it — its `blinky.sh` is:
+
+    yosys -> nextpnr-xilinx -> rapidwright_json2dcp.jar -> .dcp -> vivado -> .bit
+
+So the "no Vivado anywhere" property is a **7-series-only** property of this
+toolchain, not a property of nextpnr.
+
+`--fasm` is not *gated* on 7-series — `UspCommandHandler::customBitstream`
+calls `ctx->writeFasm()` unconditionally — but `fasm.cc` (1641 lines) contains
+no family branching at all and hardcodes 7-series names: `IOB33` x5, `IOI3` x4,
+`CLBLM` x3, `SLICEL_X0/X1`, `SLICEM_X0`. On an UltraScale+ chipdb those
+branches simply never match, so it would emit FASM with the IO and parts of the
+slice handling silently missing. That is the worst failure mode: output that
+looks plausible and is wrong.
+
+**Consequence for the K26.** Two different projects, and they should not be
+confused:
+
+* **Open synthesis + open place & route, Vivado for bitstream assembly only.**
+  Supported upstream, trodden by the zcu104 example, and the only path to a
+  bitstream on a real K26 in reasonable time. nextpnr does the real work;
+  Vivado is reduced to a DCP-to-bitstream converter.
+* **A genuinely vendor-free US+ bitstream.** Needs *three* things, not one:
+  a US+ IO/slice path written into `fasm.cc`; the per-part tilegrid for the
+  ZU5EV die (prjuray-db ships `part.yaml` for **only two ZU3EG parts** —
+  confirmed by listing it); and the segbits gaps in this document. That is a
+  project, not a patch.
+
+The measured coverage results below still stand and still matter — they are
+what a vendor-free path would be built on — but they are no longer on the
+critical path to a first working bitstream.
+
 ## The shape of a flow, and where the risk is
 
-    yosys  --synth_xilinx-->  nextpnr-xilinx  --FASM-->  prjuray  -->  .bit
-                                   ^                        ^
-                       RapidWright XCK26 chipdb      zynqusp segbits
-                       (exists, downloadable)        (family-level, ZU3EG-derived)
+    yosys --synth_xilinx--> nextpnr-xilinx --json2dcp--> .dcp --vivado--> .bit
+                                   ^
+                       RapidWright XCK26 chipdb
+                       (exists, downloadable)
+
+    (the FASM/prjuray arm of this diagram is 7-series only - see the
+     correction above)
 
 Re-ordered now that risk 1 has been measured. It was the decisive one; it is no
 longer the blocking one.
