@@ -1,16 +1,20 @@
 # Reproducing the upstream checkouts
 
-`prjuray/` and `prjuray-db/` are not tracked here — they are upstream clones
-with their own history. Recreate them exactly:
+`prjuray/`, `prjuray-db/` and `nextpnr-xilinx/` are not tracked here — they are
+upstream clones with their own history. Recreate them exactly:
 
     git clone https://github.com/f4pga/prjuray.git    && git -C prjuray    checkout c550b03
     git clone https://github.com/f4pga/prjuray-db.git && git -C prjuray-db checkout affbc5e
-    git clone --depth 1 https://github.com/gatecat/nextpnr-xilinx.git
+    git clone https://github.com/gatecat/nextpnr-xilinx.git \
+        && git -C nextpnr-xilinx checkout 8f178fc
 
 `nextpnr-xilinx` is the older standalone fork, not the himbaechel nextpnr in
 `eda-tools/`. It is the only backend with UltraScale+ support. Note that its
 UltraScale+ path generates bitstreams via RapidWright + Vivado; the
-FASM/Project X-Ray route is 7-series only. See SCOPE-K26.md.
+FASM/Project X-Ray route is 7-series only. See SCOPE-K26.md. Its four
+submodules (`tests`, `3rdparty/fpga-interchange-schema`,
+`xilinx/external/prjxray-db`, `xilinx/external/nextpnr-xilinx-meta`) are
+uninitialized in the checkout recorded here.
 
 `prjuray-tools` does not build on GCC 13 — 50 files relied on `<cstdint>`
 arriving transitively. Apply the fixes before building:
