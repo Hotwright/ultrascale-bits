@@ -1,0 +1,12 @@
+diff --git a/absl/strings/internal/str_format/extension.h b/absl/strings/internal/str_format/extension.h
+index 5726ea5c..81bbc86d 100644
+--- a/absl/strings/internal/str_format/extension.h
++++ b/absl/strings/internal/str_format/extension.h
+@@ -17,6 +17,7 @@
+ #define ABSL_STRINGS_INTERNAL_STR_FORMAT_EXTENSION_H_
+ 
+ #include <limits.h>
++#include <cstdint>
+ #include <cstddef>
+ #include <cstring>
+ #include <ostream>

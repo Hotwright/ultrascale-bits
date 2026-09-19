@@ -1,0 +1,78 @@
+#!/bin/bash
+# Bring up a prjuray environment against the Vivado actually installed here.
+#
+# prjuray's own utils/environment.sh refuses to run on anything but Vivado
+# v2019.2:
+#
+#     if [ $(${URAY_VIVADO} -h |grep Vivado |cut -d\  -f 2) != "v2019.2" ] ; then
+#         echo "Requires Vivado 2019.2 to have Zynq US+ support."
+#         export URAY_DIR="/bad/vivado/version"
+#         return
+#     fi
+#
+# Note what it does on failure: rather than erroring, it poisons URAY_DIR and
+# returns, so every later path silently points at /bad/vivado/version. That is
+# a deliberate booby-trap for a sourced script, and it means a wrong-version run
+# fails in confusing ways far from the cause.
+#
+# The stated reason - "to have Zynq US+ support" - is a 2020 statement about the
+# FLOOR, not the ceiling. Vivado 2026.1.1 has Zynq US+ support; 2019.2 was
+# simply the version that first did and the one the authors pinned.
+#
+# That does NOT make running on 2026.1.1 safe, and the 7-series side of this
+# tree is the cautionary tale: prjxray pins 2017.2, and on a modern Vivado its
+# `cfg` sub-fuzzer silently solves nothing because the DRC it depends on now
+# rejects the design. Seven years of drift between prjuray's pin and what is
+# installed here is more, not less, than that. Treat every fuzzer result as
+# suspect until cross-checked against the shipped ZU3EG database.
+#
+# usage: source env/uray_env.sh <config>      e.g. zynq_usp_5ev
+set -u
+
+URAY_ENV_DIR="$( cd -P "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+export URAY_ROOT="$( dirname "$URAY_ENV_DIR" )"
+export URAY_DIR="${URAY_ROOT}/prjuray"
+
+URAY_CONFIG="${1:-zynq_usp_5ev}"
+URAY_SETTINGS="${URAY_DIR}/settings/${URAY_CONFIG}.sh"
+if [ ! -f "$URAY_SETTINGS" ]; then
+    echo "uray_env.sh: no such config '${URAY_CONFIG}'" >&2
+    echo "  available: $( cd "${URAY_DIR}/settings" && ls *.sh | sed 's/\.sh$//' | tr '\n' ' ' )" >&2
+    return 1 2>/dev/null || exit 1
+fi
+
+# Take the settings' own exports WITHOUT sourcing the file, so prjuray's
+# environment.sh - and its version gate - never runs.
+eval "$( grep '^export URAY_' "$URAY_SETTINGS" )"
+
+# Everything environment.sh would have set, set here against this checkout.
+export URAY_UTILS_DIR="${URAY_DIR}/utils"
+export URAY_DATABASE_DIR="${URAY_DIR}/database"
+export URAY_TOOLS_DIR="${URAY_DIR}/third_party/prjuray-tools/build/tools"
+export URAY_FUZZERS_DIR="${URAY_DIR}/fuzzers"
+export URAY_FAMILY_DIR="${URAY_DATABASE_DIR}/${URAY_DATABASE}"
+export URAY_TCL_REFORMAT="${URAY_UTILS_DIR}/tcl-reformat.sh"
+export URAY_CORRELATE="${URAY_TOOLS_DIR}/correlate_segdata"
+export URAY_SEGMATCH="${URAY_TOOLS_DIR}/segmatch"
+export URAY_BITREAD="${URAY_TOOLS_DIR}/bitread"
+export URAY_MERGEDB="${URAY_UTILS_DIR}/mergedb.sh"
+export URAY_GENHEADER="${URAY_UTILS_DIR}/genheader.sh"
+
+# Reuse the 7-series tree's Vivado launcher: same install, and it already
+# handles the Windows-drive-but-Linux-build detail.
+export URAY_VIVADO="${URAY_VIVADO:-/mnt/i/Hotwright/0-xilinx-bits/rw-fuzzers/env/vivado.sh}"
+export URAY_VIVADO_SETTINGS="${URAY_VIVADO_SETTINGS:-}"
+
+if [ -e "${URAY_DIR}/env/bin/activate" ]; then
+    # shellcheck disable=SC1091
+    source "${URAY_DIR}/env/bin/activate"
+fi
+export PYTHONPATH="${URAY_DIR}:${PYTHONPATH:-}"
+
+cat >&2 <<EOF
+uray_env: config=${URAY_CONFIG} part=${URAY_PART} family=${URAY_DATABASE}
+uray_env: database=${URAY_FAMILY_DIR}
+uray_env: vivado=$( "${URAY_VIVADO}" -h 2>/dev/null | grep -m1 Vivado || echo '(not queried)' )
+uray_env: NOTE prjuray pins v2019.2; its gate is bypassed here. Cross-check
+uray_env:      results against the shipped ZU3EG database before trusting them.
+EOF

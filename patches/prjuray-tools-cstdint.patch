@@ -1,0 +1,540 @@
+diff --git a/lib/bit_ops_test.cc b/lib/bit_ops_test.cc
+index 6b35906..ea4b099 100644
+--- a/lib/bit_ops_test.cc
++++ b/lib/bit_ops_test.cc
+@@ -1,4 +1,5 @@
+ #include <prjxray/bit_ops.h>
++#include <cstdint>
+ 
+ #include <gtest/gtest.h>
+ 
+diff --git a/lib/include/prjxray/memory_mapped_file.h b/lib/include/prjxray/memory_mapped_file.h
+index dffe20f..19b9dd3 100644
+--- a/lib/include/prjxray/memory_mapped_file.h
++++ b/lib/include/prjxray/memory_mapped_file.h
+@@ -2,6 +2,7 @@
+ #define PRJXRAY_LIB_MEMORY_MAPPED_FILE
+ 
+ #include <memory>
++#include <cstdint>
+ #include <string>
+ 
+ #include <absl/types/span.h>
+diff --git a/lib/include/prjxray/xilinx/architectures.h b/lib/include/prjxray/xilinx/architectures.h
+index c268b8b..dd0df07 100644
+--- a/lib/include/prjxray/xilinx/architectures.h
++++ b/lib/include/prjxray/xilinx/architectures.h
+@@ -2,6 +2,7 @@
+ #define PRJXRAY_LIB_XILINX_ARCHITECTURES_H_
+ 
+ #include <absl/types/span.h>
++#include <cstdint>
+ #include <absl/types/variant.h>
+ #include <memory>
+ #include <vector>
+diff --git a/lib/include/prjxray/xilinx/bitstream_reader.h b/lib/include/prjxray/xilinx/bitstream_reader.h
+index c6c1a00..6e2a6c3 100644
+--- a/lib/include/prjxray/xilinx/bitstream_reader.h
++++ b/lib/include/prjxray/xilinx/bitstream_reader.h
+@@ -2,6 +2,7 @@
+ #define PRJXRAY_LIB_XILINX_BITSTREAM_READER_H
+ 
+ #include <algorithm>
++#include <cstdint>
+ #include <iostream>
+ #include <memory>
+ #include <vector>
+diff --git a/lib/include/prjxray/xilinx/bitstream_writer.h b/lib/include/prjxray/xilinx/bitstream_writer.h
+index cf5147d..e6cf5d6 100644
+--- a/lib/include/prjxray/xilinx/bitstream_writer.h
++++ b/lib/include/prjxray/xilinx/bitstream_writer.h
+@@ -7,6 +7,7 @@
+ #define PRJXRAY_LIB_XILINX_BITSTREAM_WRITER_H
+ 
+ #include <algorithm>
++#include <cstdint>
+ #include <fstream>
+ #include <memory>
+ #include <vector>
+diff --git a/lib/include/prjxray/xilinx/configuration.h b/lib/include/prjxray/xilinx/configuration.h
+index ae24b23..b282232 100644
+--- a/lib/include/prjxray/xilinx/configuration.h
++++ b/lib/include/prjxray/xilinx/configuration.h
+@@ -2,6 +2,7 @@
+ #define PRJXRAY_LIB_XILINX_CONFIGURATION_H_
+ 
+ #include <map>
++#include <cstdint>
+ #include <type_traits>
+ 
+ #include <absl/types/span.h>
+diff --git a/lib/include/prjxray/xilinx/configuration_packet_with_payload.h b/lib/include/prjxray/xilinx/configuration_packet_with_payload.h
+index f0c0bbd..38083ab 100644
+--- a/lib/include/prjxray/xilinx/configuration_packet_with_payload.h
++++ b/lib/include/prjxray/xilinx/configuration_packet_with_payload.h
+@@ -2,6 +2,7 @@
+ #define PRJXRAY_LIB_XILINX_CONFIGURATION_PACKET_WITH_PAYLOAD_H
+ 
+ #include <memory>
++#include <cstdint>
+ 
+ #include <absl/types/span.h>
+ #include <prjxray/bit_ops.h>
+diff --git a/lib/include/prjxray/xilinx/frames.h b/lib/include/prjxray/xilinx/frames.h
+index 8185fbf..eb6b18a 100644
+--- a/lib/include/prjxray/xilinx/frames.h
++++ b/lib/include/prjxray/xilinx/frames.h
+@@ -2,6 +2,7 @@
+ #define PRJXRAY_LIB_XILINX_FRAMES_H
+ 
+ #include <fstream>
++#include <cstdint>
+ #include <iostream>
+ #include <map>
+ #include <string>
+diff --git a/lib/include/prjxray/xilinx/spartan6/global_clock_region.h b/lib/include/prjxray/xilinx/spartan6/global_clock_region.h
+index f4fd1dd..6c74c07 100644
+--- a/lib/include/prjxray/xilinx/spartan6/global_clock_region.h
++++ b/lib/include/prjxray/xilinx/spartan6/global_clock_region.h
+@@ -2,6 +2,7 @@
+ #define PRJXRAY_LIB_XILINX_SPARTAN6_GLOBAL_CLOCK_REGION_H_
+ 
+ #include <algorithm>
++#include <cstdint>
+ #include <cassert>
+ #include <map>
+ #include <memory>
+diff --git a/lib/include/prjxray/xilinx/xc7series/configuration_options_0_value.h b/lib/include/prjxray/xilinx/xc7series/configuration_options_0_value.h
+index 6e04ad4..6e08a06 100644
+--- a/lib/include/prjxray/xilinx/xc7series/configuration_options_0_value.h
++++ b/lib/include/prjxray/xilinx/xc7series/configuration_options_0_value.h
+@@ -2,6 +2,7 @@
+ #define PRJXRAY_LIB_XILINX_XC7SERIES_CONFIGURATION_OPTIONS_0_VALUE_H
+ 
+ #include <prjxray/bit_ops.h>
++#include <cstdint>
+ #include <prjxray/xilinx/configuration_packet.h>
+ #include <prjxray/xilinx/configuration_register.h>
+ 
+diff --git a/lib/include/prjxray/xilinx/xc7series/global_clock_region.h b/lib/include/prjxray/xilinx/xc7series/global_clock_region.h
+index 66c6c2b..6304259 100644
+--- a/lib/include/prjxray/xilinx/xc7series/global_clock_region.h
++++ b/lib/include/prjxray/xilinx/xc7series/global_clock_region.h
+@@ -2,6 +2,7 @@
+ #define PRJXRAY_LIB_XILINX_XC7SERIES_GLOBAL_CLOCK_REGION_H_
+ 
+ #include <algorithm>
++#include <cstdint>
+ #include <cassert>
+ #include <map>
+ #include <memory>
+diff --git a/lib/include/prjxray/xilinx/xcupseries/configuration_options_0_value.h b/lib/include/prjxray/xilinx/xcupseries/configuration_options_0_value.h
+index e8804cb..6ee44ce 100644
+--- a/lib/include/prjxray/xilinx/xcupseries/configuration_options_0_value.h
++++ b/lib/include/prjxray/xilinx/xcupseries/configuration_options_0_value.h
+@@ -2,6 +2,7 @@
+ #define PRJXRAY_LIB_XILINX_XCUPSERIES_CONFIGURATION_OPTIONS_0_VALUE_H
+ 
+ #include <prjxray/bit_ops.h>
++#include <cstdint>
+ #include <prjxray/xilinx/configuration_packet.h>
+ #include <prjxray/xilinx/configuration_register.h>
+ 
+diff --git a/lib/include/prjxray/xilinx/xcuseries/configuration_options_0_value.h b/lib/include/prjxray/xilinx/xcuseries/configuration_options_0_value.h
+index 14638f9..f9f5d69 100644
+--- a/lib/include/prjxray/xilinx/xcuseries/configuration_options_0_value.h
++++ b/lib/include/prjxray/xilinx/xcuseries/configuration_options_0_value.h
+@@ -2,6 +2,7 @@
+ #define PRJXRAY_LIB_XILINX_XCUSERIES_CONFIGURATION_OPTIONS_0_VALUE_H
+ 
+ #include <prjxray/bit_ops.h>
++#include <cstdint>
+ #include <prjxray/xilinx/configuration_packet.h>
+ #include <prjxray/xilinx/configuration_register.h>
+ 
+diff --git a/lib/xilinx/bitstream_writer.cc b/lib/xilinx/bitstream_writer.cc
+index 5ae2814..ebb6fe9 100644
+--- a/lib/xilinx/bitstream_writer.cc
++++ b/lib/xilinx/bitstream_writer.cc
+@@ -1,4 +1,5 @@
+ #include <iostream>
++#include <cstdint>
+ 
+ #include <prjxray/bit_ops.h>
+ #include <prjxray/xilinx/architectures.h>
+diff --git a/lib/xilinx/configuration.cc b/lib/xilinx/configuration.cc
+index 6ade975..f31410f 100644
+--- a/lib/xilinx/configuration.cc
++++ b/lib/xilinx/configuration.cc
+@@ -1,4 +1,5 @@
+ #include <fstream>
++#include <cstdint>
+ #include <iostream>
+ 
+ #include <absl/strings/str_cat.h>
+diff --git a/lib/xilinx/configuration_packet.cc b/lib/xilinx/configuration_packet.cc
+index d37949e..c9ae719 100644
+--- a/lib/xilinx/configuration_packet.cc
++++ b/lib/xilinx/configuration_packet.cc
+@@ -1,4 +1,5 @@
+ #include <prjxray/xilinx/configuration_packet.h>
++#include <cstdint>
+ 
+ #include <iomanip>
+ #include <iostream>
+diff --git a/lib/xilinx/spartan6/frame_address.cc b/lib/xilinx/spartan6/frame_address.cc
+index ea3408f..cbae005 100644
+--- a/lib/xilinx/spartan6/frame_address.cc
++++ b/lib/xilinx/spartan6/frame_address.cc
+@@ -1,4 +1,5 @@
+ #include <iomanip>
++#include <cstdint>
+ 
+ #include <prjxray/bit_ops.h>
+ #include <prjxray/xilinx/spartan6/frame_address.h>
+diff --git a/lib/xilinx/spartan6/part.cc b/lib/xilinx/spartan6/part.cc
+index 87d9ff8..91dc55c 100644
+--- a/lib/xilinx/spartan6/part.cc
++++ b/lib/xilinx/spartan6/part.cc
+@@ -1,4 +1,5 @@
+ #include <prjxray/xilinx/spartan6/part.h>
++#include <cstdint>
+ 
+ #include <iomanip>
+ #include <iostream>
+diff --git a/lib/xilinx/tests/spartan6/bitstream_reader_test.cc b/lib/xilinx/tests/spartan6/bitstream_reader_test.cc
+index 9f5e386..2a43192 100644
+--- a/lib/xilinx/tests/spartan6/bitstream_reader_test.cc
++++ b/lib/xilinx/tests/spartan6/bitstream_reader_test.cc
+@@ -1,4 +1,5 @@
+ #include <array>
++#include <cstdint>
+ 
+ #include <absl/types/span.h>
+ #include <gtest/gtest.h>
+diff --git a/lib/xilinx/tests/spartan6/bitstream_writer_test.cc b/lib/xilinx/tests/spartan6/bitstream_writer_test.cc
+index e77f373..d7ea7e9 100644
+--- a/lib/xilinx/tests/spartan6/bitstream_writer_test.cc
++++ b/lib/xilinx/tests/spartan6/bitstream_writer_test.cc
+@@ -1,4 +1,5 @@
+ #include <array>
++#include <cstdint>
+ 
+ #include <gtest/gtest.h>
+ #include <prjxray/xilinx/architectures.h>
+diff --git a/lib/xilinx/tests/spartan6/configuration_packet_test.cc b/lib/xilinx/tests/spartan6/configuration_packet_test.cc
+index c0a7da5..4ad6678 100644
+--- a/lib/xilinx/tests/spartan6/configuration_packet_test.cc
++++ b/lib/xilinx/tests/spartan6/configuration_packet_test.cc
+@@ -1,4 +1,5 @@
+ #include <functional>
++#include <cstdint>
+ 
+ #include <absl/meta/type_traits.h>
+ #include <gtest/gtest.h>
+diff --git a/lib/xilinx/tests/spartan6/frames_test.cc b/lib/xilinx/tests/spartan6/frames_test.cc
+index 21c263d..77f2543 100644
+--- a/lib/xilinx/tests/spartan6/frames_test.cc
++++ b/lib/xilinx/tests/spartan6/frames_test.cc
+@@ -1,4 +1,5 @@
+ #include <vector>
++#include <cstdint>
+ 
+ #include <gtest/gtest.h>
+ 
+diff --git a/lib/xilinx/tests/xc7series/bitstream_reader_test.cc b/lib/xilinx/tests/xc7series/bitstream_reader_test.cc
+index 3843c4e..6ddb484 100644
+--- a/lib/xilinx/tests/xc7series/bitstream_reader_test.cc
++++ b/lib/xilinx/tests/xc7series/bitstream_reader_test.cc
+@@ -1,4 +1,5 @@
+ #include <array>
++#include <cstdint>
+ 
+ #include <gtest/gtest.h>
+ #include <prjxray/xilinx/architectures.h>
+diff --git a/lib/xilinx/tests/xc7series/bitstream_writer_test.cc b/lib/xilinx/tests/xc7series/bitstream_writer_test.cc
+index 5c8f6e2..939b330 100644
+--- a/lib/xilinx/tests/xc7series/bitstream_writer_test.cc
++++ b/lib/xilinx/tests/xc7series/bitstream_writer_test.cc
+@@ -1,4 +1,5 @@
+ #include <array>
++#include <cstdint>
+ 
+ #include <gtest/gtest.h>
+ #include <prjxray/xilinx/bitstream_reader.h>
+diff --git a/lib/xilinx/tests/xc7series/configuration_packet_test.cc b/lib/xilinx/tests/xc7series/configuration_packet_test.cc
+index 3fb4f8a..8ca34e7 100644
+--- a/lib/xilinx/tests/xc7series/configuration_packet_test.cc
++++ b/lib/xilinx/tests/xc7series/configuration_packet_test.cc
+@@ -1,4 +1,5 @@
+ #include <functional>
++#include <cstdint>
+ 
+ #include <absl/meta/type_traits.h>
+ #include <gtest/gtest.h>
+diff --git a/lib/xilinx/tests/xc7series/ecc_test.cc b/lib/xilinx/tests/xc7series/ecc_test.cc
+index fba13de..dbd7fab 100644
+--- a/lib/xilinx/tests/xc7series/ecc_test.cc
++++ b/lib/xilinx/tests/xc7series/ecc_test.cc
+@@ -1,4 +1,5 @@
+ #include <prjxray/xilinx/xc7series/ecc.h>
++#include <cstdint>
+ 
+ #include <gtest/gtest.h>
+ 
+diff --git a/lib/xilinx/tests/xc7series/frames_test.cc b/lib/xilinx/tests/xc7series/frames_test.cc
+index 3e3039d..4cb6dd8 100644
+--- a/lib/xilinx/tests/xc7series/frames_test.cc
++++ b/lib/xilinx/tests/xc7series/frames_test.cc
+@@ -1,4 +1,5 @@
+ #include <vector>
++#include <cstdint>
+ 
+ #include <gtest/gtest.h>
+ 
+diff --git a/lib/xilinx/xc7series/ecc.cc b/lib/xilinx/xc7series/ecc.cc
+index 88d0da8..c96fa89 100644
+--- a/lib/xilinx/xc7series/ecc.cc
++++ b/lib/xilinx/xc7series/ecc.cc
+@@ -1,4 +1,5 @@
+ #include <cassert>
++#include <cstdint>
+ #include <cstdio>
+ #include <prjxray/xilinx/xc7series/ecc.h>
+ 
+diff --git a/lib/xilinx/xc7series/frame_address.cc b/lib/xilinx/xc7series/frame_address.cc
+index 93b72c0..b04178f 100644
+--- a/lib/xilinx/xc7series/frame_address.cc
++++ b/lib/xilinx/xc7series/frame_address.cc
+@@ -1,4 +1,5 @@
+ #include <prjxray/xilinx/xc7series/frame_address.h>
++#include <cstdint>
+ 
+ #include <iomanip>
+ 
+diff --git a/lib/xilinx/xc7series/part.cc b/lib/xilinx/xc7series/part.cc
+index 3e3e7cf..3a998b8 100644
+--- a/lib/xilinx/xc7series/part.cc
++++ b/lib/xilinx/xc7series/part.cc
+@@ -1,4 +1,5 @@
+ #include <prjxray/xilinx/xc7series/part.h>
++#include <cstdint>
+ 
+ #include <iomanip>
+ #include <sstream>
+diff --git a/lib/xilinx/xcupseries/ecc.cc b/lib/xilinx/xcupseries/ecc.cc
+index c776f14..0567a5e 100644
+--- a/lib/xilinx/xcupseries/ecc.cc
++++ b/lib/xilinx/xcupseries/ecc.cc
+@@ -1,4 +1,5 @@
+ #include <cassert>
++#include <cstdint>
+ #include <cstdio>
+ #include <prjxray/xilinx/xcupseries/ecc.h>
+ 
+diff --git a/lib/xilinx/xcupseries/frame_address.cc b/lib/xilinx/xcupseries/frame_address.cc
+index 8bc04e9..de6c930 100644
+--- a/lib/xilinx/xcupseries/frame_address.cc
++++ b/lib/xilinx/xcupseries/frame_address.cc
+@@ -1,4 +1,5 @@
+ #include <prjxray/xilinx/xcupseries/frame_address.h>
++#include <cstdint>
+ 
+ #include <iomanip>
+ 
+diff --git a/lib/xilinx/xcupseries/part.cc b/lib/xilinx/xcupseries/part.cc
+index 0530dbc..0a9dbfe 100644
+--- a/lib/xilinx/xcupseries/part.cc
++++ b/lib/xilinx/xcupseries/part.cc
+@@ -1,4 +1,5 @@
+ #include <prjxray/xilinx/xcupseries/part.h>
++#include <cstdint>
+ 
+ #include <iomanip>
+ #include <sstream>
+diff --git a/lib/xilinx/xcuseries/ecc.cc b/lib/xilinx/xcuseries/ecc.cc
+index c5470cc..38a217a 100644
+--- a/lib/xilinx/xcuseries/ecc.cc
++++ b/lib/xilinx/xcuseries/ecc.cc
+@@ -1,4 +1,5 @@
+ #include <cassert>
++#include <cstdint>
+ #include <cstdio>
+ #include <prjxray/xilinx/xcuseries/ecc.h>
+ 
+diff --git a/lib/xilinx/xcuseries/frame_address.cc b/lib/xilinx/xcuseries/frame_address.cc
+index c7e9084..5706235 100644
+--- a/lib/xilinx/xcuseries/frame_address.cc
++++ b/lib/xilinx/xcuseries/frame_address.cc
+@@ -1,4 +1,5 @@
+ #include <prjxray/xilinx/xcuseries/frame_address.h>
++#include <cstdint>
+ 
+ #include <iomanip>
+ 
+diff --git a/lib/xilinx/xcuseries/part.cc b/lib/xilinx/xcuseries/part.cc
+index 9a8df85..2138cb8 100644
+--- a/lib/xilinx/xcuseries/part.cc
++++ b/lib/xilinx/xcuseries/part.cc
+@@ -1,4 +1,5 @@
+ #include <prjxray/xilinx/xcuseries/part.h>
++#include <cstdint>
+ 
+ #include <iomanip>
+ #include <sstream>
+diff --git a/third_party/abseil-cpp b/third_party/abseil-cpp
+--- a/third_party/abseil-cpp
++++ b/third_party/abseil-cpp
+@@ -1 +1 @@
+-Subproject commit a2e6adecc294dc4cd98cc285a9134ce58e0f2ad0
++Subproject commit a2e6adecc294dc4cd98cc285a9134ce58e0f2ad0-dirty
+diff --git a/tools/assemble.cpp b/tools/assemble.cpp
+index 5df8628..dc5fee8 100644
+--- a/tools/assemble.cpp
++++ b/tools/assemble.cpp
+@@ -10,6 +10,7 @@
+  */
+ 
+ #include <iostream>
++#include <cstdint>
+ #include <fstream>
+ #include <string>
+ #include <unordered_set>
+diff --git a/tools/bits2rbt/configuration_packets.cc b/tools/bits2rbt/configuration_packets.cc
+index 6753538..0db231c 100644
+--- a/tools/bits2rbt/configuration_packets.cc
++++ b/tools/bits2rbt/configuration_packets.cc
+@@ -1,4 +1,5 @@
+ #include <absl/strings/str_split.h>
++#include <cstdint>
+ #include <algorithm>
+ #include <bitset>
+ #include <fstream>
+diff --git a/tools/bits2rbt/configuration_packets.h b/tools/bits2rbt/configuration_packets.h
+index f5b3a1c..29842ba 100644
+--- a/tools/bits2rbt/configuration_packets.h
++++ b/tools/bits2rbt/configuration_packets.h
+@@ -1,6 +1,7 @@
+ #ifndef CONFIGURATION_PACKETS_H_
+ #define CONFIGURATION_PACKETS_H_
+ #include <array>
++#include <cstdint>
+ #include <map>
+ #include <memory>
+ #include <unordered_map>
+diff --git a/tools/bits2rbt/ecc.cc b/tools/bits2rbt/ecc.cc
+index 588b818..be5b5b8 100644
+--- a/tools/bits2rbt/ecc.cc
++++ b/tools/bits2rbt/ecc.cc
+@@ -1,4 +1,5 @@
+ #include "ecc.h"
++#include <cstdint>
+ #include <cassert>
+ #include <iostream>
+ 
+diff --git a/tools/bits2rbt/header.cc b/tools/bits2rbt/header.cc
+index 54ce1b5..2dd88e3 100644
+--- a/tools/bits2rbt/header.cc
++++ b/tools/bits2rbt/header.cc
+@@ -1,4 +1,5 @@
+ #include "header.h"
++#include <cstdint>
+ #include <algorithm>
+ #include <ctime>
+ #include <sstream>
+diff --git a/tools/bits2rbt/header.h b/tools/bits2rbt/header.h
+index 699212c..f84a845 100644
+--- a/tools/bits2rbt/header.h
++++ b/tools/bits2rbt/header.h
+@@ -1,6 +1,7 @@
+ #ifndef HEADER_H_
+ #define HEADER_H_
+ #include <absl/strings/string_view.h>
++#include <cstdint>
+ #include <iostream>
+ #include <string>
+ #include <vector>
+diff --git a/tools/bittool.cc b/tools/bittool.cc
+index 84b99c1..b123a93 100644
+--- a/tools/bittool.cc
++++ b/tools/bittool.cc
+@@ -10,6 +10,7 @@
+  */
+ 
+ #include <algorithm>
++#include <cstdint>
+ #include <iostream>
+ #include <typeinfo>
+ 
+diff --git a/tools/dump_bitstream.cpp b/tools/dump_bitstream.cpp
+index b95f500..c5a49e4 100644
+--- a/tools/dump_bitstream.cpp
++++ b/tools/dump_bitstream.cpp
+@@ -10,6 +10,7 @@
+  */
+ 
+ #include <vector>
++#include <cstdint>
+ #include <iostream>
+ #include <map>
+ #include <string>
+diff --git a/tools/explain.cpp b/tools/explain.cpp
+index 718dd26..0915cd3 100644
+--- a/tools/explain.cpp
++++ b/tools/explain.cpp
+@@ -10,6 +10,7 @@
+  */
+ 
+ #include <vector>
++#include <cstdint>
+ #include <iostream>
+ #include <map>
+ #include <string>
+diff --git a/tools/gen_part_base_yaml.cc b/tools/gen_part_base_yaml.cc
+index 30640fc..4a9c014 100644
+--- a/tools/gen_part_base_yaml.cc
++++ b/tools/gen_part_base_yaml.cc
+@@ -10,6 +10,7 @@
+  */
+ 
+ #include <libgen.h>
++#include <cstdint>
+ 
+ #include <algorithm>
+ #include <iostream>
+diff --git a/tools/xc7_frame_address_decoder.cc b/tools/xc7_frame_address_decoder.cc
+index 8c8f842..e22774b 100644
+--- a/tools/xc7_frame_address_decoder.cc
++++ b/tools/xc7_frame_address_decoder.cc
+@@ -10,6 +10,7 @@
+  */
+ 
+ #include <fstream>
++#include <cstdint>
+ #include <iomanip>
+ #include <iostream>
+ 
+diff --git a/tools/xcpatch.cc b/tools/xcpatch.cc
+index f5633ad..f7fc26c 100644
+--- a/tools/xcpatch.cc
++++ b/tools/xcpatch.cc
+@@ -10,6 +10,7 @@
+  */
+ 
+ #include <iostream>
++#include <cstdint>
+ 
+ #include <gflags/gflags.h>
+ #include <prjxray/memory_mapped_file.h>
+diff --git a/tools/xcu_frame_address_decoder.cc b/tools/xcu_frame_address_decoder.cc
+index 13edd7c..6ebe340 100644
+--- a/tools/xcu_frame_address_decoder.cc
++++ b/tools/xcu_frame_address_decoder.cc
+@@ -10,6 +10,7 @@
+  */
+ 
+ #include <fstream>
++#include <cstdint>
+ #include <iomanip>
+ #include <iostream>
+ 

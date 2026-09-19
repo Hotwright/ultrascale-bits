@@ -1,0 +1,11 @@
+# Upstream clones. Both are plain clones with their own history, reproducible
+# from the URL + SHA recorded in README-CLONES.md, so they are not vendored
+# here. prjuray's build needs the patches in patches/ applied on top - see
+# README-CLONES.md for the exact sequence.
+/prjuray/
+/prjuray-db/
+
+# Fuzzer/build scratch
+/work/
+*.pyc
+__pycache__/
