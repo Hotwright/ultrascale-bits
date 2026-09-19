@@ -1,0 +1,162 @@
+--- nextpnr-xilinx/xilinx/java/bbaexport.java.orig	2026-09-19 12:50:32.747957600 -0700
++++ nextpnr-xilinx/xilinx/java/bbaexport.java	2026-09-19 12:57:53.075219300 -0700
+@@ -7,7 +7,6 @@
+ import com.xilinx.rapidwright.device.*;
+ import com.xilinx.rapidwright.edif.*;
+ import com.xilinx.rapidwright.util.Utils;
+-import com.xilinx.rapidwright.util.RapidWright;
+ import com.xilinx.rapidwright.timing.*;
+ 
+ import java.io.File;
+@@ -227,6 +226,13 @@
+     private static ArrayList<Integer> pipDelays = new ArrayList<>();
+     private static HashMap<Integer, Integer> knownPipDelays = new HashMap<>();
+ 
++    // Delay assigned to a PIP whose nodes RapidWright will not resolve.
++    private static final int DEFAULT_PIP_DELAY_PS = 100;
++    private static long nullNodePips = 0;
++    private static long nullSiteWirePins = 0;
++    private static long noIntTileSites = 0;
++    private static long nullNodeEnum = 0;
++
+     private static int get_pip_timing_class(int delay_ps) {
+         if (knownPipDelays.containsKey(delay_ps))
+             return knownPipDelays.get(delay_ps);
+@@ -283,6 +289,14 @@
+             belsInTile.put(s.getTile(), belsInTile.getOrDefault(s.getTile(), 0) + 1);
+ 
+             for (BELPin bp : b.getPins()) {
++                // RapidWright 2026 returns null from getSiteWireName() for a
++                // BEL pin that is not attached to any site wire. There is
++                // nothing for nextpnr to route to, so skip it rather than
++                // interning a null key. Counted so a pervasive case is visible.
++                if (bp.getSiteWireName() == null) {
++                    ++nullSiteWirePins;
++                    continue;
++                }
+                 NextpnrBelWire nport = new NextpnrBelWire();
+                 nport.port_type = bp.isBidir() ? 2 : (bp.isOutput() ? 1 : 0);
+                 nport.name = makeConstId(bp.getName());
+@@ -401,12 +415,24 @@
+             // Note this is a first-pass model. It assumes that all pips are buferred and all pips have the same
+             // delay regardless of location. It is to guide the nextpnr router rather than give sign-off quality
+             // STA.
+-            TimingGroup tg = new TimingGroup(m);
+-            tg.add(p.getStartNode(), p.getStartWire().getIntentCode());
+-            tg.add(p);
+-            tg.add(p.getEndNode(), p.getEndWire().getIntentCode());
+-            var delay = m.calcDelay(tg);
+-            int tmg_cls = get_pip_timing_class((int)(delay));
++            // RapidWright 2026 returns null from getStartNode()/getEndNode() for
++            // some PIPs (TimingGroup.add then NPEs on it). The model above is
++            // explicitly a first-pass guide for the router, not sign-off STA,
++            // so an unmodellable PIP takes a default delay rather than killing
++            // the whole export. nullNodePips counts them so a pervasive
++            // failure cannot hide as a rare one.
++            int delay;
++            if (p.getStartNode() == null || p.getEndNode() == null) {
++                ++nullNodePips;
++                delay = DEFAULT_PIP_DELAY_PS;
++            } else {
++                TimingGroup tg = new TimingGroup(m);
++                tg.add(p.getStartNode(), p.getStartWire().getIntentCode());
++                tg.add(p);
++                tg.add(p.getEndNode(), p.getEndWire().getIntentCode());
++                delay = (int) m.calcDelay(tg);
++            }
++            int tmg_cls = get_pip_timing_class(delay);
+ 
+             NextpnrPip np = new NextpnrPip(pips.size(), reverse ?  p.getEndWireIndex() : p.getStartWireIndex(), reverse ?  p.getStartWireIndex() : p.getEndWireIndex(), tmg_cls, NextpnrPipType.TILE_ROUTING);
+             wires.get(np.from).pips_dh.add(np.index);
+@@ -799,7 +825,7 @@
+             ++known_id_count;
+         }
+ 
+-        TimingModel tmg = new TimingModel(des);
++        TimingModel tmg = new TimingModel(des.getDevice());
+         tmg.build();
+ 
+         // Unique tiletypes
+@@ -815,6 +841,10 @@
+             ntt.importTile(d, des, tmg, t);
+             tileTypes.add(ntt);
+             System.out.println("Processed tile type " + t.getTileTypeEnum().name());
++            if (nullNodePips > 0 && tileTypes.size() % 25 == 0)
++                System.out.println("  (PIPs with unresolvable nodes so far: " + nullNodePips + ")");
++            if (nullSiteWirePins > 0 && tileTypes.size() % 25 == 0)
++                System.out.println("  (BEL pins with no site wire so far: " + nullSiteWirePins + ")");
+         }
+ 
+         // Tile entries
+@@ -864,8 +894,13 @@
+                     Tile intert = null;
+                     try {
+                         intert = s.getIntTile();
+-                    } catch(java.lang.ArrayIndexOutOfBoundsException e) {
+-
++                    } catch (RuntimeException e) {
++                        // The original caught only ArrayIndexOutOfBoundsException.
++                        // RapidWright 2026's DeviceTools.getIntTile() throws NPE
++                        // instead (Wire.getNode() returns null) for sites with no
++                        // reachable INT tile. Same condition, different exception;
++                        // the -1/-1 fallback below is the author's intended answer.
++                        ++noIntTileSites;
+                     }
+                     if (intert != null) {
+                         nsi.inter_x = intert.getColumn();
+@@ -993,7 +1028,7 @@
+         }
+ 
+         // Nodes
+-        HashSet<TileTypeEnum> intTileTypes = Utils.getIntTileTypes();
++        Set<TileTypeEnum> intTileTypes = Utils.getIntTileTypes();
+         HashSet<Long> seenNodes = new HashSet<>();
+         int curr = 0, total = d.getAllTiles().size();
+         ArrayList<Integer> nodeWireCount = new ArrayList<>(), nodeIntent = new ArrayList<>();
+@@ -1003,12 +1038,22 @@
+             for (int col = 0; col < d.getColumns(); col++) {
+                 Tile t = d.getTile(row, col);
+                 ++curr;
+-                System.out.println("Processing nodes in tile " + curr + "/" + total);
++                if (curr % 5000 == 0 || curr == total)
++                    System.out.println("Processing nodes in tile " + curr + "/" + total);
+                 for (PIP p : t.getPIPs()) {
+                     Node[] nodes = {p.getStartNode(), p.getEndNode()};
+                     // FIXME: best way to discover nodes in tile?
+                     for (Node n : nodes) {
+-                        long flatIndex = (long)(n.getTile().getRow() * d.getColumns() + n.getTile().getColumn()) << 32 | n.getWire();
++                        // Same condition the addPIP guard handles: RapidWright
++                        // 2026 returns null for some PIP endpoints. Such a PIP
++                        // is still emitted (with a default delay) but cannot
++                        // contribute a node here, so its wires stay separate
++                        // tile wires rather than being merged into one node.
++                        if (n == null) {
++                            ++nullNodeEnum;
++                            continue;
++                        }
++                        long flatIndex = (long)(n.getTile().getRow() * d.getColumns() + n.getTile().getColumn()) << 32 | n.getWireIndex();
+                         if (seenNodes.contains(flatIndex))
+                             continue;
+                         seenNodes.add(flatIndex);
+@@ -1043,7 +1088,7 @@
+ 
+                                 }
+                             }
+-                            Wire nw = new Wire(n.getTile(), n.getWire());
++                            Wire nw = new Wire(n.getTile(), n.getWireIndex());
+                             nodeIntent.add(makeConstId(nw.getIntentCode().toString()));
+                             nodeWireCount.add(n.getAllWiresInNode().length);
+                         }
+@@ -1153,7 +1198,11 @@
+         bba.printf("ref pip_timing_classes\n");
+         // Chip info
+         bba.println("label chip_info");
+-        bba.printf("str |%s|\n", d.getDeviceName()); //device name
++        System.out.println("port summary: " + nullNodePips + " PIPs with unresolvable nodes, "
++            + nullSiteWirePins + " BEL pins with no site wire, "
++            + noIntTileSites + " sites with no INT tile, "
++            + nullNodeEnum + " null PIP endpoints during node enumeration");
++        bba.printf("str |%s|\n", d.getName()); //device name
+         bba.printf("str |RapidWright|\n"); //generator
+         bba.printf("u32 %d\n", 1); //version
+         bba.printf("u32 %d\n", d.getColumns()); //width

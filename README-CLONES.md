@@ -27,3 +27,23 @@ arriving transitively. Apply the fixes before building:
 
 Then `mk_uray_overlay.sh` builds the writable overlay, and `env/uray_env.sh`
 sets the environment (it bypasses prjuray's exact-`v2019.2` Vivado gate).
+
+## nextpnr-xilinx's RapidWright exporter
+
+`xilinx/java/bbaexport.java` was written against RapidWright ~2020 and does not
+compile or run against 2026.1.0. `patches/bbaexport-rapidwright-2026.patch`
+carries the port. Apply it, then build and run with `run_bbaexport.sh`, which
+runs the class directly rather than from a jar (family.cmake builds a jar whose
+manifest holds the whole RapidWright classpath, and a JAR manifest line cannot
+exceed 72 bytes).
+
+The port is six API fixes plus four null-guards. The guards matter: RapidWright
+2026 returns null where the old API did not, and each guard counts what it
+dropped so a pervasive failure cannot masquerade as a rare one. The run prints
+
+    port summary: <n> PIPs with unresolvable nodes, <n> BEL pins with no site
+    wire, <n> sites with no INT tile, <n> null PIP endpoints during node
+    enumeration
+
+Check those numbers against device size before trusting the chipdb - a silently
+degraded routing graph shows up much later as an unroutable design.
