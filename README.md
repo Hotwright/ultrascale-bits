@@ -1,4 +1,4 @@
-# 0-ultrascale-bits
+# ultrascale-bits
 
 Scoping an open bitstream flow for the **Kria K26** (`XCK26-SFVC784-2LV-C`, Zynq
 UltraScale+ MPSoC). Companion to `0-xilinx-bits`, which does the same job for
