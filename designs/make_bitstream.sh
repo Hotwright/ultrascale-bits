@@ -49,64 +49,129 @@ echo "=== round trip: decode our own bitstream back to FASM ==="
 # back. 180 of this design's 9011 features are like that -- every .V0 of a
 # .V0/.V1 pair -- and requiring them would fail the build on features that are
 # working exactly as intended.
-python3 - "$FASM" "$D/$NAME.roundtrip.fasm" "$URAY_FAMILY_DIR" <<'PY' || exit 1
-import collections, glob, os, re, sys
+# --verbose is not cosmetic: without it bit2fasm skips a tile whose type has no
+# segbits file in silence, so bits we set there would vanish from the decode and
+# the comparison below would call that a pass.
+python3 "$R/prjuray/utils/bit2fasm.py" --verbose \
+    --db-root "$URAY_FAMILY_DIR" --part "$URAY_PART" \
+    --architecture "$URAY_ARCH" --bitread "$URAY_TOOLS_DIR/bitread" \
+    "$BIT" > "$D/$NAME.roundtrip.fasm" || exit 1
+echo "  decoded $(grep -c . "$D/$NAME.roundtrip.fasm") line(s)"
 
-fasm_in, fasm_out, db = sys.argv[1], sys.argv[2], sys.argv[3]
+python3 - "$FASM" "$D/$NAME.roundtrip.fasm" "$URAY_FAMILY_DIR" "$TG" <<'PY' || exit 1
+import glob, json, os, re, sys
 
-# feature key -> does it set at least one bit
+fasm_in, fasm_out, db, tgpath = sys.argv[1:5]
+
+# segbits key -> does it set at least one bit (as opposed to only clearing)
 sets_a_bit = {}
 for path in glob.glob(os.path.join(db, "segbits_*.db")):
     if "origin_info" in path:
         continue
     with open(path) as f:
         for line in f:
-            parts = line.split()
-            if len(parts) >= 2:
-                sets_a_bit[parts[0]] = any(not b.startswith("!")
-                                           for b in parts[1:])
+            p = line.split()
+            if len(p) >= 2:
+                sets_a_bit[p[0]] = any(not b.startswith("!") for b in p[1:])
 
+tg = json.load(open(tgpath))
 TILE_INST = re.compile(r"_X-?\d+Y-?\d+$")
+RANGE = re.compile(r"^(.*)\[(\d+):(\d+)\]$")
+INDEX = re.compile(r"^(.*)\[(\d+)\]$")
+VALUE = re.compile(r"^(\d+)'([hbdo])([0-9a-fA-F]+)$")
 
 
-def feats(path):
-    out = set()
+def load(path):
+    """FASM -> {base feature: integer mask}, plus the set that was indexed.
+
+    The assembler and the disassembler are each free to spell an indexed
+    feature any way that is FASM-equivalent. We write
+    `CLEL_R_X6Y151.ALUT.INIT[63:0] = 64'h8000000000000000`; bit2fasm writes
+    `CLEL_R_X6Y151.ALUT.INIT[63]`. Comparing the text calls that a mismatch --
+    and, far worse, calls two identical spellings carrying DIFFERENT values a
+    match. So fold every indexed feature down to a number and compare numbers.
+    """
+    vals, indexed = {}, set()
     with open(path) as f:
         for line in f:
             line = line.split("#")[0].strip()
-            if line and not line.startswith("{"):
-                out.add(line.split()[0].rstrip("=").strip())
-    return out
+            if not line or line.startswith("{"):
+                continue
+            lhs, _, rhs = (x.strip() for x in line.partition("="))
+            v = 1
+            if rhs:
+                m = VALUE.match(rhs.replace("_", ""))
+                v = (int(m.group(3), {"b": 2, "o": 8, "d": 10, "h": 16}[m.group(2)])
+                     if m else int(rhs, 0))
+            m = RANGE.match(lhs) or INDEX.match(lhs)
+            if m:
+                base, lo = m.group(1), int(m.group(m.lastindex))
+                indexed.add(base)
+                vals[base] = vals.get(base, 0) | (v << lo)
+            else:
+                vals[lhs] = vals.get(lhs, 0) | v
+    return vals, indexed
 
 
-want, got = feats(fasm_in), feats(fasm_out)
-required, clear_only, unknown = set(), set(), set()
-for f in want:
-    tile, feature = f.split(".", 1)
-    key = "%s.%s" % (TILE_INST.sub("", tile), feature)
-    if key not in sets_a_bit:
-        unknown.add(f)          # multi-bit keys like LUT.INIT[43] land here
-        required.add(f)         # conservatively require them
-    elif sets_a_bit[key]:
-        required.add(f)
+def seg_key(tile, feat, bit=None):
+    ttype = tg[tile]["type"] if tile in tg else TILE_INST.sub("", tile)
+    return "%s.%s%s" % (ttype, feat, "" if bit is None else "[%d]" % bit)
+
+
+want, want_ix = load(fasm_in)
+got, _ = load(fasm_out)
+
+# A feature whose segbits are all "!"-prefixed CLEARS bits rather than setting
+# them, so a bitstream containing it is identical to one without it and no
+# decode can ever report it back. Requiring those would fail the build on
+# features that are working exactly as intended.
+required, clear_only, unknown = {}, 0, set()
+for f, v in want.items():
+    tile, _, feat = f.partition(".")
+    if f in want_ix:
+        mask = 0
+        for i in range(v.bit_length()):
+            if not (v >> i) & 1:
+                continue
+            obs = sets_a_bit.get(seg_key(tile, feat, i))
+            if obs is None:
+                unknown.add("%s[%d]" % (f, i))
+            if obs is not False:          # unknown is required conservatively
+                mask |= 1 << i
+        clear_only += bin(v & ~mask).count("1")
+        if mask:
+            required[f] = mask
     else:
-        clear_only.add(f)
+        obs = sets_a_bit.get(seg_key(tile, feat))
+        if obs is None:
+            unknown.add(f)
+        if obs is not False:
+            required[f] = v
+        else:
+            clear_only += 1
 
-missing, extra = required - got, got - want
-print("  asked for %d, of which %d observable (%d clear only)"
-      % (len(want), len(required), len(clear_only)))
-print("  got back %d; missing %d, unexpected %d"
+missing = {f: (m, got.get(f, 0)) for f, m in required.items()
+           if (got.get(f, 0) & m) != m}
+want_tiles = {f.partition(".")[0] for f in want}
+extra = [f for f in got if f not in want and f.partition(".")[0] in want_tiles]
+
+print("  asked for %d feature(s) over %d tile(s)" % (len(want), len(want_tiles)))
+print("  %d observable, %d bit(s) clear-only and unobservable by construction"
+      % (len(required), clear_only))
+print("  decode returned %d feature(s); %d missing, %d unexpected in our tiles"
       % (len(got), len(missing), len(extra)))
 if unknown:
-    print("  (%d feature(s) had no exact segbits key and were required anyway)"
+    print("  (%d had no segbits key of their own and were required anyway)"
           % len(unknown))
 for f in sorted(missing)[:10]:
-    print("    MISSING %s" % f)
+    m, g = missing[f]
+    print("    MISSING %s: wanted 0x%x, decoded 0x%x (short by 0x%x)"
+          % (f, m, g, m & ~g))
 for f in sorted(extra)[:5]:
-    print("    EXTRA   %s" % f)
+    print("    EXTRA   %s = 0x%x" % (f, got[f]))
 if missing:
     sys.exit("  FAIL: observable features we set did not survive the round trip")
-print("  OK: every observable feature survived")
+print("  OK: every observable feature came back with the value we asked for")
 PY
 
 echo "=== .bit -> .bit.bin ==="
