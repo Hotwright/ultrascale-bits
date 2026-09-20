@@ -1,11 +1,16 @@
 #!/usr/bin/env python3
 """Will every tile type this design uses get a frame base address?
 
-A feature in a tile with no base address cannot be assembled at all. That is a
-worse failure than a missing segbit and a much quieter one: fasm2bit places
-nothing there, the bitstream comes out the right size, the round trip passes,
-and the function is simply absent. On the XCK26 that nearly shipped a design
-whose clock was never connected.
+A feature in a tile with no base address cannot be assembled at all, and
+fasm2bit refuses the whole file rather than writing a bitstream without it --
+tile_segbits.py raises KeyError on bits_map[block_type] and fasm_assembler
+re-raises it as FasmLookupError.
+
+The trap is the message, not silence. It reads "Segment DB <tile type>, key
+<feature> not found", blaming a missing segbit for a missing base address.
+Those need opposite fixes: one a characterisation run, the other a propagation
+rule. This tool exists so the question gets asked directly instead of being
+inferred from that error.
 
 The failure is easy to walk into because 002-tilegrid's sub-fuzzers are named
 after ZU3EG tile types but work by SITE type: each scans the grid for its site

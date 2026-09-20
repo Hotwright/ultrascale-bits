@@ -31,11 +31,12 @@ TG="$URAY_FAMILY_DIR/$URAY_PART/tilegrid.json"
 [ -f "$TG" ] || { echo "no $TG -- run ./env/run_uray_fuzzers.sh 002 first" >&2; exit 1; }
 
 echo "=== 0. does the design's every tile type have an address? ==="
-# Ask this first. A tile type the design uses but 002 never addressed is a
-# quieter failure than a missing segbit: fasm2bit places nothing there, the
-# bitstream is the right size, the round trip passes, and the function is
-# absent. Exit code is advisory here -- the fill below is meant to resolve the
-# site-less cases, so re-run this afterwards for the verdict.
+# Ask this first. A tile type the design uses but 002 never addressed makes
+# fasm2bit refuse the whole file at step 4 -- and report it as a missing
+# SEGBIT, which sends you off to characterise something that is already
+# characterised. Cheaper to see it named here. Exit code is advisory: the fill
+# below resolves the site-less cases, so re-run this afterwards for the
+# verdict.
 for d in "$R"/designs/*/; do
     f=$( ls "$d"*.fasm 2>/dev/null | grep -v filtered | head -1 )
     [ -f "$f" ] || continue

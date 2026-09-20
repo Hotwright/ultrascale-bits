@@ -553,10 +553,22 @@ Both `build.sh` scripts run it. On the PS design it drops exactly 11:
   **`rclk_pss_alto` is not optional.** `RCLK_INTF_LEFT_TERM_ALTO` is where
   `PL_CLK` enters the fabric -- our FASM's
   `PIP.CLK_BUFG_PS_0_CLK_IN.PS_TO_PL_CLK0` is in it -- and with no base
-  address `fasm2bit` cannot place a single bit there. The design would
-  assemble into a bitstream whose clock is never connected, and every check
-  short of the hardware would pass. The other three cost tile types this
-  design does not use, but they are wrong for the database all the same.
+  address `fasm2bit` cannot place a single bit there.
+
+  **This does not produce a silently dead bitstream** -- an earlier version of
+  this section said it would, and that was wrong in the alarming direction.
+  `tile_segbits.py` does `bits_map[block_type]`, which for a tile with
+  `bits: {}` raises `KeyError`, and `fasm_assembler.py` turns every `KeyError`
+  there into `FasmLookupError("Segment DB <type>, key <feature> not found")`.
+  `fasm2bit` therefore refuses the whole file and writes no bitstream at all.
+
+  The cost is the misdiagnosis, not the silence: it blames a missing **segbit**
+  for what is really a missing **base address**, and those need opposite fixes
+  -- a characterisation run versus a propagation rule. Chasing the first when
+  you need the second is what this would actually have cost.
+
+  The other three sub-fuzzers cost tile types this design does not use, but
+  they are wrong for the database all the same.
 
   `env/add_missing_tilegrid_fuzzers.sh` repairs it after 002 finishes: it
   builds each `.tdb` on its own first and adds it to the dependency list only

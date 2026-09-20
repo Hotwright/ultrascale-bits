@@ -15,7 +15,11 @@
 # rclk_pss_alto is not optional. RCLK_INTF_LEFT_TERM_ALTO is where PL_CLK
 # enters the fabric -- our FASM's PIP.CLK_BUFG_PS_0_CLK_IN.PS_TO_PL_CLK0 lives
 # there -- and without a base address fasm2bit cannot place a single bit in it.
-# The design would assemble into a bitstream whose clock is never connected.
+# It fails loudly rather than silently: a tile with bits:{} makes
+# tile_segbits.py raise KeyError on bits_map[block_type], which fasm_assembler
+# reports as FasmLookupError "Segment DB ... key ... not found", so the whole
+# file is refused. The trap is that the message blames a missing segbit for a
+# missing base address, and those want opposite fixes.
 #
 # Run AFTER env/run_uray_fuzzers.sh 002 has finished. Each sub-fuzzer is built
 # on its own first and only added to tilegrid.json's dependency list once its
