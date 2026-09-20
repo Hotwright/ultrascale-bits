@@ -78,6 +78,30 @@ python3 "$R/tools/locate_unknown_bits.py" "$OUT/ref.fasm" \
 echo "  (bits present  => the enable we emit is real and must not be dropped)"
 echo "  (no bits       => we are over-emitting and --filter is correct)"
 
+echo "=== IO tiles, bit for bit ==="
+# The only check in this tree that has ever found a MISSING feature. The FASM
+# checker proves emitted subset of known and the round trip is closed loop, so
+# neither can see something we never write -- that is how nextpnr shipping no
+# OQ_MUX feature at all went unnoticed until this ran.
+#
+# Restricted to IO tiles on purpose. The two tools place logic differently, so
+# a CLE diff is noise, but the XDC LOCs every pad to a package pin, so the same
+# IO tile holds the same outputs in both bitstreams and a difference there is
+# real.
+"$URAY_TOOLS_DIR/bitread" --architecture "$URAY_ARCH" \
+    --part_file "$URAY_FAMILY_DIR/$URAY_PART/part.yaml" \
+    -o "$OUT/ref.frames" "$OUT/ref.bit" >/dev/null || exit 1
+OURFRAMES="${OURS%.fasm}.frames"
+if [ -f "$OURFRAMES" ]; then
+    IOTILES=$(grep -ohE '^HDIO_[A-Z_]+_X[0-9]+Y[0-9]+' "$OURS" | sort -u | sed 's/^/--tile /')
+    python3 "$R/tools/diff_tile_bits.py" "$OUT/ref.frames" "$OURFRAMES" \
+        --tilegrid "$URAY_FAMILY_DIR/$URAY_PART/tilegrid.json" \
+        --segbits "$URAY_FAMILY_DIR/segbits_hdio_top_right.db" \
+        $IOTILES || echo "  (differences above are real; see SCOPE-K26.md)"
+else
+    echo "  skipped: no $OURFRAMES -- run designs/make_bitstream.sh first"
+fi
+
 echo "=== feature classes: Vivado vs ours ==="
 python3 "$R/tools/diff_fasm_classes.py" "$OUT/ref.fasm" "$OURS" \
     --tilegrid "$URAY_FAMILY_DIR/$URAY_PART/tilegrid.json" \

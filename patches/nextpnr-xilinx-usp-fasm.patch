@@ -1,6 +1,6 @@
 --- nextpnr-xilinx/xilinx/fasm.cc.orig	2026-09-19 18:10:06.243029900 -0700
-+++ nextpnr-xilinx/xilinx/fasm.cc	2026-09-19 19:00:09.736091300 -0700
-@@ -209,6 +209,120 @@
++++ nextpnr-xilinx/xilinx/fasm.cc	2026-09-20 01:34:17.674462000 -0700
+@@ -209,6 +209,199 @@
          }
      }
  
@@ -49,6 +49,22 @@
 +#undef USP_BUFCE_LEAF
 +    }
 +
++    // HDIO_LOGICPAIR_<n>_OPFF{M,S}_Q -> HDIOLOGIC_{M,S}_X<x>Y<y>. Same reason
++    // as usp_bufce_leaf: the chipdb carries no site for these route-throughs,
++    // so the site cannot be recovered at runtime. See
++    // tools/gen_usp_hdio_optff.py.
++    std::unordered_map<std::string, std::string> usp_hdio_optff;
++    bool usp_hdio_optff_built = false;
++    void build_usp_hdio_optff()
++    {
++        if (usp_hdio_optff_built)
++            return;
++        usp_hdio_optff_built = true;
++#define USP_HDIO_OPTFF(tt, wire, site) usp_hdio_optff[std::string(tt) + "/" + (wire)] = site;
++#include "usp_hdio_optff.inc"
++#undef USP_HDIO_OPTFF
++    }
++
 +    // UltraScale+ pips whose configuration is NOT a routing bit. Mostly
 +    // route-throughs -- a pip that passes through a site is selected by that
 +    // site's own configuration -- plus the PS interface, whose whole
@@ -89,6 +105,25 @@
 +            push(it->second);
 +            push("BUFCE_LEAF");
 +            write_choice("IN_USE", "V1");
++            // dump_features.tcl writes four more for a leaf that has a cell in
++            // it: CE_TYPE, and one <pin>INV per IS_*_INVERTED property. Three
++            // of the five are clear-only in the database and cost nothing, but
++            // IINV.V1 and DELAY_TAP.V0 each SET a bit -- and leaving DELAY_TAP
++            // entirely clear encodes no tap at all, since none of
++            // V0/V1/V2/V4/V8 matches an all-clear pattern.
++            //
++            // Values measured from the Vivado reference (env/reference_build.sh
++            // on kv260_ps_blink): its one in-use leaf is IINV.V1, DELAY_TAP.V0,
++            // CE_TYPE.SYNC, CEINV.V0, while all 31 unused leaves in the same
++            // bitstream decode as IINV.V0 with no tap. So V1 is what "this leaf
++            // is driving" looks like physically: prjuray's IINV is the bit, not
++            // the logical IS_I_INVERTED, which dump_features.tcl XORs with the
++            // site pin's own inversion before writing. DELAY_TAP.V0 is no
++            // deskew, which is what a design with no timing constraint gets.
++            write_choice("CE_TYPE", "SYNC");
++            write_choice("CEINV", "V0");
++            write_choice("IINV", "V1");
++            write_choice("DELAY_TAP", "V0");
 +            pop(3);
 +            return true;
 +        }
@@ -118,16 +153,62 @@
 +        return false;
 +    }
 +
++    // Some UltraScale+ route-throughs need BOTH a pip feature and the passed
++    // site's own configuration. Unlike write_pip_as_site_config_usp() this does
++    // not consume the pip: prjuray has a real pip feature as well, and Vivado
++    // writes both.
++    void write_usp_extra_site_config(PipId pip)
++    {
++        auto &li = ctx->locInfo(pip);
++        auto &pd = li.pip_data[pip.index];
++        std::string dst = IdString(li.wire_data[pd.dst_index].name).str(ctx);
++        std::string src = IdString(li.wire_data[pd.src_index].name).str(ctx);
++
++        // The HDIO output flip-flop bypass, which is two features, not one:
++        //
++        //   PIP.HDIO_LOGICPAIR_35_OPFFM_Q.HDIO_LOGICPAIR_35_OPFFM_D1  00_830
++        //   HDIOLOGIC_M_X0Y3.OQ_MUX.NOT_OPTFF                        !00_826 01_825
++        //
++        // The pip bit says the route passes through the site; the site's own
++        // output mux says what drives the pad. Writing only the first leaves
++        // the mux bits matching NEITHER choice -- NOT_OPTFF wants 01_825 set,
++        // OPTFF wants 00_826 set, and we left both clear. Vivado sets both
++        // features on every HDIOLOGIC site driving a pin, and adding them made
++        // our two HDIO tiles match its bitstream bit for bit.
++        if (boost::contains(dst, "_OPFF") && boost::ends_with(dst, "_Q") &&
++            boost::contains(src, "_OPFF") && boost::ends_with(src, "_D1")) {
++            // The site has to come from a table. pd.site, both wires' site
++            // and the wires' bel pins are all -1/absent for these pips -- all
++            // eight in kv260_ps_blink -- exactly as for BUFCE_LEAF, and the
++            // wire number is not the site number either (HDIO_LOGICPAIR_14 is
++            // HDIOLOGIC_M_X0Y0, _15 is HDIOLOGIC_S_X0Y0).
++            build_usp_hdio_optff();
++            std::string tt = IdString(li.type).str(ctx);
++            auto it = usp_hdio_optff.find(tt + "/" + dst);
++            if (it == usp_hdio_optff.end()) {
++                log_warning("no HDIOLOGIC site known for %s.%s; regenerate usp_hdio_optff.inc\n", tt.c_str(),
++                            dst.c_str());
++                return;
++            }
++            push(get_tile_name(pip.tile));
++            push(it->second);
++            write_choice("OQ_MUX", "NOT_OPTFF");
++            pop(2);
++        }
++    }
++
      void write_pip(PipId pip, NetInfo *net)
      {
          const bool debug_this = false;
-@@ -279,7 +393,25 @@
+@@ -279,7 +472,27 @@
              if (!pp.empty())
                  last_was_blank = false;
          } else {
 -            if (pd.extra_data == 1)
 +            if (!ctx->xc7 && write_pip_as_site_config_usp(pip))
 +                return;
++            if (!ctx->xc7)
++                write_usp_extra_site_config(pip);
 +            if (pd.extra_data == 1 && getenv("NEXTPNR_RT_TRACE")) {
 +                auto &li = ctx->locInfo(pip);
 +                auto &sw = li.wire_data[pd.src_index];
@@ -148,7 +229,7 @@
                  log_warning("Unprocessed route-thru %s.%s.%s\n!", get_tile_name(pip.tile).c_str(),
                              IdString(ctx->locInfo(pip).wire_data[pd.dst_index].name).c_str(ctx),
                              IdString(ctx->locInfo(pip).wire_data[pd.src_index].name).c_str(ctx));
-@@ -322,9 +454,22 @@
+@@ -322,9 +535,22 @@
                      return; // missing, not sure if really a ppip?
              }
  
@@ -172,7 +253,7 @@
  
              if (boost::contains(tile_name, "IOI") && boost::starts_with(dst_name, "IOI_OCLK_")) {
                  dst_name.insert(dst_name.find("OCLK") + 4, 1, 'M');
-@@ -334,6 +479,8 @@
+@@ -334,6 +560,8 @@
                  NPNR_ASSERT(w != WireId());
                  if (ctx->getBoundWireNet(w) == nullptr) {
                      out << tile_name << ".";
@@ -181,7 +262,7 @@
                      out << dst_name << ".";
                      out << src_name << std::endl;
                  }
-@@ -686,6 +833,281 @@
+@@ -686,6 +914,281 @@
          pop(3);
      }
  
@@ -463,7 +544,7 @@
      void write_logic()
      {
          std::set<int> used_logic_tiles;
-@@ -694,12 +1116,18 @@
+@@ -694,12 +1197,18 @@
                  used_logic_tiles.insert(cell.second->bel.tile);
          }
          for (int tile : used_logic_tiles) {
@@ -488,7 +569,7 @@
              blank();
          }
      }
-@@ -1614,15 +2042,230 @@
+@@ -1614,15 +2123,236 @@
          }
      }
  
@@ -513,8 +594,14 @@
 +    // IOB_X0Y1 the first HDIOB_S, and so on to IOB_X0Y11.
 +    std::string usp_site_index_in_tile(BelId bel)
 +    {
-+        auto &ti = ctx->chip_info->tile_insts[bel.tile];
-+        int si = ctx->locInfo(bel).bel_data[bel.index].site;
++        return usp_site_index_name(bel.tile, ctx->locInfo(bel).bel_data[bel.index].site);
++    }
++
++    // The same naming from a raw site index, which is what PipInfoPOD carries
++    // for a route-through (pip_data[].site) -- no BelId is involved there.
++    std::string usp_site_index_name(int tile, int si)
++    {
++        auto &ti = ctx->chip_info->tile_insts[tile];
 +        NPNR_ASSERT(si >= 0 && si < ti.num_sites);
 +        std::string name = ti.site_insts[si].name.get();
 +        auto xpos = name.rfind("_X");

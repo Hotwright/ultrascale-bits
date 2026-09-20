@@ -121,6 +121,24 @@ for row in "${TABLE[@]}"; do
   fi
 done
 
+# Two of fasm.cc's tables are #included from generated .inc files, and
+# nextpnr-xilinx/ is gitignored, so on a fresh clone the patch lands on a tree
+# where those files do not exist and the build fails at the #include. Generate
+# them here rather than leaving it to a README step nobody reads. Both read
+# prjuray-db and write into nextpnr-xilinx/xilinx/; neither writes to the
+# read-only database.
+if [ "$DRY" != 1 ] && [ $fail = 0 ] && [ -d "$ROOT/nextpnr-xilinx/xilinx" ]; then
+  echo
+  for gen in gen_usp_bufce_leaf gen_usp_hdio_optff; do
+    if python3 "$ROOT/tools/$gen.py" >/dev/null 2>&1; then
+      printf '  generated %s\n' "$gen.py"
+    else
+      printf '  FAILED    %s -- fasm.cc will not compile without its .inc\n' "$gen.py"
+      fail=1
+    fi
+  done
+fi
+
 echo
 echo "  $applied to apply, $already already applied, $([ $fail = 0 ] && echo 'no failures' || echo 'FAILURES - see above')"
 exit $fail
