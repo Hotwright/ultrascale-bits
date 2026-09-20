@@ -1,0 +1,39 @@
+--- /tmp/claude-1000/-mnt-i-Hotwright-0-xilinx-bits/e8653efd-f53f-4c26-9851-65632759a9cd/scratchpad/002.Makefile.orig	2026-09-19 19:13:19.475441979 -0700
++++ prjuray/fuzzers/002-tilegrid/Makefile	2026-09-19 19:13:33.381747600 -0700
+@@ -17,6 +17,19 @@
+ FUZDIR=$(shell pwd)
+ BUILD_FOLDER=build_${URAY_PART}
+ BUILD_DIR=$(FUZDIR)/$(BUILD_FOLDER)
++# Four sub-fuzzers were removed for the XCK26 because the tile types they target
++# do not exist on this die. Counted in the tile dump this fuzzer itself produces
++# (build_<part>/tiles/tiles.txt):
++#
++#   hpio_right        HPIO_RIGHT        0   (the K26 has HPIO_L,        8)
++#   bitslice_tiles    XIPHY_BYTE_RIGHT  0   (the K26 has XIPHY_BYTE_L, 16)
++#   cmt_right         CMT_RIGHT         0
++#   rclk_pss_alto     RCLK_PSS_ALTO     0
++#
++# tilegrid.json depends on EVERY .tdb in this list, so leaving them in means
++# make never reaches the final target no matter how the sub-fuzzer fails.
++# add_tdb.py itself already skips a missing .tdb, so dropping them here costs
++# nothing beyond those tile types, which the die does not have.
+ TILEGRID_TDB_DEPENDENCIES=
+ TILEGRID_TDB_DEPENDENCIES += cle/$(BUILD_FOLDER)/segbits_tilegrid.tdb \
+                              clel_int/$(BUILD_FOLDER)/segbits_tilegrid.tdb \
+@@ -25,16 +38,12 @@
+                              rclk_int/$(BUILD_FOLDER)/segbits_tilegrid.tdb \
+                              rclk_other/$(BUILD_FOLDER)/segbits_tilegrid.tdb \
+                              rclk_hdio/$(BUILD_FOLDER)/segbits_tilegrid.tdb \
+-                             rclk_pss_alto/$(BUILD_FOLDER)/segbits_tilegrid.tdb \
+-                             cmt_right/$(BUILD_FOLDER)/segbits_tilegrid.tdb \
+                              intf_r_pcie4_hdio/$(BUILD_FOLDER)/segbits_tilegrid.tdb \
+                              pss_alto/$(BUILD_FOLDER)/segbits_tilegrid.tdb \
+                              hdio_top_right/$(BUILD_FOLDER)/segbits_tilegrid.tdb \
+                              hdio_bot_right/$(BUILD_FOLDER)/segbits_tilegrid.tdb \
+-                             hpio_right/$(BUILD_FOLDER)/segbits_tilegrid.tdb \
+                              rclk_dsp_intf_clkbuf/$(BUILD_FOLDER)/segbits_tilegrid.tdb \
+                              ps8_intf/$(BUILD_FOLDER)/segbits_tilegrid.tdb \
+-                             bitslice_tiles/$(BUILD_FOLDER)/segbits_tilegrid.tdb \
+                              bram/$(BUILD_FOLDER)/segbits_tilegrid.tdb \
+                              bram_block/$(BUILD_FOLDER)/segbits_tilegrid.tdb
+ 

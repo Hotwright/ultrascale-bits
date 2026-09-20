@@ -17,6 +17,10 @@
 # written.
 set -u
 STAGE="${1:-all}"
+# Each specimen is an independent Vivado run. 002-tilegrid has ~150 of them on
+# this die, and serially that is most of a day; Vivado peaks around 4 GB, so
+# four at a time fits comfortably in 26 GB.
+JOBS="${URAY_JOBS:-4}"
 R="$( cd -P "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd )"
 source "$R/env/uray_env.sh" zynq_usp_5ev || exit 1
 . "$R/prjuray/env/bin/activate"
@@ -27,7 +31,7 @@ run_stage () {
     local dir="$1"
     echo "=== $dir : starting $(date -Is) ==="
     cd "$R/prjuray/fuzzers/$dir" || return 1
-    if ! make database; then echo "=== $dir : DATABASE FAILED ==="; return 1; fi
+    if ! make -j"$JOBS" database; then echo "=== $dir : DATABASE FAILED ==="; return 1; fi
     if ! make pushdb;   then echo "=== $dir : PUSHDB FAILED ==="; return 1; fi
     echo "=== $dir : done $(date -Is) ==="
 }
