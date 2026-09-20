@@ -35,6 +35,13 @@ between a conclusion and a guess.
 Usage:
   bit2fasm.py --verbose ... > ref.fasm
   locate_unknown_bits.py ref.fasm [--tilegrid PATH] [--tile NAME]...
+  locate_unknown_bits.py --self-test [--tilegrid PATH]
+
+Run --self-test before trusting a result. A bug in the regex or the window
+arithmetic reports zero bits, and zero is a meaningful answer here -- it reads
+as "Vivado set nothing in that tile", which is the opposite conclusion. The
+self-test plants bits at the window edges and just outside them, so an
+off-by-one in either direction fails it.
 """
 import argparse
 import collections
@@ -58,16 +65,63 @@ def load_windows(tilegrid):
     return out
 
 
+def self_test(tilegrid_path):
+    """Plant bits with a known answer and check they are attributed to it."""
+    import subprocess
+    import tempfile
+    with open(tilegrid_path) as f:
+        grid = json.load(f)
+    subject = next((n for n, t in grid.items()
+                    if t["type"] == "RCLK_INTF_LEFT_TERM_ALTO"
+                    and (t.get("bits") or {}).get("CLB_IO_CLK")), None)
+    if subject is None:
+        sys.exit("self-test: no addressed RCLK_INTF_LEFT_TERM_ALTO to use")
+    b = grid[subject]["bits"]["CLB_IO_CLK"]
+    base, frames, off, words = (int(b["baseaddr"], 0), b["frames"],
+                                b["offset"], b["words"])
+    # Three inside, at both edges and the interior; two just outside, one by a
+    # word and one by a frame. Edges are where an inclusive/exclusive slip shows.
+    inside = [(base, off), (base + frames - 1, off + words - 1), (base + 1, off + 1)]
+    outside = [(base, off - 1), (base + frames, off)]
+    lines = [f'{{ unknown_bit = "{f:08x}_{w}_{i}" }}'
+             for i, (f, w) in enumerate(inside + outside)]
+    with tempfile.NamedTemporaryFile("w", suffix=".fasm", delete=False) as fh:
+        fh.write("\n".join(lines) + "\n")
+        path = fh.name
+    out = subprocess.run(
+        [sys.executable, os.path.abspath(__file__), path,
+         "--tilegrid", tilegrid_path, "--tile", subject],
+        capture_output=True, text=True).stdout
+    os.unlink(path)
+    print(out.rstrip())
+    want = f"{len(inside)} undecoded bit(s)"
+    if want not in out:
+        sys.exit(f"\nself-test FAILED: expected '{want}' for {subject}")
+    if "2 attributed to no tile" in out:
+        sys.exit("\nself-test FAILED: outside bits were attributed")
+    print(f"\nself-test OK: {len(inside)} planted inside the window were"
+          f" attributed to {subject},")
+    print(f"              {len(outside)} planted outside it were not")
+    return 0
+
+
 def main():
     ap = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("fasm", help="output of bit2fasm.py --verbose")
+    ap.add_argument("fasm", nargs="?", help="output of bit2fasm.py --verbose")
     ap.add_argument("--tilegrid", default=os.path.join(
         os.environ.get("URAY_FAMILY_DIR", ""),
         os.environ.get("URAY_PART", ""), "tilegrid.json"))
     ap.add_argument("--tile", action="append", default=[],
                     help="report only these tiles (repeatable)")
+    ap.add_argument("--self-test", action="store_true",
+                    help="plant bits with a known answer and verify them")
     args = ap.parse_args()
+
+    if args.self_test:
+        return self_test(args.tilegrid)
+    if not args.fasm:
+        ap.error("a FASM file is required unless --self-test is given")
 
     with open(args.tilegrid) as f:
         grid = json.load(f)
@@ -133,7 +187,7 @@ def main():
             else:
                 state = f"{n} undecoded bit(s)"
             print(f"  {name:44s} {state}")
-            for other, k in shared_with.get(name, {}).most_common(3):
+            for other, k in shared_with.get(name, collections.Counter()).most_common(3):
                 print(f"      {k} of them also lie in {other}"
                       " -- ambiguous, not proof")
         return 0

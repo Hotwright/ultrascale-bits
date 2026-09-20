@@ -104,6 +104,11 @@ PY
 
 echo
 echo "=== 3. where the undecoded bits are ==="
+# A regex or window-arithmetic bug in the locator reports zero bits, and zero
+# reads as "Vivado set nothing there" -- the opposite conclusion. Check the
+# tool before believing it.
+python3 "$R/tools/locate_unknown_bits.py" --self-test --tilegrid "$TG" \
+    | tail -3 || exit 1
 python3 "$R/tools/locate_unknown_bits.py" "$OUT/specimen.fasm" \
     --tilegrid "$TG" | head -30
 
