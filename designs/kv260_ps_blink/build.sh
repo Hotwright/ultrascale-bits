@@ -27,6 +27,12 @@ yosys -q -p "read_verilog blink_ps.v
 # prjuray's assembler does not ignore a feature it has never heard of --
 # fasm_assembler.py collects every one and raises FasmLookupError, so a single
 # stray name makes fasm2bit.py refuse the whole file. --filter writes a copy
-# with the unknowns removed and names each one. SCOPE-K26.md says which tile
-# types those are and why dropping them is safe.
+# with the unknowns removed and names each one.
+#
+# Dropping them is NOT known to be safe. Two of the eleven -- the HDISTR
+# enables in RCLK_CLEM_CLKBUF_L and RCLK_RCLK_XIPHY_INNER_FT -- are on the
+# clock spine in tile types the ZU3EG does not have, so prjuray-db has nothing
+# for them and every characterised sibling does carry the enable. See
+# SCOPE-K26.md; tools/explain_missing_feature.py gives the verdict per
+# feature, and env/reference_build.sh is what settles it.
 python3 "$ROOT/tools/check_fasm_vs_uraydb.py" blink_ps.fasm --filter blink_ps.filtered.fasm
