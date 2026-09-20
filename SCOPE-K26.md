@@ -441,12 +441,48 @@ Both `build.sh` scripts run it. On the PS design it drops exactly 11:
   shows the pad-to-fabric direction of that tile is unconditional wiring, fan-in
   1, with nothing to configure.
 * 3 `WIRE.CLK_HDISTR_*.USED.V1`, in `RCLK_RCLK_XIPHY_INNER_FT`,
-  `RCLK_INTF_LEFT_TERM_ALTO` and `RCLK_CLEM_CLKBUF_L` -- three tile types with
-  no segbits file at all. **These are the real risk.** All three sit on the
+  `RCLK_INTF_LEFT_TERM_ALTO` and `RCLK_CLEM_CLKBUF_L`. All three sit on the
   clock spine at Y149, between the PS clock buffer and the leaf buffer that
   feeds the flip-flops. If the distribution track needs a per-tile enable in
-  each, dropping them means the clock never arrives and the LEDs never blink.
-  Nothing measured so far says either way; the reference build below settles it.
+  each, dropping one means the clock never arrives and the LEDs never blink.
+
+  **This has now been measured, and the three split two to one.**
+  `tools/explain_missing_feature.py` asks the question that matters: is the
+  feature missing because the fuzzer looked and found nothing, or because it
+  never looked? The two call for opposite responses, and the answer is in
+  prjuray-db already.
+
+  Every `.USED.` bit in every RCLK tile type was solved by one fuzzer,
+  `060-rclk-seed`. So where a tile type has a segbits file, that fuzzer
+  reached it, and an absent feature family is a **solved negative**.
+
+  | tile type | on the ZU3EG | segbits | `CLK_HDISTR.*USED` | verdict |
+  | --- | ---: | --- | ---: | --- |
+  | `RCLK_INTF_LEFT_TERM_ALTO` | 3 | yes, 456 bits | **0** (48 `CLK_HROUTE`) | solved negative -- **safe** |
+  | `RCLK_CLEM_CLKBUF_L` | **0** | none | -- | coverage gap |
+  | `RCLK_RCLK_XIPHY_INNER_FT` | **0** | none | -- | coverage gap |
+
+  `RCLK_INTF_LEFT_TERM_ALTO` exists on the ZU3EG, was fuzzed, and got 48
+  `CLK_HROUTE` enables and **no** `CLK_HDISTR` ones. The enable does not exist
+  in that tile type; we over-emit and dropping it is right.
+
+  The other two **do not exist on the ZU3EG at all**, which is the whole
+  reason prjuray-db has nothing for them -- not a fuzzer that gave up, a die
+  that lacks the tiles. So nothing is known, and the analogy runs the wrong
+  way for us: the comparable characterised tile types do have the bits.
+  `RCLK_DSP_INTF_CLKBUF_L`, the other CLKBUF tile, carries 48 `CLK_HDISTR_L`
+  plus 48 `CLK_HDISTR_R` enables; `RCLK_XIPHY_OUTER_RIGHT` carries 48. Plain
+  pass-through RCLK tiles (`RCLK_CLEM_L`, `RCLK_CLEM_R`, `RCLK_CLEL_L_L`)
+  carry 12 USED bits each and **none is HDISTR** -- only VDISTR/VROUTE. The
+  consistent physical reading is that HDISTR is a buffered horizontal spine
+  whose enable lives in the tiles that re-drive it, and `RCLK_CLEM_CLKBUF_L`
+  is by its name one of those.
+
+  **So the two dropped `CLKBUF`/`XIPHY_INNER` enables are probably real bits
+  we are failing to set.** The fix is not a guess: run `060-rclk-seed` on the
+  XCK26 after `002-tilegrid` lands. Because this die *has* these tiles, its
+  random clock designs will route through them and solve what the ZU3EG never
+  could. That is ~405 specimens, so budget hours, not minutes.
 
 | tile type | known | unknown | % |
 | --- | ---: | ---: | ---: |
