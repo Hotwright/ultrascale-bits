@@ -727,6 +727,97 @@ falsified. Reading the Tcl settled every one of them in minutes.
   number (`BUFCE_LEAF_X0Y2` is `CLK_LEAF_SITES_3`). Hence the generated table
   `tools/gen_usp_bufce_leaf.py`.
 
+## 002-tilegrid does not solve every tile, and it fails quietly
+
+Running 002 to completion is not the same as having a base address for every
+tile. On this die it leaves three distinct kinds of hole, and none of them is
+announced.
+
+**segmatch writes placeholders, and add_tdb.py died on them.** When a tag
+cannot be solved, `segmatch` emits `<const0>`, `<const1>` or `<K candidates>`
+in place of an address; when it solves a tag to the *wrong* bit, the tag's own
+DFRAME/DWORD deltas land the base off a 0x100 boundary. `add_tdb.py` fed both
+straight into `int(x, 16)` and an alignment assert, so a single bad line out of
+13920 aborted the entire tilegrid with a message naming neither the file nor
+the tile:
+
+    ValueError: invalid literal for int() with base 16: '<const0>'
+    AssertionError: Unaligned frame at 0x00001FF8
+
+Both are *expected* at a low rate. `<const0>` means the tag was never 1 in any
+specimen, which for a random-value fuzzer happens with probability `2**-N` per
+tile: at `N=15` across cle's 13920 tiles you expect ~0.4 of them, and this die
+produced exactly one — `CLEL_L_X11Y0`, confirmed 0 in all 15 `params.csv`.
+Do **not** re-run with a larger N to chase it; one tile is what chance
+predicts, and everything else here is structural, not statistical.
+
+`patches/prjuray-002-add-tdb-tolerate-unsolved.patch` makes both non-fatal and
+reports them per tile. `tools/audit_tilegrid_tdb.py` runs the same checks up
+front and answers the question that matters — is the tile recoverable from its
+column? On this die: 535 broken tags, 57 recoverable locally, the rest needing
+a different source.
+
+**The INT gap is structural and shaped.** `clel_int` and `clem_int` between
+them solve 9713 of the die's 10320 INT tiles. The 88 they never emit at all sit
+at exactly four Y values: **Y31, Y91 and Y151 in the 15 DSP-adjacent columns,
+and Y239 — the top row — in all 43.** Two of them, `INT_X0Y239` and
+`INT_X7Y151`, are used by the reference designs. The ZU3EG reference database
+has all 5940 of its INT tiles solved, so this is a property of our run, not of
+prjuray.
+
+`tools/fill_int_tilegrid.py` closes it **from measurement, not inference**:
+
+* `RCLK_INT_L` / `RCLK_INT_R` sit in the *same frame column* as the INT tiles
+  beside them — which is exactly why `add_tdb.py` hands them INT's own
+  `frames`/`words`. `rclk_int` solved all 43 columns with zero broken tags, and
+  on the 41 columns where both are solved the two agree **41/41, 0 disagree**.
+  That also supplies X34 and X42, whose INT tiles are unsolved end to end.
+* the row field and `frames`/`words`/`offset` are functions of Y, and the tool
+  *verifies* that before relying on it rather than assuming it.
+* only a Y solved nowhere on this die (Y0 and Y239) falls back to the
+  read-only ZU3EG reference.
+
+Cross-validation predicts all 9713 already-solved tiles: **9713 right, 0
+wrong**. INT goes to 10320/10320.
+
+**The offset law, confirmed on two dies and two tile types:**
+
+    offset = 3*(Y % 60) + 6 if (Y % 60) >= 30 else 3*(Y % 60)
+
+The `+6` is the RCLK row, which sits at position 29 within each 60-row clock
+region. It holds on all 60 Y%60 values of INT and all 24 of
+`INT_INTF_R_PCIE4`, on both the XCK26 and the ZU3EG — 168 points, no
+exceptions. The last row of every region therefore has offset **183**, which is
+how Y239 is known without ever having been fuzzed.
+
+**`INT_INTF_R_PCIE4` is an upstream gap, not ours.** 95 of 480 solved here, and
+95 of 360 in the reference — with *identical* Y%60 coverage
+(`0,2,4,6,10,12,...` and never 30). That pattern is structural to the fuzzer,
+so more specimens will not close it. Its `PIP.IMUXOUT*.IMUX*` lines are what
+`check_fasm_vs_uraydb.py --filter` drops, and `make_bitstream.sh` consumes the
+filtered file, so it does not block a bitstream.
+
+**`RCLK_CLEM_CLKBUF_L` and `RCLK_RCLK_XIPHY_INNER_FT` do not exist on the
+ZU3EG at all** (0 tiles in the reference). `tools/fill_rclk_baseaddr.py` gives
+them base addresses; their `.USED.` segbits would need `060-rclk-seed`, which
+has not been run. Both are filtered out of the designs today.
+
+### `git apply --check` is not evidence that a patch belongs somewhere
+
+`env/apply_patches.sh` originally searched for each patch's root by trying
+candidates until `git apply --check` succeeded, and on its first run placed two
+patches into `prjuray/third_party/VexRiscv`, which shares no file with either
+project. `git apply --check` *succeeds* on a wrong root precisely when the
+patch's paths are absent there, because creating files is a legal patch. The
+script now uses an explicit `(patch, root, strip, tool)` table and requires
+every target to already exist; `--self-test` asserts VexRiscv is rejected and
+prints that `git apply --check` still accepts it.
+
+Note also that `prjuray/third_party/VexRiscv` is **not its own git repo** — a
+`git -C` there walks up to prjuray's root, so `git status` run inside it lists
+*prjuray's* modified files. That is alarming to read and easy to misdiagnose as
+the patches having been destroyed.
+
 ## Open, in priority order
 
 1. **No `part.yaml` or `tilegrid.json` for the XCK26**, so
