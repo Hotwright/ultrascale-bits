@@ -25,7 +25,18 @@ source "$R/env/uray_env.sh" zynq_usp_5ev || exit 1
 export PYTHONPATH="$R/prjuray:${PYTHONPATH:-}"
 
 SRC="${REF_SRC:-$( ls "$D"/*.v | head -1 )}"
-XDC="${REF_XDC:-$( ls "$D"/*.xdc | head -1 )}"
+# Prefer a Vivado-spelled XDC if the design ships one. The nextpnr file is not
+# valid Tcl -- `[get_ports pmod[0]]` runs a command named `0` -- and it uses
+# LOC where Vivado wants PACKAGE_PIN. Constraining the two tools differently
+# would make the whole comparison meaningless, so this is not cosmetic.
+XDC="${REF_XDC:-$( ls "$D"/*_vivado.xdc 2>/dev/null | head -1 )}"
+if [ -z "$XDC" ]; then
+    XDC="$( ls "$D"/*.xdc | grep -v _vivado | head -1 )"
+    echo "WARNING: $(basename "$D") has no *_vivado.xdc, falling back to" >&2
+    echo "         $(basename "$XDC"), which Vivado will almost certainly" >&2
+    echo "         reject: an unbraced [get_ports foo[0]] is a Tcl command" >&2
+    echo "         substitution, and LOC is not PACKAGE_PIN." >&2
+fi
 OURS="${REF_OURS:-$( ls "$D"/*.fasm | grep -v filtered | head -1 )}"
 OUT="$D/reference"
 
