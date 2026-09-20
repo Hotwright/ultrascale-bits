@@ -17,6 +17,15 @@ set_property LOC B11 [get_ports pmod[7]]
 # 16 minutes of CPU on a 45-cell design. Giving it a real clock-capable pin
 # bounds the search.
 #
-# NOTE: for the board this should come from PS8 pl_clk0 instead, needing no
-# pin at all. This constraint exists to exercise the chipdb end to end.
-set_property LOC F11 [get_ports clk]
+# F12 is IO_L6P_HDGC_45 -- the P side of a clock-capable differential pair.
+# F11, used here before, is the N side of that same pair, and an N-side CCIO
+# cannot drive the global clock network. Vivado enforces that:
+#   ERROR: [DRC PLIO-9] Placement Constraints Check for IO constraints: The
+#   following clock source has been LOCed to a N-Type CCIO : clk
+# nextpnr does not run that check, so it placed F11 happily and the result
+# would not have worked on silicon.
+#
+# NOTE: on the actual board this clock should come from PS8 pl_clk0, needing no
+# pin at all -- the KV260 PMOD is output-only and cannot supply a clock. This
+# constraint exists to exercise the chipdb end to end.
+set_property LOC F12 [get_ports clk]
