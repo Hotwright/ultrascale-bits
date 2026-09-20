@@ -126,9 +126,15 @@ if python3 "$R/tools/fill_int_tilegrid.py" "$TG" --cross-validate \
     [ -s "$TG.int" ] && mv "$TG.int" "$TG" && echo "  INT fill applied to $TG"
 else
     rm -f "$TG.int"
-    echo "  INT fill REFUSED -- tilegrid left untouched (see the message above)"
+    # Fatal, not a warning. A refusal means a tile the designs use may have no
+    # frame window, and that surfaces later as a FasmLookupError blaming a
+    # missing SEGBIT -- the misdiagnosis this whole file exists to prevent.
+    echo "  INT fill REFUSED -- tilegrid left untouched (see the message above)" >&2
+    exit 1
 fi
-# Record what we produced, so the next run can tell our output from a fresh push.
+# Record what we produced, so the next run can tell our output from a fresh
+# push. Only on the path where both fills succeeded: stamping a partial result
+# would stop the next run refreshing .orig from a genuinely new push.
 sha256sum "$TG" | cut -d" " -f1 > "$TG.stamp"
 
 echo "=== 2. round-trip smoke test ==="

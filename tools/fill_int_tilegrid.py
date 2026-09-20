@@ -118,6 +118,26 @@ def reference_geometry(ref_path, y, rows_per):
     if not ref_path or not os.path.exists(ref_path):
         return None, "no reference database given"
     ref = json.load(open(ref_path))
+    # Reading a row by (Y % rows_per) is only meaningful if the reference lays
+    # its clock regions out in the same height. That is true of the ZU3EG (60
+    # rows, like this die) but it is a property of the part, not a law, and a
+    # die with 50-row regions would silently hand back the offset of a
+    # different row. So infer it there the same way and require agreement.
+    rrow = collections.defaultdict(set)
+    for name, v in ref.items():
+        m = INT_RE.match(name)
+        if not m or not (v.get("bits") or {}):
+            continue
+        for b in v["bits"].values():
+            base = b["baseaddr"] if isinstance(b["baseaddr"], int) \
+                else int(str(b["baseaddr"]), 0)
+            rrow[int(m.group(2))].add(base & ROW_MASK)
+    ks = sorted(k for k, s2 in rrow.items() if len(s2) == 1)
+    ref_rows = next((y2 for y1, y2 in zip(ks, ks[1:])
+                     if rrow[y1] != rrow[y2]), None)
+    if ref_rows != rows_per:
+        return None, ("reference clock-region height %s != this die's %s"
+                      % (ref_rows, rows_per))
     want = y % rows_per                      # position within its clock region
     acc = collections.Counter()
     for name, v in ref.items():
