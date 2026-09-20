@@ -551,9 +551,25 @@ Both `build.sh` scripts run it. On the PS design it drops exactly 11:
   | sub-fuzzer | site it looks for | where that site lives on the XCK26 | confirmed |
   | --- | --- | --- | --- |
   | `rclk_pss_alto` | `BUFG_PS` | 96 in `RCLK_INTF_LEFT_TERM_ALTO` (4 tiles) | **built, solved** |
-  | `cmt_right` | `BUFCE_ROW` | 96 in `CMT_L` (4) | **yes** |
-  | `bitslice_tiles` | `BITSLICE_RX_TX` | 208 in `XIPHY_BYTE_L` (16) | **yes** |
+  | `cmt_right` | `BUFCE_ROW` | 96 in `CMT_L` (4) | **built, solved** |
+  | `bitslice_tiles` | `BITSLICE_RX_TX` | 208 in `XIPHY_BYTE_L` (16) | **fails, for a real reason** |
   | `hpio_right` | `HPIOB_M`/`_S` | 164 in `HPIO_L` (8) | not tested |
+
+  **`bitslice_tiles` genuinely cannot run on this part**, and this is the one
+  case where leaving it disabled was the right call for the wrong reason. Its
+  design routes each `BITSLICE_RX_TX` output to a package pad, and on
+  SFVC784 the adjacent IOBs are not brought out:
+
+      CRITICAL WARNING: [Constraints 18-5] Cannot loc instance 'tx_0' at site
+      BITSLICE_RX_TX_X0Y0, Site IOB_X1Y0 is not bonded. Place terminal out[0]
+      and connected instances in a site with a PAD
+
+  The K26 SOM does not bond those HP-bank pins, so the sites exist and the
+  fuzzer still cannot place its terminals. Fixing it would mean rewriting the
+  fuzzer not to need a pad, which no design here calls for -- `XIPHY_BYTE_L`
+  is not a tile type either blinky touches. `add_missing_tilegrid_fuzzers.sh`
+  leaves a failing sub-fuzzer out of the dependency list, which is exactly
+  what should happen here.
 
   "Confirmed" means its `top.py` was run against this die's basicdb and its
   `params.csv` came out naming exactly those tiles -- for `rclk_pss_alto`, the
