@@ -1,0 +1,130 @@
+--- nextpnr-xilinx/xilinx/arch.cc.orig	2026-09-19 14:10:19.177967700 -0700
++++ nextpnr-xilinx/xilinx/arch.cc	2026-09-19 17:12:12.175223200 -0700
+@@ -19,6 +19,7 @@
+  */
+ 
+ #include <algorithm>
++#include <chrono>
+ #include <boost/algorithm/string.hpp>
+ #include <boost/range/adaptor/reversed.hpp>
+ #include <cmath>
+@@ -767,6 +768,33 @@
+         if (!is_global)
+             continue;
+ 
++        // Diagnostics knobs: NEXTPNR_CLK_BFS_BUDGET bounds the uphill search,
++        // NEXTPNR_CLK_BFS_TRACE=1 reports progress. Both exist because this
++        // loop can run for tens of minutes on a large UltraScale+ device and
++        // there is otherwise no way to tell a slow search from a stuck one.
++        static const long clk_bfs_budget =
++                getenv("NEXTPNR_CLK_BFS_BUDGET") ? atol(getenv("NEXTPNR_CLK_BFS_BUDGET")) : 200000;
++        static const bool clk_bfs_trace = getenv("NEXTPNR_CLK_BFS_TRACE") != nullptr;
++        static const int clk_bfs_ms =
++                getenv("NEXTPNR_CLK_BFS_MS") ? atoi(getenv("NEXTPNR_CLK_BFS_MS")) : 15000;
++        static const int clk_bfs_every =
++                getenv("NEXTPNR_CLK_BFS_EVERY") ? atoi(getenv("NEXTPNR_CLK_BFS_EVERY")) : 1000;
++        // Escape hatch. On XCK26 this dedicated-clock BFS can wedge inside a
++        // single getPipsUphill() iteration: the deadline at the top of the
++        // loop never runs and the work counter stops decrementing, so neither
++        // a time nor an operation bound can observe it. Traced to a specific
++        // pop (321) after ~320 healthy pops through real clock resources.
++        //
++        // With this set, clock nets are left to the general router. That gives
++        // up the dedicated global clock tree - fine for a slow counter, NOT
++        // fine for anything that cares about skew - but it unblocks the rest
++        // of the flow while the iterator bug is outstanding.
++        static const bool skip_gclk = getenv("NEXTPNR_SKIP_GCLK") != nullptr;
++        if (skip_gclk) {
++            log_info("    skipping dedicated routing for clock '%s' (NEXTPNR_SKIP_GCLK)\n",
++                     clk_net->name.c_str(this));
++            continue;
++        }
+         log_info("    routing clock '%s'\n", clk_net->name.c_str(this));
+         bindWire(getCtx()->getNetinfoSourceWire(clk_net), clk_net, STRENGTH_LOCKED);
+ 
+@@ -785,7 +813,49 @@
+             }
+ 
+             visit.push(sink_wire);
+-            while (!visit.empty()) {
++            // A real dedicated clock route is a handful of hops through global
++            // resources. Without a bound this BFS explores general interconnect
++            // across the whole device once per sink - 30+ minutes of CPU for a
++            // 45-cell design on XCK26. Giving up after a budget costs nothing:
++            // the sink simply falls back to the general router below, exactly
++            // as it already does when no dedicated route exists.
++            // The budget counts PIP EXPANSIONS, not queue pops. Counting pops
++            // is useless here: a single wire on the UltraScale+ global clock
++            // spine has enormous uphill fanout, so one pop can iterate for
++            // minutes and the pop counter never advances. Observed directly -
++            // with a pop budget the trace printed "popped 1000, queue 74" and
++            // then produced nothing further for the rest of the run.
++            // Bound by WALL CLOCK, not by an operation count.
++            //
++            // Counting pips is the wrong meter here: only ~5 pips are yielded
++            // per pop, yet a pop costs ~45ms. The time goes into getPipsUphill
++            // SCANNING every tile wire of a node to find those few - a clock
++            // node can hold thousands of tile wires, and on a 373MB mmap'd
++            // chipdb each step is a cache miss. Both an earlier pop budget and
++            // a pip budget failed to fire for this reason while the search ran
++            // for 30+ minutes.
++            //
++            // A deadline needs no model of where the time goes. Exceeding it
++            // falls back to the general router, exactly as an unroutable sink
++            // already does.
++            auto clk_deadline = std::chrono::steady_clock::now() +
++                                std::chrono::milliseconds(clk_bfs_ms);
++            long work = long(clk_bfs_budget);
++            int popped = 0;
++            bool budget_hit = false;
++            while (!visit.empty() && !budget_hit) {
++                if ((popped & 0x3F) == 0 && std::chrono::steady_clock::now() > clk_deadline) {
++                    log_info("            dedicated clock search hit the %dms deadline after %d nodes.\n",
++                             clk_bfs_ms, popped);
++                    budget_hit = true;
++                    break;
++                }
++                if (clk_bfs_trace && (++popped % clk_bfs_every) == 0) {
++                    log_info("            ...bfs pop %d, queue %d, backtrace %d, work left %ld, wire %s\n", popped,
++                             int(visit.size()), int(backtrace.size()), work,
++                             visit.empty() ? "?" : nameOfWire(visit.front()));
++                    fflush(stdout);
++                }
+                 WireId curr = visit.front();
+                 visit.pop();
+                 if (getBoundWireNet(curr) == clk_net) {
+@@ -793,6 +863,12 @@
+                     break;
+                 }
+                 for (auto uh : getPipsUphill(curr)) {
++                    if (--work <= 0) {
++                        log_info("            giving up on dedicated clock search (budget spent, %d nodes popped).\n",
++                                 popped);
++                        budget_hit = true;
++                        break;
++                    }
+                     if (!checkPipAvail(uh))
+                         continue;
+                     WireId src = getPipSrcWire(uh);
+@@ -804,7 +880,20 @@
+                         intent == ID_NODE_CLE_OUTPUT || intent == ID_NODE_OPTDELAY || intent == ID_BENTQUAD ||
+                         intent == ID_DOUBLE || intent == ID_HLONG || intent == ID_HQUAD || intent == ID_OPTDELAY ||
+                         intent == ID_SINGLE || intent == ID_VLONG || intent == ID_VLONG12 || intent == ID_VQUAD ||
+-                        intent == ID_PINBOUNCE)
++                        intent == ID_PINBOUNCE ||
++                        // ID_PINBOUNCE is the 7-series spelling and never matches
++                        // an UltraScale+ device, which reports NODE_PINBOUNCE.
++                        // Same resource, so prune it for the same reason.
++                        intent == ID_NODE_PINBOUNCE ||
++                        // The global constant network. bbaexport builds ONE VCC
++                        // node and ONE GND node per device, each tied to every
++                        // tile, so stepping into either makes the frontier the
++                        // whole die. Traced on XCK26: popping
++                        // DSP_X12Y150/VCC_WIRE14 took the queue from 9 to 457 in
++                        // a single expansion and the search never recovered.
++                        // A clock is never routed through the constant network,
++                        // so this prunes nothing a clock could legally use.
++                        intent == ID_PSEUDO_GND || intent == ID_PSEUDO_VCC)
+                         continue;
+                     if (!checkWireAvail(src) && getBoundWireNet(src) != clk_net)
+                         continue;

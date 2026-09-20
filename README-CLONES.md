@@ -47,3 +47,35 @@ dropped so a pervasive failure cannot masquerade as a rare one. The run prints
 
 Check those numbers against device size before trusting the chipdb - a silently
 degraded routing graph shows up much later as an unroutable design.
+
+## nextpnr-xilinx patches for XCK26
+
+`patches/nextpnr-xilinx-usp-clock-bfs.patch` against `xilinx/arch.cc`. Three
+things, only the first of which is a clean fix:
+
+1. **Prune the global constant network from the dedicated-clock BFS.**
+   `bbaexport` builds one VCC node and one GND node per device, each tied to
+   every tile (`PSEUDO_GND: 1/112250`). Stepping into either makes the search
+   frontier the whole die - traced on XCK26, popping `DSP_X12Y150/VCC_WIRE14`
+   took the queue from 9 to 457 in a single expansion. A clock is never routed
+   through the constant network, so this removes nothing legal. Also prunes
+   `NODE_PINBOUNCE`: the existing `ID_PINBOUNCE` entry is the 7-series spelling
+   and never matches an UltraScale+ device.
+
+2. **Instrumentation**, behind environment variables, because without it there
+   is no way to tell a slow search from a wedged one:
+   `NEXTPNR_CLK_BFS_TRACE=1`, `NEXTPNR_CLK_BFS_EVERY=<n>` (trace every n pops;
+   note `EVERY=1` calls `nameOfWire()` per pop and is itself slow enough to
+   dominate the measurement - do not draw timing conclusions from it),
+   `NEXTPNR_CLK_BFS_BUDGET=<pips>`, `NEXTPNR_CLK_BFS_MS=<ms>`.
+
+3. **`NEXTPNR_SKIP_GCLK=1`** - leave clock nets to the general router.
+
+**Outstanding bug.** Even with (1), the BFS wedges on XCK26 inside a single
+`getPipsUphill()` iteration, at around pop 321 after ~320 healthy pops through
+real clock resources. Neither the millisecond deadline (checked at the top of
+the while loop) nor the pip budget (checked in the inner loop) can observe it,
+which localises it to `UphillPipIterator::operator++` not terminating. Until
+that is fixed, US+ runs need `NEXTPNR_SKIP_GCLK=1`, which **gives up the
+dedicated global clock tree** - acceptable for a slow blinker, not for anything
+skew-sensitive.
