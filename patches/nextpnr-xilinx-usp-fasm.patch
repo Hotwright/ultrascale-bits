@@ -1,0 +1,675 @@
+--- nextpnr-xilinx/xilinx/fasm.cc.orig	2026-09-19 18:10:06.243029900 -0700
++++ nextpnr-xilinx/xilinx/fasm.cc	2026-09-19 18:36:53.829128900 -0700
+@@ -209,6 +209,95 @@
+         }
+     }
+ 
++    // A bidirectional pip appears in the chipdb twice: bbaexport emits
++    // addPIP(p, false) then addPIP(p, true), so the canonical direction always
++    // has the lower tile-local index. prjuray distinguishes the two with a
++    // suffix -- INT.PIP.BYPASS_W14.INT_NODE_IMUX_50_INT_OUT0.FWD and .REV are
++    // separate features on separate bits. Returns "" for a one-way pip.
++    std::string usp_pip_direction_suffix(PipId pip)
++    {
++        auto &li = ctx->locInfo(pip);
++        auto &pd = li.pip_data[pip.index];
++        auto &dw = li.wire_data[pd.dst_index];
++        for (int k = 0; k < dw.num_downhill; k++) {
++            int idx = dw.pips_downhill[k];
++            if (li.pip_data[idx].dst_index == pd.src_index)
++                return (pip.index < idx) ? ".FWD" : ".REV";
++        }
++        return "";
++    }
++
++    // CLK_LEAF_SITES_<n>_CLK_IN -> BUFCE_LEAF_X<x>Y<y>, built once from the
++    // generated table. See tools/gen_usp_bufce_leaf.py for why a table.
++    std::unordered_map<std::string, std::string> usp_bufce_leaf;
++    bool usp_bufce_leaf_built = false;
++    void build_usp_bufce_leaf()
++    {
++        if (usp_bufce_leaf_built)
++            return;
++        usp_bufce_leaf_built = true;
++#define USP_BUFCE_LEAF(tt, wire, site) usp_bufce_leaf[std::string(tt) + "/" + (wire)] = site;
++#include "usp_bufce_leaf.inc"
++#undef USP_BUFCE_LEAF
++    }
++
++    // UltraScale+ route-throughs. A pip that passes through a site is not a
++    // routing bit; the site's own configuration is what selects the path, and
++    // prjuray has no pip feature for it at all -- writing one assembles to
++    // nothing, silently. Returns true when the pip was consumed here.
++    bool write_routethru_usp(PipId pip)
++    {
++        auto &li = ctx->locInfo(pip);
++        auto &pd = li.pip_data[pip.index];
++        std::string tt = IdString(li.type).str(ctx);
++        std::string dst = IdString(li.wire_data[pd.dst_index].name).str(ctx);
++        std::string src = IdString(li.wire_data[pd.src_index].name).str(ctx);
++
++        // The HDIOB output and input buffers. Configured by
++        // write_io_config_usp() as IOB_X<x>Y<y>.IOSTANDARD_{IN,OUT}.*, and
++        // prjuray has no HDIO_IOBPAIR pip feature at all.
++        if (boost::starts_with(dst, "HDIO_IOBPAIR_") || boost::starts_with(src, "HDIO_IOBPAIR_"))
++            return true;
++        // The HDIO input flip-flop bypass. prjuray has no IPFF feature of any
++        // kind for these tiles, so there is nothing to write.
++        if (boost::contains(dst, "_IPFF") || boost::contains(src, "_IPFF"))
++            return true;
++
++        // The leaf clock buffer. dump_features.tcl: a pip in RCLK_INT_L/R whose
++        // downhill wire is CLK_LEAF_SITES_*_CLK_LEAF and whose uphill wire ends
++        // _CLK_IN yields <site>.BUFCE_LEAF.IN_USE.V1.
++        if ((tt == "RCLK_INT_L" || tt == "RCLK_INT_R") && boost::starts_with(dst, "CLK_LEAF_SITES_") &&
++            boost::ends_with(dst, "_CLK_LEAF") && boost::ends_with(src, "_CLK_IN")) {
++            build_usp_bufce_leaf();
++            auto it = usp_bufce_leaf.find(tt + "/" + src);
++            if (it == usp_bufce_leaf.end()) {
++                log_warning("no BUFCE_LEAF site known for %s.%s; regenerate usp_bufce_leaf.inc\n", tt.c_str(),
++                            src.c_str());
++                return true;
++            }
++            push(get_tile_name(pip.tile));
++            push(it->second);
++            push("BUFCE_LEAF");
++            write_choice("IN_USE", "V1");
++            pop(3);
++            return true;
++        }
++
++        // The clock tri-state/ESD driver. prjuray has a pip feature for what
++        // drives ITS output onward (CLK_BUFCE_ROW_FSR_n_CLK_IN <- ..._SCHMITT_B)
++        // but none for the track that drives the driver: that is carried by
++        // WIRE.CLK_VDISTR_*.USED.V1, which write_clocking_usp() emits.
++        if (boost::contains(dst, "CLK_CMT_DRVR_TRI_ESD") && boost::ends_with(dst, "_SCHMITT_B"))
++            return true;
++
++        // The row clock buffer. prjuray has a pip feature for its INPUT mux
++        // (CLK_BUFCE_ROW_FSR_n_CLK_IN <- ...) but none for the buffer itself.
++        if (boost::starts_with(dst, "CLK_BUFCE_ROW_FSR") && boost::ends_with(dst, "_CLK_OUT"))
++            return true;
++
++        return false;
++    }
++
+     void write_pip(PipId pip, NetInfo *net)
+     {
+         const bool debug_this = false;
+@@ -279,7 +368,25 @@
+             if (!pp.empty())
+                 last_was_blank = false;
+         } else {
+-            if (pd.extra_data == 1)
++            if (!ctx->xc7 && write_routethru_usp(pip))
++                return;
++            if (pd.extra_data == 1 && getenv("NEXTPNR_RT_TRACE")) {
++                auto &li = ctx->locInfo(pip);
++                auto &sw = li.wire_data[pd.src_index];
++                auto &dw = li.wire_data[pd.dst_index];
++                auto sitename = [&](int si) {
++                    if (si < 0 || si >= ctx->chip_info->tile_insts[pip.tile].num_sites)
++                        return std::string("-");
++                    auto &s = ctx->chip_info->tile_insts[pip.tile].site_insts[si];
++                    return std::string(s.name.get()) + " rel=X" + std::to_string(s.rel_x) + "Y" +
++                           std::to_string(s.rel_y);
++                };
++                log_info("RT %s  %s <- %s | pip.site=%s dstwire.site=%s srcwire.site=%s dstbelpins=%d srcbelpins=%d\n",
++                         get_tile_name(pip.tile).c_str(), IdString(dw.name).c_str(ctx), IdString(sw.name).c_str(ctx),
++                         sitename(pd.site).c_str(), sitename(dw.site).c_str(), sitename(sw.site).c_str(),
++                         dw.num_bel_pins, sw.num_bel_pins);
++            }
++            if (pd.extra_data == 1 && ctx->xc7)
+                 log_warning("Unprocessed route-thru %s.%s.%s\n!", get_tile_name(pip.tile).c_str(),
+                             IdString(ctx->locInfo(pip).wire_data[pd.dst_index].name).c_str(ctx),
+                             IdString(ctx->locInfo(pip).wire_data[pd.src_index].name).c_str(ctx));
+@@ -322,9 +429,18 @@
+                     return; // missing, not sure if really a ppip?
+             }
+ 
++            // prjxray spells a routing bit TILE.DST.SRC; prjuray puts a PIP
++            // level in between -- TILE.PIP.DST.SRC -- see
++            // prjuray-db/zynqusp/segbits_int.db, e.g.
++            //   INT.PIP.BOUNCE_E_0_FT1.INODE_E_1_FT1 64_00 !66_00 ...
+             out << tile_name << ".";
++            if (!ctx->xc7)
++                out << "PIP.";
+             out << dst_name << ".";
+-            out << src_name << std::endl;
++            out << src_name;
++            if (!ctx->xc7)
++                out << usp_pip_direction_suffix(pip);
++            out << std::endl;
+ 
+             if (boost::contains(tile_name, "IOI") && boost::starts_with(dst_name, "IOI_OCLK_")) {
+                 dst_name.insert(dst_name.find("OCLK") + 4, 1, 'M');
+@@ -334,6 +450,8 @@
+                 NPNR_ASSERT(w != WireId());
+                 if (ctx->getBoundWireNet(w) == nullptr) {
+                     out << tile_name << ".";
++                    if (!ctx->xc7)
++                        out << "PIP.";
+                     out << dst_name << ".";
+                     out << src_name << std::endl;
+                 }
+@@ -686,6 +804,281 @@
+         pop(3);
+     }
+ 
++    // ------------------------------------------------------------------
++    // UltraScale+ CLE
++    //
++    // Three things differ from 7-series and all three change the feature
++    // name, so none of the writers above can be reused:
++    //
++    //  1. The tile holds ONE slice of eight LUTs (A..H), not two of four,
++    //     so there is no SLICE*_X* level at all. prjuray writes
++    //     CLEM_X7Y153.ALUT.INIT[63:0], not ...SLICEL_X0.ALUT.INIT[63:0].
++    //  2. Booleans are an explicit two-sided choice -- CLKINV.V0 / .V1,
++    //     MODE.FF / .LATCH -- and BOTH sides can carry set bits. AFF.INIT.V0
++    //     SETS 12_02 while .V1 clears it, so "write the bit only when true",
++    //     which is what write_bit() does, would silently drop it.
++    //  3. Flip-flop control is grouped per half (ABCD / EFGH) with a separate
++    //     CE/SR pair for each of the two FF ranks: ABCDFF carries CLKINV,
++    //     SRINV, MODE and SYNC plus rank-1 CEUSED/SRUSED, and ABCDFF2
++    //     carries only rank-2 CEUSED/SRUSED.
++    //
++    // Names checked against prjuray-db/zynqusp/segbits_clem.db.
++    static const char *cle_letters() { return "ABCDEFGH"; }
++
++    // Write an explicit .V0/.V1 choice.
++    void write_bool(const std::string &name, bool value)
++    {
++        write_prefix();
++        out << name << (value ? ".V1" : ".V0") << std::endl;
++    }
++
++    // Write an explicit named choice, e.g. write_choice("MODE", "LATCH").
++    void write_choice(const std::string &name, const std::string &value)
++    {
++        write_prefix();
++        out << name << "." << value << std::endl;
++    }
++
++    BelId get_site_bel_usp(int tile)
++    {
++        return ctx->getBelByLocation(Loc(tile % ctx->chip_info->width, tile / ctx->chip_info->width, 0));
++    }
++
++    void write_luts_config_usp(int tile)
++    {
++        auto lts = ctx->tileStatus[tile].lts;
++        if (lts == nullptr)
++            return;
++        std::string tname = get_tile_name(tile);
++        // CLEM / CLEM_R hold a SLICEM; CLEL_L / CLEL_R hold a SLICEL.
++        bool is_slicem = boost::starts_with(tname, "CLEM");
++        BelId site_bel = get_site_bel_usp(tile);
++        if (site_bel == BelId())
++            return;
++
++        push(tname);
++        bool wa7_used = false, wa8_used = false, wa9_used = false;
++        bool any_lut = false;
++
++        for (int i = 0; i < 8; i++) {
++            char c = cle_letters()[i];
++            CellInfo *lut6 = lts->cells[(i << 4) | BEL_6LUT];
++            CellInfo *lut5 = lts->cells[(i << 4) | BEL_5LUT];
++            if (lut6 != nullptr || lut5 != nullptr) {
++                any_lut = true;
++                push(std::string("") + c + std::string("LUT"));
++                write_vector("INIT[63:0]", get_lut_init(lut6, lut5));
++
++                bool is_small = false, is_ram = false, is_srl = false;
++                for (int j = 0; j < 2; j++) {
++                    CellInfo *lut = (j == 1) ? lut5 : lut6;
++                    if (lut == nullptr)
++                        continue;
++                    std::string type = str_or_default(lut->attrs, id_X_ORIG_TYPE);
++                    if (type == "RAMD64E" || type == "RAMS64E") {
++                        is_ram = true;
++                    } else if (type == "RAMD32" || type == "RAMS32") {
++                        is_ram = true;
++                        is_small = true;
++                    } else if (type == "SRL16E") {
++                        is_srl = true;
++                        is_small = true;
++                    } else if (type == "SRLC32E") {
++                        is_srl = true;
++                    }
++                    wa7_used |= (lut->getPort(id_WA7) != nullptr);
++                    wa8_used |= (lut->getPort(id_WA8) != nullptr);
++                    wa9_used |= (lut->getPort(id_WA9) != nullptr);
++                }
++                // MODE and SIZE exist only where the LUT can be memory. A
++                // SLICEL cannot, and prjuray has no CLEL_L/CLEL_R entry for
++                // either -- emitting them there assembles to nothing at all.
++                if (is_slicem) {
++                    write_choice("MODE", is_ram ? "RAM" : is_srl ? "SRL" : "LUT");
++                    write_choice("SIZE", is_small ? "SMALL" : "LARGE");
++                } else if (is_ram || is_srl) {
++                    log_error("LUT memory placed on a SLICEL in tile %s\n", tname.c_str());
++                }
++                pop();
++            }
++            // OUTMUX<c> and, in a SLICEM, <c>LUT.DI1 come out of the chipdb
++            // with the names prjuray uses, so write_routing_bel() needs no help.
++            write_routing_bel(get_site_wire(site_bel, std::string("") + c + std::string("MUX")));
++        }
++
++        if (any_lut && is_slicem) {
++            write_bool("WA7USED", wa7_used);
++            write_bool("WA8USED", wa8_used);
++            write_bool("WA9USED", wa9_used);
++        }
++        pop();
++    }
++
++    void write_ffs_config_usp(int tile)
++    {
++        auto lts = ctx->tileStatus[tile].lts;
++        if (lts == nullptr)
++            return;
++        std::string tname = get_tile_name(tile);
++        push(tname);
++
++        // Per-half control state. [half][rank]; rank 1 is the only one that
++        // carries CLKINV / SRINV / MODE / SYNC.
++        struct CtrlGroup
++        {
++            bool used = false;
++            bool latch = false, sync = false, clkinv = false, srinv = false;
++            bool srused[2] = {false, false};
++            bool ceused[2] = {false, false};
++            bool rank_used[2] = {false, false};
++        } group[2];
++
++        for (int i = 0; i < 8; i++) {
++            int half = i / 4; // 0 = ABCD, 1 = EFGH
++            for (int j = 0; j < 2; j++) {
++                CellInfo *ff = lts->cells[(i << 4) | (j == 1 ? BEL_FF2 : BEL_FF)];
++                if (ff == nullptr)
++                    continue;
++                bool zrst = false;
++                bool zinit = (int_or_default(ff->params, id_INIT, 0) != 1);
++                bool negedge_ff = false, is_latch = false, is_sync = false;
++                std::string type = str_or_default(ff->attrs, id_X_ORIG_TYPE, "");
++                if (type == "FDRE" || type == "FDRE_1") {
++                    zrst = true;
++                    is_sync = true;
++                } else if (type == "FDSE" || type == "FDSE_1") {
++                    is_sync = true;
++                } else if (type == "FDCE" || type == "FDCE_1") {
++                    zrst = true;
++                } else if (type == "FDPE" || type == "FDPE_1") {
++                    // zrst stays false, async
++                } else if (type == "LDCE" || type == "LDPE") {
++                    zrst = (type == "LDCE");
++                    is_latch = true;
++                } else {
++                    log_error("unsupported FF type: '%s'\n", type.c_str());
++                }
++                negedge_ff = boost::ends_with(type, "_1");
++
++                // Per-FF init/reset value. Both sides carry bits, so always
++                // write one: AFF.INIT.V0 sets 12_02, AFF.INIT.V1 clears it.
++                push(get_bel_name(ff->bel));
++                write_choice("INIT", zinit ? "V0" : "V1");
++                write_choice("SRVAL", zrst ? "V0" : "V1");
++                pop();
++
++                NetInfo *sr = ff->getPort(id_SR), *ce = ff->getPort(id_CE);
++                auto &g = group[half];
++                g.used = true;
++                g.rank_used[j] = true;
++                g.latch = g.latch || is_latch;
++                g.sync = g.sync || is_sync;
++                g.clkinv = g.clkinv || negedge_ff || int_or_default(ff->params, id_IS_C_INVERTED) == 1;
++                // yosys spells "this FF has no reset" as SR tied to the constant
++                // VCC net with IS_R_INVERTED=1, so the effective reset is a
++                // constant 0. Testing only against GND, as the 7-series writer
++                // does, calls that a used reset and then SRINV.V1 has to undo
++                // it. Treat EITHER constant as unused and the question goes away.
++                bool sr_is_const = sr == nullptr || sr->name == ctx->id("$PACKER_GND_NET") ||
++                                   sr->name == ctx->id("$PACKER_VCC_NET");
++                g.srused[j] = g.srused[j] || !sr_is_const;
++                if (!sr_is_const)
++                    g.srinv = g.srinv || int_or_default(ff->params, id_IS_R_INVERTED) == 1 ||
++                              int_or_default(ff->params, id_IS_S_INVERTED) == 1;
++                g.ceused[j] = g.ceused[j] || (ce != nullptr && ce->name != ctx->id("$PACKER_VCC_NET"));
++
++                // FFMUX<c><1|2> input select.
++                write_routing_bel(ctx->getBelPinWire(ff->bel, id_D));
++            }
++        }
++
++        for (int half = 0; half < 2; half++) {
++            auto &g = group[half];
++            if (!g.used)
++                continue;
++            std::string base = half ? "EFGH" : "ABCD";
++            push(base + "FF");
++            write_choice("MODE", g.latch ? "LATCH" : "FF");
++            write_choice("SYNC", g.sync ? "SYNC" : "ASYNC");
++            write_bool("CLKINV", g.clkinv);
++            write_bool("SRINV", g.srinv);
++            write_bool("CEUSED", g.ceused[0]);
++            write_bool("SRUSED", g.srused[0]);
++            pop();
++            if (g.rank_used[1]) {
++                push(base + "FF2");
++                write_bool("CEUSED", g.ceused[1]);
++                write_bool("SRUSED", g.srused[1]);
++                pop();
++            }
++        }
++        pop();
++    }
++
++    void write_carry_config_usp(int tile)
++    {
++        auto lts = ctx->tileStatus[tile].lts;
++        if (lts == nullptr)
++            return;
++        CellInfo *carry = lts->cells[BEL_CARRY8];
++        if (carry == nullptr)
++            return;
++
++        push(get_tile_name(tile));
++        push("CARRY8");
++        write_choice("CARRY_TYPE", str_or_default(carry->params, id_CARRY_TYPE, "SINGLE_CY8"));
++
++        // Carry-in select. prjuray knows three states -- AX, V0, V1 -- and no
++        // CIN state, because a chained CARRY8 takes CIN from the tile below
++        // unconditionally. So write nothing when this cell is chained.
++        NetInfo *ax = carry->getPort(id_AX);
++        if (ax == nullptr) {
++            // A chained CARRY8 takes its carry-in from the CARRY8 below. prjuray
++            // fuzzes that state -- fuzzers/017-cle-precyinit emits the tag
++            // CARRY8.PRECYINIT_BOT.CIN -- but it is NOT in the solved database:
++            // segbits_clem.db carries only CARRY8.CI.{AX,V0,V1}, three of the
++            // four options in that tag group. Writing nothing leaves both bits
++            // (10_18, 14_01) clear, which is exactly CI.V0, constant zero -- so
++            // the chain would be quietly cut rather than obviously broken.
++            log_warning("CARRY8 at %s is chained, and CARRY8.CI.CIN has no entry in prjuray-db "
++                        "(only AX/V0/V1 of that tag group were solved). The carry-in bits will "
++                        "assemble as constant 0. Synthesise with -nocarry until this is "
++                        "characterised.\n",
++                        get_tile_name(tile).c_str());
++        } else {
++            if (ax->name == ctx->id("$PACKER_GND_NET"))
++                write_choice("CI", "V0");
++            else if (ax->name == ctx->id("$PACKER_VCC_NET"))
++                write_choice("CI", "V1");
++            else
++                write_choice("CI", "AX");
++        }
++
++        NetInfo *ex = carry->getPort(id_EX);
++        if (ex != nullptr) {
++            if (ex->name == ctx->id("$PACKER_GND_NET"))
++                write_choice("CI_TOP", "V0");
++            else if (ex->name == ctx->id("$PACKER_VCC_NET"))
++                write_choice("CI_TOP", "V1");
++            else
++                write_choice("CI_TOP", "EX");
++        }
++
++        // DI<n> picks between the matching LUT's second output (DI<n>) and the
++        // slice's <c>X input pin. Only the former carries a bit.
++        for (int i = 0; i < 8; i++) {
++            NetInfo *di = carry->getPort(ctx->id("DI[" + std::to_string(i) + "]"));
++            if (di == nullptr || di->driver.cell == nullptr)
++                continue;
++            CellInfo *drv = di->driver.cell;
++            bool from_lut = drv->bel != BelId() && drv->bel.tile == carry->bel.tile &&
++                            (ctx->locInfo(drv->bel).bel_data[drv->bel.index].z & 0xF) == BEL_5LUT;
++            write_choice("DI" + std::to_string(i),
++                         from_lut ? "DI" + std::to_string(i) : std::string("") + cle_letters()[i] + "X");
++        }
++        pop(2);
++    }
++
+     void write_logic()
+     {
+         std::set<int> used_logic_tiles;
+@@ -694,12 +1087,18 @@
+                 used_logic_tiles.insert(cell.second->bel.tile);
+         }
+         for (int tile : used_logic_tiles) {
+-            write_luts_config(tile, 0);
+-            write_luts_config(tile, 1);
+-            write_ffs_config(tile, 0);
+-            write_ffs_config(tile, 1);
+-            write_carry_config(tile, 0);
+-            write_carry_config(tile, 1);
++            if (ctx->xc7) {
++                write_luts_config(tile, 0);
++                write_luts_config(tile, 1);
++                write_ffs_config(tile, 0);
++                write_ffs_config(tile, 1);
++                write_carry_config(tile, 0);
++                write_carry_config(tile, 1);
++            } else {
++                write_luts_config_usp(tile);
++                write_ffs_config_usp(tile);
++                write_carry_config_usp(tile);
++            }
+             blank();
+         }
+     }
+@@ -1614,15 +2013,209 @@
+         }
+     }
+ 
++    // ------------------------------------------------------------------
++    // UltraScale+ IO and clocking
++    //
++    // The rules below are transcribed from prjuray's own model of a routed
++    // design, prjuray/tools/dump_features.tcl -- the Tcl that turns a Vivado
++    // result into the feature list its fuzzers then solve. That file, not the
++    // segbits, is the specification; the segbits only say which of those
++    // features were successfully solved.
++    pool<int> usp_hv_banks, usp_lv_banks;
++
++    // prjuray's site_index_in_tile: a site is named by its position within the
++    // tile, counted over every site sharing its NAME PREFIX.
++    //
++    // getSiteLocInTile() cannot be used for this. bbaexport computes rel_x/rel_y
++    // per site TYPE, and an HDIO tile holds HDIOB_M and HDIOB_S sites
++    // interleaved, so each type restarts at zero and the two collide: eight
++    // distinct pads came out as IOB_X0Y{0,2,4,6} with every name used twice.
++    // prjuray numbers them across both -- IOB_X0Y0 is the first HDIOB_M,
++    // IOB_X0Y1 the first HDIOB_S, and so on to IOB_X0Y11.
++    std::string usp_site_index_in_tile(BelId bel)
++    {
++        auto &ti = ctx->chip_info->tile_insts[bel.tile];
++        int si = ctx->locInfo(bel).bel_data[bel.index].site;
++        NPNR_ASSERT(si >= 0 && si < ti.num_sites);
++        std::string name = ti.site_insts[si].name.get();
++        auto xpos = name.rfind("_X");
++        std::string prefix = (xpos == std::string::npos) ? name : name.substr(0, xpos);
++        int min_x = ti.site_insts[si].site_x, min_y = ti.site_insts[si].site_y;
++        for (int i = 0; i < ti.num_sites; i++) {
++            std::string other = ti.site_insts[i].name.get();
++            auto opos = other.rfind("_X");
++            if (opos == std::string::npos || other.substr(0, opos) != prefix)
++                continue;
++            min_x = std::min(min_x, ti.site_insts[i].site_x);
++            min_y = std::min(min_y, ti.site_insts[i].site_y);
++        }
++        return prefix + "_X" + std::to_string(ti.site_insts[si].site_x - min_x) + "Y" +
++               std::to_string(ti.site_insts[si].site_y - min_y);
++    }
++
++    void write_io_config_usp(CellInfo *pad)
++    {
++        NetInfo *pad_net = pad->getPort(id_PAD);
++        NPNR_ASSERT(pad_net != nullptr);
++        std::string iostandard = str_or_default(pad->attrs, id_IOSTANDARD, "LVCMOS33");
++        std::string pulltype = str_or_default(pad->attrs, id_PULLTYPE, "NONE");
++        std::string slew = str_or_default(pad->attrs, id_SLEW, "SLOW");
++        int drive = int_or_default(pad->attrs, id_DRIVE, 12);
++
++        bool is_output = pad_net->driver.cell != nullptr;
++        bool is_input = false;
++        for (auto &usr : pad_net->users)
++            if (boost::contains(usr.cell->type.str(ctx), "INBUF"))
++                is_input = true;
++
++        // prjuray keys IOB features by the site's position WITHIN the tile --
++        // HDIO_TOP_RIGHT.IOB_X0Y7.PULLTYPE.NONE -- which is exactly what
++        // getSiteLocInTile() returns (SiteInstInfoPOD::rel_x / rel_y).
++        std::string tile = get_tile_name(pad->bel.tile);
++        push(tile);
++        push(usp_site_index_in_tile(pad->bel));
++        if (is_input)
++            write_choice("IOSTANDARD_IN", iostandard);
++        if (is_output) {
++            // dump_features.tcl writes $sn.IOSTANDARD_OUT.$iostd; 031-iob-spec
++            // folds drive and slew into that name, which is how the database
++            // spells it: LVCMOS33_IDRIVE_I12_SLEW_SLEW_SLOW.
++            write_choice("IOSTANDARD_OUT",
++                         iostandard + "_IDRIVE_I" + std::to_string(drive) + "_SLEW_SLEW_" + slew);
++            if (is_input)
++                write_choice("IOSTANDARD_IN_OUT", iostandard);
++        }
++        write_choice("PULLTYPE", pulltype);
++        pop(2);
++
++        // Bank voltage is a per-bank bit that lives in the HDIO_TOP_RIGHT tile.
++        if (boost::starts_with(tile, "HDIO_TOP_RIGHT")) {
++            bool low = iostandard == "LVCMOS12" || iostandard == "LVCMOS15" || iostandard == "LVCMOS18";
++            (low ? usp_lv_banks : usp_hv_banks).insert(pad->bel.tile);
++        }
++    }
++
++    void write_io_usp()
++    {
++        for (auto &cell : ctx->cells) {
++            CellInfo *ci = cell.second.get();
++            if (ci->type == id_IOB_PAD && ci->bel != BelId()) {
++                write_io_config_usp(ci);
++                blank();
++            }
++        }
++        for (int tile : usp_hv_banks) {
++            push(get_tile_name(tile));
++            write_choice("BANK_VOLTAGE", "HIGH_VOLTAGE");
++            pop();
++        }
++        for (int tile : usp_lv_banks) {
++            if (usp_hv_banks.count(tile))
++                log_error("tile %s has both a low- and a high-voltage IO standard\n", get_tile_name(tile).c_str());
++            push(get_tile_name(tile));
++            write_choice("BANK_VOLTAGE", "LOW_VOLTAGE");
++            pop();
++        }
++        blank();
++    }
++
++    // Clock distribution and route tracks carry a per-tile "this track is in
++    // use" bit, the UltraScale+ analogue of the 7-series HROW USED bits.
++    // dump_features.tcl applies it to two different wire sets depending on the
++    // tile type, so both lists are reproduced exactly.
++    static bool usp_wire_used_feature(const std::string &tt, const std::string &wire)
++    {
++        static const char *group_a[] = {"RCLK_BRAM_INTF_L",  "RCLK_BRAM_INTF_TD_L",      "RCLK_BRAM_INTF_TD_R",
++                                        "RCLK_CLEL_L_L",     "RCLK_CLEL_L",              "RCLK_CLEL_L_R",
++                                        "RCLK_CLEM_CLKBUF_L", "RCLK_CLEM_L",             "RCLK_DSP_INTF_L",
++                                        "RCLK_DSP_INTF_R",   "RCLK_RCLK_URAM_INTF_L_FT", "RCLK_CLEM_R",
++                                        "RCLK_CLEL_R",       "GTH_QUAD_RIGHT"};
++        static const char *group_b[] = {"RCLK_DSP_INTF_CLKBUF_L", "RCLK_CLEM_CLKBUF_L",
++                                        "RCLK_AMS_CFGIO",         "RCLK_INTF_LEFT_TERM_ALTO",
++                                        "RCLK_XIPHY_OUTER_RIGHT", "RCLK_RCLK_XIPHY_INNER_FT",
++                                        "RCLK_HDIO",              "GTH_QUAD_RIGHT"};
++        auto in = [&](const char *const *set, size_t n) {
++            for (size_t i = 0; i < n; i++)
++                if (tt == set[i])
++                    return true;
++            return false;
++        };
++        if (in(group_a, sizeof(group_a) / sizeof(*group_a)))
++            if (boost::starts_with(wire, "CLK_TEST_BUF_SITE_") || boost::starts_with(wire, "CLK_HROUTE_CORE_OPT") ||
++                boost::starts_with(wire, "CLK_VDISTR_BOT") || boost::starts_with(wire, "CLK_VDISTR_TOP") ||
++                boost::starts_with(wire, "CLK_VROUTE_BOT") || boost::starts_with(wire, "CLK_VROUTE_TOP"))
++                return true;
++        if (in(group_b, sizeof(group_b) / sizeof(*group_b)))
++            if (boost::starts_with(wire, "CLK_HROUTE") || boost::starts_with(wire, "CLK_HDISTR"))
++                return true;
++        if (tt == "CMT_L" || tt == "CMT_RIGHT")
++            if (boost::starts_with(wire, "CLK_HROUTE_") || boost::starts_with(wire, "CLK_HDISTR_") ||
++                boost::starts_with(wire, "CLK_VDISTR_") || boost::starts_with(wire, "CLK_TEST_BUF_SITE_"))
++                return true;
++        return false;
++    }
++
++    void write_clocking_usp()
++    {
++        // A distribution wire is a NODE spanning every tile in the row, so walk
++        // the node's tile wires rather than the WireId the router recorded.
++        // Marking the whole node used is what the node means -- the track is
++        // driven along its length -- and is what makes the clock arrive.
++        std::set<std::pair<int, std::string>> emitted;
++        for (auto &net : ctx->nets) {
++            NetInfo *ni = net.second.get();
++            for (auto &w : ni->wires) {
++                WireId wire = w.first;
++                auto visit = [&](int tile, int index) {
++                    if (tile < 0 || tile >= ctx->chip_info->num_tiles)
++                        return;
++                    auto &ti = ctx->chip_info->tile_insts[tile];
++                    auto &tt = ctx->chip_info->tile_types[ti.type];
++                    if (index < 0 || index >= tt.num_wires)
++                        return;
++                    std::string tts = IdString(tt.type).str(ctx);
++                    std::string wname = IdString(tt.wire_data[index].name).str(ctx);
++                    if (!usp_wire_used_feature(tts, wname))
++                        return;
++                    if (!emitted.insert({tile, wname}).second)
++                        return;
++                    push(std::string(ti.name.get()));
++                    push("WIRE");
++                    write_choice(wname + ".USED", "V1");
++                    pop(2);
++                };
++                if (wire.tile == -1) {
++                    auto &node = ctx->chip_info->nodes[wire.index];
++                    for (int i = 0; i < node.num_tile_wires; i++)
++                        visit(node.tile_wires[i].tile, node.tile_wires[i].index);
++                } else {
++                    visit(wire.tile, wire.index);
++                }
++            }
++        }
++        blank();
++    }
++
+     void write_fasm()
+     {
+         get_invertible_pins(ctx, invertible_pins);
+         write_logic();
+-        write_io();
++        if (ctx->xc7)
++            write_io();
++        else
++            write_io_usp();
+         write_routing();
+-        write_bram();
+-        write_clocking();
+-        write_ip();
++        if (ctx->xc7) {
++            write_bram();
++            write_clocking();
++            write_ip();
++        } else {
++            // BRAM, the PLL/MMCM and the DSP are not ported yet; the CLE, the
++            // IO and the clock tracks are. Anything using them will simply be
++            // missing its configuration rather than getting the 7-series one,
++            // which would be worse.
++            write_clocking_usp();
++        }
+     }
+ };
+ 
