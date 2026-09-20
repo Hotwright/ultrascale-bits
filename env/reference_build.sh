@@ -93,7 +93,8 @@ echo "=== IO tiles, bit for bit ==="
     -o "$OUT/ref.frames" "$OUT/ref.bit" >/dev/null || exit 1
 OURFRAMES="${OURS%.fasm}.frames"
 if [ -f "$OURFRAMES" ]; then
-    IOTILES=$(grep -ohE '^HDIO_[A-Z_]+_X[0-9]+Y[0-9]+' "$OURS" | sort -u | sed 's/^/--tile /')
+    # HDIO and HPIO both: an HPIO design would otherwise silently diff nothing.
+    IOTILES=$(grep -ohE '^H[DP]IO[A-Z_]*_X[0-9]+Y[0-9]+' "$OURS" | sort -u | sed 's/^/--tile /')
     python3 "$R/tools/diff_tile_bits.py" "$OUT/ref.frames" "$OURFRAMES" \
         --tilegrid "$URAY_FAMILY_DIR/$URAY_PART/tilegrid.json" \
         --segbits "$URAY_FAMILY_DIR/segbits_hdio_top_right.db" \

@@ -31,3 +31,9 @@
 # Setting it means OSERDES_T_BYPASS false on HDIOLOGIC_M_X0Y2, so the pad's
 # output enable would come from an OSERDES nothing configures.
 HDIO_TOP_RIGHT.IOB_X0Y4.IOSTANDARD_OUT.LVCMOS33_IDRIVE_I12_SLEW_SLEW_SLOW drop-bit 01_605
+
+# NOT corrected, deliberately: IOB_X0Y3, IOB_X0Y6 and IOB_X0Y9 carry a 27th bit
+# at the same relative offset too, but NEGATED (!01_413, !01_797, !01_1181). A
+# negated bit only ever clears, and the assembler only sets, so they cannot
+# corrupt anything. Left alone rather than "tidied" so this file stays a record
+# of bits that actually mattered.

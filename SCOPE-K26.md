@@ -974,15 +974,20 @@ rest. Of the 128 frames Vivado's dump has that our `.frames` does not, 127 are
 all-zero. The exception is `0x00083202`, where Vivado sets 8 bits and **no tile
 in our tilegrid owns the frame at all**: the column list runs `0x83100 HPIO_L`,
 then nothing, then `0x83300 CMT_L`. Those are part of the 17 undecoded bits
-`locate_unknown_bits.py` could attribute to no tile. Not on this design's path
--- the PMOD pins are HDIO in bank 45, not HPIO -- but it is a real hole in
-002's column coverage and the place to start if an HPIO design misbehaves.
+`locate_unknown_bits.py` could attribute to no tile.
+
+The column is the **XIPHY** one: every tile at X16/X17 without a base address
+includes `XIPHY_BYTE_L_X16Y*` and `RCLK_RCLK_XIPHY_INNER_FT_X16Y*`, because 002
+excludes `bitslice_tiles`. So this gap and the one unsettled clock-spine
+feature above are the same gap. Closing it means giving 002 a way to solve the
+XIPHY column on a part whose IOBs there are unbonded.
 
 
 
-### 3. What the reference settled about the clock spine
+### 3. What the reference settled about the clock spine — two of three
 
-`--filter` is right to drop the three `CLK_HDISTR_*.USED.V1` features. The class
+Of the three `CLK_HDISTR_*.USED.V1` features `--filter` drops, **two are
+verified over-emission and one is not settled.** The class
 diff shows `RCLK_INTF_LEFT_TERM_ALTO:WIRE.CLK_HDISTR_*.USED.*` is a class **only
 we emit**: Vivado configures that tile type (25 PIP + 24 WIRE features) and
 writes `CLK_HROUTE*.USED.*` there, never an HDISTR one, in any instance. For its
@@ -990,9 +995,19 @@ own equivalent route Vivado sets exactly one HDISTR enable,
 `RCLK_HDIO_X7Y149.WIRE.CLK_HDISTR_FT0_8.USED.V1`, in a tile we also emit. And
 `RCLK_CLEM_CLKBUF_L_X15Y149` -- which has a frame window from the fill and no
 segbits, so any set bit would show as undecoded -- has **0 undecoded bits**.
-nextpnr is marking `.USED` on every tile a distribution node passes through;
-only the endpoints carry a bit. `RCLK_RCLK_XIPHY_INNER_FT` still has no frame
-window, so it is the one tile this could not test.
+So for those two, nextpnr is marking `.USED` on every tile a distribution node
+passes through when only the endpoints carry a bit.
+
+`RCLK_RCLK_XIPHY_INNER_FT_X16Y149` is the one that is NOT settled, and the
+frame-column gap below is why. That tile sits in the unmapped X16 column,
+together with `XIPHY_BYTE_L` -- 002 excludes `bitslice_tiles` (unbonded IOBs on
+SFVC784), which is exactly why nothing there has a base address. Of the eight
+bits Vivado sets in `0x00083202`, seven land at 16-bit words 90-92 and one at
+word **94** -- and every RCLK tile on this die is `offset=93, words=3`, so that
+bit falls inside an RCLK window in that column at row Y149. It may well be the
+enable we are dropping. It cannot be attributed without a base address, and
+Vivado's route is track 8 while ours is track 0, so hand-setting its bit would
+prove nothing either. **The board discriminates this, not the reference build.**
 
 Beware the class diff's "classes ONLY in the reference (114)" list: `ref.fasm`
 is a full-die **decode** of 1.2M features and ours is a 9k **emit**, so it is
