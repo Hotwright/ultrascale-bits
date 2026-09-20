@@ -543,12 +543,23 @@ Both `build.sh` scripts run it. On the PS design it drops exactly 11:
   it, and none mentions its namesake tile type anywhere. The XCK26 simply has
   the left-hand variants where the ZU3EG had the right-hand ones.
 
-  | sub-fuzzer | site it looks for | where that site lives on the XCK26 |
-  | --- | --- | --- |
-  | `rclk_pss_alto` | `BUFG_PS` | 96 in `RCLK_INTF_LEFT_TERM_ALTO` (4 tiles) |
-  | `cmt_right` | `BUFCE_ROW` | 96 in `CMT_L` (4) |
-  | `bitslice_tiles` | `BITSLICE_RX_TX` | 208 in `XIPHY_BYTE_L` (16) |
-  | `hpio_right` | `HPIOB_M`/`_S` | 164 in `HPIO_L` (8) |
+  | sub-fuzzer | site it looks for | where that site lives on the XCK26 | confirmed |
+  | --- | --- | --- | --- |
+  | `rclk_pss_alto` | `BUFG_PS` | 96 in `RCLK_INTF_LEFT_TERM_ALTO` (4 tiles) | **yes** |
+  | `cmt_right` | `BUFCE_ROW` | 96 in `CMT_L` (4) | **yes** |
+  | `bitslice_tiles` | `BITSLICE_RX_TX` | 208 in `XIPHY_BYTE_L` (16) | **yes** |
+  | `hpio_right` | `HPIOB_M`/`_S` | 164 in `HPIO_L` (8) | not tested |
+
+  "Confirmed" means its `top.py` was run against this die's basicdb and its
+  `params.csv` came out naming exactly those tiles -- for `rclk_pss_alto`, the
+  four `RCLK_INTF_LEFT_TERM_ALTO` instances including `X0Y149`, the one this
+  design's clock goes through. No inference involved.
+
+  `hpio_right` was not tested only because its `top.py` reads
+  `general_purpose_io_sites.txt`, which its own Makefile generates during the
+  build; running `top.py` standalone skips that step. `hdio_top_right` and
+  `hdio_bot_right` use the same mechanism and are enabled and working, so
+  there is no reason to expect it to fail.
 
   **`rclk_pss_alto` is not optional.** `RCLK_INTF_LEFT_TERM_ALTO` is where
   `PL_CLK` enters the fabric -- our FASM's

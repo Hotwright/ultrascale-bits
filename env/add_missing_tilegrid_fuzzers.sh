@@ -12,6 +12,13 @@
 #   bitslice_tiles  BITSLICE_RX_TX 208 sites in XIPHY_BYTE_L            (16)
 #   hpio_right      HPIOB_M/S      164 sites in HPIO_L                   (8)
 #
+# The first three are confirmed rather than inferred: each top.py was run
+# against this die's basicdb and its params.csv named exactly those tiles.
+# hpio_right was not, only because its top.py reads general_purpose_io_sites.txt
+# which its own Makefile generates during the build, so a standalone run of
+# top.py skips it. hdio_top_right and hdio_bot_right work the same way and are
+# enabled and fine.
+#
 # rclk_pss_alto is not optional. RCLK_INTF_LEFT_TERM_ALTO is where PL_CLK
 # enters the fabric -- our FASM's PIP.CLK_BUFG_PS_0_CLK_IN.PS_TO_PL_CLK0 lives
 # there -- and without a base address fasm2bit cannot place a single bit in it.
