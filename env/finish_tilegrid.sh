@@ -45,6 +45,25 @@ for d in "$R"/designs/*/; do
 done
 
 echo
+echo "=== 0b. does every filtered tile type have a tile_type json? ==="
+# Database.__init__ enumerates tile_types/ and skips anything not there, so a
+# tile type with no tile_type_*.json fails the same way an unaddressed tile
+# does -- FasmLookupError blaming the segment DB. The directory is a symlink
+# into the READ-ONLY prjuray-db and holds the ZU3EG's 158 tile types; 002's
+# basicdb/tile_types comes out empty, so there is nothing else to fall back on.
+# After --filter the remaining types should all be covered, but check rather
+# than assume.
+for d in "$R"/designs/*/; do
+    f=$( ls "$d"*.filtered.fasm 2>/dev/null | head -1 )
+    [ -f "$f" ] || continue
+    miss=0
+    for t in $( sed 's/#.*//' "$f" | grep -oE '^[A-Z][A-Z0-9_]*_X[0-9]+Y[0-9]+\.'                 | sed 's/_X[0-9]*Y[0-9]*\.$//' | sort -u ); do
+        [ -f "$URAY_FAMILY_DIR/tile_types/tile_type_$t.json" ]             || { echo "  $(basename "$d"): NO tile_type_$t.json"; miss=1; }
+    done
+    [ "$miss" = 0 ] && echo "  $(basename "$d"): all tile types covered"
+done
+
+echo
 echo "=== 1. base addresses ==="
 python3 - "$TG" <<'PY'
 import json, sys, collections
