@@ -818,14 +818,86 @@ Note also that `prjuray/third_party/VexRiscv` is **not its own git repo** — a
 *prjuray's* modified files. That is alarming to read and easy to misdiagnose as
 the patches having been destroyed.
 
+## STATUS 2026-09-20: both designs assemble to a `.bit`, and it round-trips clean
+
+`tilegrid.json` is finished (25 147 408 bytes, 18/18 tdb from 002 plus
+`env/finish_tilegrid.sh`'s two derived fills), so `designs/make_bitstream.sh`
+now runs end to end with **no vendor tool**:
+
+| design | features asked for | observable | missing | frames | `.bit.bin` |
+| --- | --- | --- | --- | --- | --- |
+| `kv260_pmod_blink` | 919 over 41 tiles | 749 | **0** | 20812 | 7 798 008 B |
+| `kv260_ps_blink` | 9045 over 223 tiles | 8865 | **0** | 20812 | 7 798 008 B |
+
+"Observable" excludes the 170/180 bits whose segbits are entirely `!`-prefixed:
+those *clear* bits, so a bitstream containing the feature is identical to one
+without it and no decode can ever report it back. Requiring them would fail the
+build on features working exactly as intended.
+
+Load with `sudo fpgautil -b <name>.bit.bin -f Full`. **Nothing has been loaded
+on the board yet.**
+
+### Two defects in the round-trip check, found by running it
+
+It had never actually run: the comparison opened a `.roundtrip.fasm` that
+nothing in the script produced, so the step could only end in
+`FileNotFoundError`. With `bit2fasm` wired in, it then compared feature names
+as **strings**, and reported 20 missing features that were all present in the
+bitstream — verified by reading the frames directly. The assembler and the
+disassembler each spell an indexed feature any way that is FASM-equivalent: we
+write `CLEL_R_X6Y151.ALUT.INIT[63:0] = 64'h8000000000000000`, `bit2fasm` writes
+`CLEL_R_X6Y151.ALUT.INIT[63]`, and where the top bits are clear it narrows the
+range to `INIT[61:0]`. The dangerous direction is the other one: a string
+compare calls two identical spellings carrying **different values** a match,
+which is precisely the failure the check exists to catch. Both files are now
+folded to `{base feature -> integer mask}` and compared as numbers, with
+observability decided per bit from the per-bit segbits key.
+
+### prjuray tilegrid offsets are 16-bit words; the `.frames` file is 32-bit
+
+`prjuray-tools/prjuray/bitstream.py` sets `WORD_SIZE_BITS = 16` and
+`FRAME_WORD_COUNT = 93 * 2`. A US+ frame is 93 **32-bit** words and that is
+what a `.frames` line carries, but `tilegrid.json`'s `offset`/`words` and a
+segbits `FF_BB` offset are in **16-bit** units — which is why offsets run to
+186. `offset: 99` against a 93-word frame line looks like a corrupt database
+and is not. To read one segbit out of a `.frames` file:
+
+```python
+fo, bo = (int(x) for x in segbit.split("_"))   # e.g. "08_00"
+frame  = baseaddr + fo
+bitidx = offset * 16 + bo
+w16, b16 = bitidx // 16, bitidx % 16
+w32, b32 = w16 // 2, b16 + (w16 & 1) * 16      # fasm2bit.py:40,53
+bit = (frame_words[w32] >> b32) & 1
+```
+
+### prjuray-db has at least one physical bit claimed by two features
+
+```
+HDIO_TOP_RIGHT.IOB_X0Y3.PULLTYPE.NONE                       !00_397 !01_396 01_397
+HDIO_TOP_RIGHT.HDIOLOGIC_M_X0Y1.OPTFF...IS_CLK_INVERTED.V0   01_397
+```
+
+Two fuzzers, one of them `031-iob-spec`, solved the same bit. Harmless as we
+use it — `PULLTYPE.NONE` sets it and the decode gains a phantom
+`IS_CLK_INVERTED.V0` — but a FASM emitting `IS_CLK_INVERTED.V1` would clear it
+and silently turn that pin's `PULLTYPE.NONE` into `PULLDOWN`. Our FASM emits no
+HDIOLOGIC features, so it cannot happen today. Assume there are others; the way
+to find them is the round-trip decode, looking only at decoded features that
+*set* bits and were never asked for. Of the 4730 features the pmod decode
+reports in tiles we configured, 4709 are clear-only — the default encoding an
+all-clear region legitimately decodes to — and 16 are narrowed spellings of
+ours. Five set bits, four of those are ours, and the fifth is the collision
+above.
+
 ## Open, in priority order
 
-1. **No `part.yaml` or `tilegrid.json` for the XCK26**, so
-   `prjuray/utils/fasm2bit.py` cannot run at all and there is still no `.bit`.
-   prjuray-db ships part directories for two ZU3EG parts only. `001-part-yaml`
-   is one Vivado run — `gen_part_base_yaml` off a per-frame-CRC bitstream.
-   `002-tilegrid` has 20 sub-fuzzers and is the long pole. **This is
-   characterisation, run once per die, not Vivado in the design loop.**
+1. **DONE.** `part.yaml` and `tilegrid.json` both exist for the XCK26 and
+   `fasm2bit.py` produces a `.bit` for both designs — see the 2026-09-20 status
+   above. What remains of this item: `RCLK_RCLK_XIPHY_INNER_FT` (4 tiles) still
+   has no base address, since its column span is undetermined by the data, and
+   `INT_INTF_R_PCIE4` is 95/480, an upstream gap the ZU3EG reference shares.
+   Both are filtered out of both designs, so neither blocks a bitstream.
 
 2. **`CARRY8.CI.CIN` is absent from prjuray-db.** `017-cle-precyinit` emits the
    tag — its `tag_groups.txt` lists `PRECYINIT_BOT` as a four-way group
