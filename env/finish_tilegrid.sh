@@ -30,6 +30,20 @@ export PYTHONPATH="$R/prjuray:${PYTHONPATH:-}"
 TG="$URAY_FAMILY_DIR/$URAY_PART/tilegrid.json"
 [ -f "$TG" ] || { echo "no $TG -- run ./env/run_uray_fuzzers.sh 002 first" >&2; exit 1; }
 
+echo "=== 0. does the design's every tile type have an address? ==="
+# Ask this first. A tile type the design uses but 002 never addressed is a
+# quieter failure than a missing segbit: fasm2bit places nothing there, the
+# bitstream is the right size, the round trip passes, and the function is
+# absent. Exit code is advisory here -- the fill below is meant to resolve the
+# site-less cases, so re-run this afterwards for the verdict.
+for d in "$R"/designs/*/; do
+    f=$( ls "$d"*.fasm 2>/dev/null | grep -v filtered | head -1 )
+    [ -f "$f" ] || continue
+    echo "--- $(basename "$d") ---"
+    python3 "$R/tools/check_tilegrid_coverage.py" "$f" --tilegrid "$TG" || true
+done
+
+echo
 echo "=== 1. base addresses ==="
 python3 - "$TG" <<'PY'
 import json, sys, collections
