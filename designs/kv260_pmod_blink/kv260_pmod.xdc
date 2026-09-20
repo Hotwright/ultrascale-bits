@@ -37,3 +37,16 @@ set_property LOC B11 [get_ports pmod[7]]
 # needs PS8 pl_clk0 and no clock pin at all. This constraint exists to exercise
 # the chipdb and the FASM writers end to end.
 set_property LOC G11 [get_ports clk]
+
+# IOSTANDARD stated rather than left to fasm.cc's LVCMOS33 default; correct
+# for a 3.3V PMOD either way, but not a thing to leave implicit.
+
+set_property IOSTANDARD LVCMOS33 [get_ports pmod[0]]
+set_property IOSTANDARD LVCMOS33 [get_ports pmod[1]]
+set_property IOSTANDARD LVCMOS33 [get_ports pmod[2]]
+set_property IOSTANDARD LVCMOS33 [get_ports pmod[3]]
+set_property IOSTANDARD LVCMOS33 [get_ports pmod[4]]
+set_property IOSTANDARD LVCMOS33 [get_ports pmod[5]]
+set_property IOSTANDARD LVCMOS33 [get_ports pmod[6]]
+set_property IOSTANDARD LVCMOS33 [get_ports pmod[7]]
+set_property IOSTANDARD LVCMOS33 [get_ports clk]
