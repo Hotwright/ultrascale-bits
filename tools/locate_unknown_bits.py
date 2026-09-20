@@ -23,6 +23,15 @@ Note the dependency: a tile with no base address owns no window, so its bits
 are attributed to nothing and it looks innocent. Run tools/fill_rclk_baseaddr.py
 first -- on an unfilled tilegrid this tool cannot see the very tiles it is for.
 
+Windows are NOT disjoint, so a bit can have more than one owner. On the ZU3EG
+13908 (frame, word) cells are claimed twice, every one of them PSS_ALTO
+overlapping an INT or RCLK_INT_L -- the PS interface tile covers the same bits
+as the interconnect tiles beneath it. An earlier version took the first match
+and moved on, which silently picked one owner by dictionary order. Every owner
+is now reported and the ambiguity counted, because for the question this tool
+answers, "some other tile may account for these bits" is the difference
+between a conclusion and a guess.
+
 Usage:
   bit2fasm.py --verbose ... > ref.fasm
   locate_unknown_bits.py ref.fasm [--tilegrid PATH] [--tile NAME]...
@@ -88,14 +97,26 @@ def main():
         return 0
 
     per_tile = collections.Counter()
-    unattributed = 0
+    shared_with = collections.defaultdict(collections.Counter)
+    unattributed = ambiguous = 0
     for frame, word, _bit in bits:
-        for base, frames, off, words, name, _ty in windows:
-            if base <= frame < base + frames and off <= word < off + words:
-                per_tile[name] += 1
-                break
-        else:
+        owners = [(name, ty) for base, frames, off, words, name, ty in windows
+                  if base <= frame < base + frames
+                  and off <= word < off + words]
+        if not owners:
             unattributed += 1
+            continue
+        if len(owners) > 1:
+            ambiguous += 1
+        for name, _ty in owners:
+            per_tile[name] += 1
+            for other, _oty in owners:
+                if other != name:
+                    shared_with[name][other] += 1
+
+    if ambiguous:
+        print(f"  {ambiguous} bit(s) fall in more than one tile's window and"
+              " are counted for each")
 
     if args.tile:
         print("\nrequested tiles:")
@@ -103,10 +124,18 @@ def main():
             n = per_tile.get(name, 0)
             known = name in grid
             win = known and (grid[name].get("bits") or {}).get("CLB_IO_CLK")
-            state = ("no frame window -- cannot tell" if known and not win
-                     else "not in the tilegrid" if not known
-                     else f"{n} undecoded bit(s)")
-            print(f"  {name:40s} {state}")
+            if not known:
+                state = "not in the tilegrid"
+            elif not win:
+                state = "no frame window -- run fill_rclk_baseaddr.py, cannot tell"
+            elif n == 0:
+                state = "0 undecoded bits -- Vivado set nothing we cannot explain"
+            else:
+                state = f"{n} undecoded bit(s)"
+            print(f"  {name:44s} {state}")
+            for other, k in shared_with.get(name, {}).most_common(3):
+                print(f"      {k} of them also lie in {other}"
+                      " -- ambiguous, not proof")
         return 0
 
     per_type = collections.Counter()
