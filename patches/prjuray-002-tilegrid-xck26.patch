@@ -1,34 +1,49 @@
-# SUPERSEDED IN PART -- see SCOPE-K26.md.
-# Three of these four removals were justified on the wrong criterion. These
-# sub-fuzzers scan for a SITE type and configure whichever tile holds it; none
-# of them mentions its namesake tile type. The XCK26 has the left-hand variants
-# where the ZU3EG had the right-hand ones, so BUFG_PS, BUFCE_ROW and
-# BITSLICE_RX_TX all exist here in CMT_L / XIPHY_BYTE_L / RCLK_INTF_LEFT_TERM_ALTO.
-# rclk_pss_alto in particular addresses RCLK_INTF_LEFT_TERM_ALTO, where PL_CLK
-# enters the fabric. env/add_missing_tilegrid_fuzzers.sh restores them.
---- /tmp/claude-1000/-mnt-i-Hotwright-0-xilinx-bits/e8653efd-f53f-4c26-9851-65632759a9cd/scratchpad/002.Makefile.orig	2026-09-19 19:13:19.475441979 -0700
-+++ prjuray/fuzzers/002-tilegrid/Makefile	2026-09-19 19:13:33.381747600 -0700
-@@ -17,6 +17,19 @@
+# 002-tilegrid for the XCK26: leave out bitslice_tiles, and only that.
+#
+# Four sub-fuzzers were originally dropped because the tile type each is NAMED
+# after has zero instances on this die. That criterion is wrong: 002's
+# sub-fuzzers key on SITE types and configure whichever tile holds them, and
+# the XCK26 carries the left-hand variants where the ZU3EG had the right-hand
+# ones -- hpio_right finds HPIOB_M/_S in HPIO_L, cmt_right finds BUFCE_ROW in
+# CMT_L, rclk_pss_alto finds BUFG_PS in RCLK_INTF_LEFT_TERM_ALTO. All three are
+# restored here, and all three have since been run and solved their tiles.
+# rclk_pss_alto is not optional: RCLK_INTF_LEFT_TERM_ALTO is where PL_CLK
+# enters the fabric.
+#
+# bitslice_tiles stays out for a different and real reason -- it cannot BUILD
+# on this package. It routes each BITSLICE_RX_TX output to a pad, and SFVC784
+# does not bond the adjacent IOBs, so Vivado fails with ERROR: [Place 30-686].
+# tilegrid.json depends on every .tdb listed, so one that can never succeed
+# blocks the final target however it fails.
+#
+# Note this list governs only what make BUILDS and waits for. add_tdb.py keeps
+# its own hardcoded list of all 19 sub-fuzzers and skips any .tdb that is
+# absent, so a .tdb present on disk is ingested whether or not it is listed.
+--- a/fuzzers/002-tilegrid/Makefile
++++ prjuray/fuzzers/002-tilegrid/Makefile
+@@ -17,6 +17,21 @@
  FUZDIR=$(shell pwd)
  BUILD_FOLDER=build_${URAY_PART}
  BUILD_DIR=$(FUZDIR)/$(BUILD_FOLDER)
-+# Four sub-fuzzers were removed for the XCK26 because the tile types they target
-+# do not exist on this die. Counted in the tile dump this fuzzer itself produces
-+# (build_<part>/tiles/tiles.txt):
++# bitslice_tiles is the ONLY sub-fuzzer left out, and not because the XCK26
++# lacks its tile type. 002's sub-fuzzers key on SITE types, not on the tile
++# they are named after: bitslice_tiles scans for BITSLICE_RX_TX, which this die
++# has 208 of, in XIPHY_BYTE_L. It is excluded because it cannot BUILD here - it
++# routes each BITSLICE_RX_TX output to a package pad, and SFVC784 does not bond
++# the adjacent IOBs, so Vivado fails placement with "ERROR: [Place 30-686]".
 +#
-+#   hpio_right        HPIO_RIGHT        0   (the K26 has HPIO_L,        8)
-+#   bitslice_tiles    XIPHY_BYTE_RIGHT  0   (the K26 has XIPHY_BYTE_L, 16)
-+#   cmt_right         CMT_RIGHT         0
-+#   rclk_pss_alto     RCLK_PSS_ALTO     0
++# tilegrid.json depends on EVERY .tdb in this list, so one that can never
++# succeed means make never reaches the final target however it fails.
 +#
-+# tilegrid.json depends on EVERY .tdb in this list, so leaving them in means
-+# make never reaches the final target no matter how the sub-fuzzer fails.
-+# add_tdb.py itself already skips a missing .tdb, so dropping them here costs
-+# nothing beyond those tile types, which the die does not have.
++# hpio_right, cmt_right and rclk_pss_alto WERE removed on the wrong criterion
++# and are restored below; rclk_pss_alto in particular addresses
++# RCLK_INTF_LEFT_TERM_ALTO, where PL_CLK enters the fabric. Note that
++# add_tdb.py keeps its own hardcoded list of all 19 and skips a .tdb that is
++# absent, so this list governs only what make BUILDS and waits for.
  TILEGRID_TDB_DEPENDENCIES=
  TILEGRID_TDB_DEPENDENCIES += cle/$(BUILD_FOLDER)/segbits_tilegrid.tdb \
                               clel_int/$(BUILD_FOLDER)/segbits_tilegrid.tdb \
-@@ -25,16 +38,12 @@
+@@ -25,16 +40,15 @@
                               rclk_int/$(BUILD_FOLDER)/segbits_tilegrid.tdb \
                               rclk_other/$(BUILD_FOLDER)/segbits_tilegrid.tdb \
                               rclk_hdio/$(BUILD_FOLDER)/segbits_tilegrid.tdb \
@@ -42,6 +57,9 @@
                               rclk_dsp_intf_clkbuf/$(BUILD_FOLDER)/segbits_tilegrid.tdb \
                               ps8_intf/$(BUILD_FOLDER)/segbits_tilegrid.tdb \
 -                             bitslice_tiles/$(BUILD_FOLDER)/segbits_tilegrid.tdb \
++                             hpio_right/$(BUILD_FOLDER)/segbits_tilegrid.tdb \
++                             cmt_right/$(BUILD_FOLDER)/segbits_tilegrid.tdb \
++                             rclk_pss_alto/$(BUILD_FOLDER)/segbits_tilegrid.tdb \
                               bram/$(BUILD_FOLDER)/segbits_tilegrid.tdb \
                               bram_block/$(BUILD_FOLDER)/segbits_tilegrid.tdb
  
