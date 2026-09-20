@@ -5,8 +5,23 @@
 > **For where the work actually stands, jump to
 > [STATUS 2026-09-19](#status-2026-09-19-the-fasm-path-now-exists-and-we-built-it).**
 > Short version: yosys → nextpnr-xilinx → FASM runs on the XCK26 with no vendor
-> tool, and 977 of the 978 features it emits are known to prjuray-db. There is
-> still no `.bit`, because the XCK26 has no `part.yaml`/`tilegrid.json`.
+> tool, and 977 of the 978 features it emits are known to prjuray-db.
+> `part.yaml` is done; `tilegrid.json` is the remaining blocker.
+
+## What to run, in order
+
+Everything below the first line is staged and tested as far as it can be
+without `tilegrid.json`. Run it in this order; each step says why it exists.
+
+| | command | what it settles |
+| --- | --- | --- |
+| 1 | `./env/run_uray_fuzzers.sh 002` | produces `tilegrid.json`. ~3.5 h at `URAY_JOBS=4`. Count **`design.bit`** for progress -- `design.bits` lags it by the whole bitread step. |
+| 2 | `./env/finish_tilegrid.sh` | fills the base addresses 002 structurally cannot produce, then smoke-tests the round trip by decoding a specimen the fuzzer built and checking the features land in the tiles its `params.csv` names |
+| 3 | `./env/reference_build.sh` | the one Vivado run. Answers `required ⊆ emitted` by class diff, and says whether Vivado sets bits in the three clock-spine tiles |
+| 4 | `./designs/make_bitstream.sh` | FASM → `.bit` → `.bit.bin`, and round-trips our own bitstream back to FASM to check the assembler and disassembler agree |
+| 5 | `sudo fpgautil -b blink_ps.bit.bin -f Full` | on the board. Check `/sys/kernel/debug/clk/clk_summary` for `pl0` first -- `fpgautil` does not touch clocks |
+
+Only step 5 has never been exercised in any form.
 
 The original question was "what would a real flow actually need", and the short
 answer was that **none of `0-xilinx-bits` reaches this part**, but the pieces
