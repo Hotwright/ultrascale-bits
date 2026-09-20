@@ -45,28 +45,67 @@ if not miss:
 PY
 
 # Keep the pushed file recoverable: the filler is derived, not measured, and
-# being able to diff against the original is how a wrong width gets caught.
-[ -f "$TG.orig" ] || cp -p "$TG" "$TG.orig"
+# being able to diff against the original is how a wrong span gets caught.
+# Refresh .orig whenever the pushed tilegrid is newer, so re-running 002 does
+# not leave us filling from a stale snapshot.
+if [ ! -f "$TG.orig" ] || [ "$TG" -nt "$TG.orig" ]; then cp -p "$TG" "$TG.orig"; fi
 python3 "$R/tools/fill_rclk_baseaddr.py" --cross-validate "$TG.orig" || {
     echo "cross-validation reported a WRONG prediction -- not filling" >&2; exit 1; }
 python3 "$R/tools/fill_rclk_baseaddr.py" "$TG.orig" "$TG" || exit 1
 
 echo
-echo "=== 2. round-trip smoke test: bit2fasm on 001's own bitstream ==="
-BIT="$R/prjuray/fuzzers/001-part-yaml/build_$URAY_PART/specimen_001/design.bit"
-[ -f "$BIT" ] || { echo "  no $BIT -- skipping" >&2; exit 1; }
+echo "=== 2. round-trip smoke test ==="
+# Decode a bitstream we did NOT build, and check the result against what the
+# fuzzer is known to have put in it. The subject is 002's own cle/specimen_003
+# rather than 001-part-yaml's: 001's specimen exists to produce per-frame
+# CRCs and may be near-trivial, so a feature count there proves little, while
+# this one ships a params.csv naming all 13920 tiles it configured. That makes
+# the check a round trip -- did the features come back in the right tiles --
+# instead of a threshold.
+SP="$R/prjuray/fuzzers/002-tilegrid/cle/build_$URAY_PART/specimen_003"
+[ -f "$SP/design.bit" ] && [ -f "$SP/params.csv" ] || {
+    echo "  no $SP/{design.bit,params.csv} -- skipping" >&2; exit 1; }
 OUT="$R/work/smoke"; mkdir -p "$OUT"
-python3 "$R/prjuray/utils/bit2fasm.py" \
+# --verbose matters: without it a tile whose type has no segbits file is
+# skipped in silence, so undecoded bits vanish rather than being reported.
+python3 "$R/prjuray/utils/bit2fasm.py" --verbose \
     --db-root "$URAY_FAMILY_DIR" --part "$URAY_PART" \
     --architecture "$URAY_ARCH" --bitread "$URAY_TOOLS_DIR/bitread" \
-    "$BIT" > "$OUT/design.fasm" 2> "$OUT/bit2fasm.err" || {
+    "$SP/design.bit" > "$OUT/specimen.fasm" 2> "$OUT/bit2fasm.err" || {
         echo "  bit2fasm FAILED:"; tail -20 "$OUT/bit2fasm.err"; exit 1; }
-n=$(grep -c . "$OUT/design.fasm")
-echo "  decoded $n features -> $OUT/design.fasm"
-# A decode that produces almost nothing is the failure mode to watch for: it
-# exits 0 and looks like a clean result. 001's specimen is a real placed design.
-[ "$n" -lt 100 ] && { echo "  only $n features -- that is not a decoded design" >&2; exit 1; }
-echo "  top tile types:"
-sed 's/_X[0-9]*Y[0-9]*\..*//' "$OUT/design.fasm" | sort | uniq -c | sort -rn | head -8 | sed 's/^/    /'
+
+python3 - "$OUT/specimen.fasm" "$SP/params.csv" <<'PY' || exit 1
+import csv, re, sys, collections
+fasm, params = sys.argv[1], sys.argv[2]
+want = set()
+with open(params) as f:
+    for row in csv.DictReader(f):
+        want.add(row["tile"])
+got = collections.Counter()
+feats = 0
+for line in open(fasm):
+    line = line.split("#")[0].strip()
+    if not line or line.startswith("{"):
+        continue
+    feats += 1
+    got[line.split(".")[0]] += 1
+hit = want & set(got)
+print(f"  {feats} features over {len(got)} tiles;"
+      f" params.csv names {len(want)}")
+print(f"  tiles in both: {len(hit)}"
+      f" ({100.0 * len(hit) / max(len(want), 1):.1f}% of the fuzzer's)")
+if not feats:
+    sys.exit("  FAIL: decoded nothing")
+if len(hit) < 0.5 * len(want):
+    sys.exit("  FAIL: most of the tiles the fuzzer configured came back with"
+             " no features -- the tilegrid does not line up with the bitstream")
+print("  OK: the decode lands in the tiles the fuzzer configured")
+PY
+
+echo
+echo "=== 3. where the undecoded bits are ==="
+python3 "$R/tools/locate_unknown_bits.py" "$OUT/specimen.fasm" \
+    --tilegrid "$TG" | head -30
+
 echo
 echo "OK: tilegrid usable. Next: env/reference_build.sh"

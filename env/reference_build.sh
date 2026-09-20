@@ -4,12 +4,21 @@
 # in the design loop.
 #
 # Usage: ./env/reference_build.sh [<design-dir>]
-#   default designs/kv260_pmod_blink -- the pin-clocked variant. Prefer it as
-#   the reference target: kv260_ps_blink instantiates a bare PS8 with only
-#   PLCLK connected, which nextpnr accepts but Vivado will want configured.
+#
+# The default is kv260_ps_blink, and it has to be. The whole reason for
+# spending a Vivado run is to see whether Vivado sets bits in
+# RCLK_INTF_LEFT_TERM_ALTO, RCLK_CLEM_CLKBUF_L_X15Y149 and
+# RCLK_RCLK_XIPHY_INNER_FT at Y149 -- and those sit on the PS-side clock
+# route. kv260_pmod_blink takes its clock from an HDIO pin in bank 45 and
+# never crosses them, so a reference built from it cannot answer the question
+# however clean it comes out.
+#
+# A bare PS8 with only PLCLK connected does synthesize: it is a UNISIM
+# primitive, and the PLCLK frequency is set by PS firmware rather than by the
+# bitstream. Expect unconnected-pin warnings.
 set -u
 R="$( cd -P "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd )"
-D="${1:-$R/designs/kv260_pmod_blink}"
+D="${1:-$R/designs/kv260_ps_blink}"
 D="$( cd "$D" && pwd )"
 source "$R/env/uray_env.sh" zynq_usp_5ev || exit 1
 . "$R/prjuray/env/bin/activate"
@@ -36,11 +45,27 @@ echo "reference: $(basename "$SRC") + $(basename "$XDC") -> $OUT/ref.bit"
     -source "$R/env/reference_build.tcl" || exit 1
 
 echo "=== bit2fasm on the Vivado bitstream ==="
-python3 "$R/prjuray/utils/bit2fasm.py" \
+# --verbose is required, not cosmetic. A tile whose type has no segbits file is
+# skipped in silence without it, so bits Vivado set in exactly the tiles this
+# run is meant to investigate would never be reported at all.
+python3 "$R/prjuray/utils/bit2fasm.py" --verbose \
     --db-root "$URAY_FAMILY_DIR" --part "$URAY_PART" \
     --architecture "$URAY_ARCH" --bitread "$URAY_TOOLS_DIR/bitread" \
     "$OUT/ref.bit" > "$OUT/ref.fasm" || exit 1
-echo "  $(grep -c . "$OUT/ref.fasm") features"
+echo "  $(grep -c . "$OUT/ref.fasm") lines"
+
+echo "=== does Vivado set bits in the three clock-spine tiles? ==="
+# The question the whole run exists to answer. bit2fasm reports an undecoded
+# bit by frame and word with no tile name, so locate_unknown_bits maps it back
+# through the tilegrid's frame windows -- which is why finish_tilegrid.sh has
+# to have filled the base addresses first.
+python3 "$R/tools/locate_unknown_bits.py" "$OUT/ref.fasm" \
+    --tilegrid "$URAY_FAMILY_DIR/$URAY_PART/tilegrid.json" \
+    --tile RCLK_INTF_LEFT_TERM_ALTO_X0Y149 \
+    --tile RCLK_CLEM_CLKBUF_L_X15Y149 \
+    --tile RCLK_RCLK_XIPHY_INNER_FT_X16Y149
+echo "  (bits present  => the enable we emit is real and must not be dropped)"
+echo "  (no bits       => we are over-emitting and --filter is correct)"
 
 echo "=== feature classes: Vivado vs ours ==="
 python3 "$R/tools/diff_fasm_classes.py" "$OUT/ref.fasm" "$OURS" \

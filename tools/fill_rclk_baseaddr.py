@@ -71,6 +71,14 @@ all RCLK_INT_L (75) and RCLK_INT_R (24), which are the anchors nearly
 everywhere: holding them out removes the very constraints that would pin them.
 That is not the situation here.
 
+**One thing holdout cannot test, by construction.** It can only hold out a
+type that has addresses somewhere, and RCLK_CLEM_CLKBUF_L has none on any
+characterised die -- that is the whole problem. So its fill is never validated
+directly; what the holdout establishes is that the method is right for types
+*in that position*, which is evidence by analogy rather than proof. The same
+caveat applies to any type the reference die lacks, and to break tiles like
+RCLK_CBRK_M12BUF_L that are never addressed anywhere.
+
 What *is* the situation here is a site-less type sandwiched between anchors,
 and those survive the holdout cleanly: RCLK_DSP_INTF_CLKBUF_L scores 3/3 and
 RCLK_DSP_INTF_L 6/6. RCLK_CLEM_CLKBUF_L sits at grid dx=1 from an RCLK_INT_L
@@ -87,12 +95,74 @@ Usage:
 """
 import argparse
 import collections
+import os
+import re
 from fractions import Fraction
 import json
 import sys
 
 STEP = 0x100
 MAX_COLUMNS = 3  # RCLK_XIPHY_OUTER_RIGHT owns 3; that is the observed maximum.
+
+
+def part_frame_counts(path):
+    """bus -> {column index: frame_count}, from part.yaml.
+
+    A filled entry needs `frames` as well as `baseaddr`, and `frames` is not
+    something the span model can produce -- it is how many frames the tile's
+    configuration column holds. part.yaml has exactly that, and the column
+    index is carried in the base address itself.
+
+    Verified on the ZU3EG: frames == frame_count[(baseaddr >> 8) & 0x3ff] for
+    all 15712 tiles that carry a frame count, across both buses. Every row
+    carries an identical column map on both dies, so the row field need not be
+    decoded at all. The mask is 10 bits rather than the 7 the ZU3EG's 104
+    columns would need, because the XCK26 has 134.
+    """
+    out, row, bus, col = {}, None, None, None
+    with open(path) as f:
+        for line in f:
+            m = re.match(r"^  (\d+): !", line)
+            if m:
+                row = int(m.group(1))
+                continue
+            m = re.match(r"^      (\w+): !", line)
+            if m:
+                bus = m.group(1)
+                out.setdefault(bus, {})
+                continue
+            m = re.match(r"^          (\d+): !", line)
+            if m:
+                col = int(m.group(1))
+                continue
+            m = re.match(r"^            frame_count: (\d+)", line)
+            if m and row == 0:
+                out[bus][col] = int(m.group(1))
+    return out
+
+
+BASEADDR_COLUMN_SHIFT = 8
+BASEADDR_COLUMN_MASK = 0x3FF
+
+
+def rclk_offset_words(grid):
+    """The (offset, words) every RCLK tile shares, or None if they differ.
+
+    Measured rather than assumed: on the ZU3EG all 215 addressed RCLK tiles
+    carry (93, 3), while ordinary tiles vary by position within the column. If
+    a die ever breaks that uniformity this returns None and the fill refuses,
+    which is better than writing a plausible wrong offset.
+    """
+    seen = collections.Counter()
+    for t in grid.values():
+        if not t["type"].startswith("RCLK_"):
+            continue
+        b = (t.get("bits") or {}).get("CLB_IO_CLK")
+        if b and "offset" in b and "words" in b:
+            seen[(b["offset"], b["words"])] += 1
+    if len(seen) != 1:
+        return None, seen
+    return next(iter(seen)), seen
 
 
 def load_rows(grid):
@@ -320,7 +390,14 @@ def cross_validate(rows):
         if not cons:
             continue
         _, m = solve(cons, types)
-        fill(blinded, m, [], [])
+        # Keep the contradictions: a model refitted without one type can
+        # disagree with anchors that remain, and discarding that would hide a
+        # genuine failure behind a clean-looking holdout score.
+        contra = []
+        fill(blinded, m, [], contra)
+        if contra:
+            print(f"  ({held}: {len(contra)} contradiction(s) against"
+                  " surviving anchors)")
         right = wrong = none = 0
         truth = {n: ba for r in rows.values() for _, n, ty, ba in r
                  if ty == held and ba is not None}
@@ -351,6 +428,8 @@ def main():
     ap.add_argument("out", nargs="?")
     ap.add_argument("--self-test", action="store_true",
                     help="fit and report only; write nothing")
+    ap.add_argument("--part-yaml",
+                    help="part.yaml for `frames` (default: beside the tilegrid)")
     ap.add_argument("--cross-validate", action="store_true",
                     help="hold out each tile type's addresses and predict them back")
     args = ap.parse_args()
@@ -416,13 +495,46 @@ def main():
               " one, so the column model is wrong for this die.")
         return 1
 
+    # A filled entry must look like a measured one. Database.grid(),
+    # fasm_assembler and bit2fasm all expect frames/offset/words beside
+    # baseaddr; writing baseaddr alone would produce a tilegrid that fails on
+    # exactly the tiles this exists to fix.
+    part_yaml = args.part_yaml or os.path.join(os.path.dirname(path), "part.yaml")
+    if not os.path.exists(part_yaml):
+        print(f"\nrefusing to write: no {part_yaml}, so `frames` cannot be"
+              " derived")
+        return 1
+    fc = part_frame_counts(part_yaml)
+    ow, seen = rclk_offset_words(grid)
+    if ow is None:
+        print(f"\nrefusing to write: addressed RCLK tiles do not agree on"
+              f" (offset, words): {dict(seen)}")
+        return 1
+    offset, words = ow
+    print(f"part.yaml: {sum(len(v) for v in fc.values())} columns;"
+          f" RCLK (offset, words) = ({offset}, {words})")
+
+    written = 0
     for r in rows.values():
         for _, name, ty, ba in r:
             if ba is None:
                 continue
             bits = grid[name].setdefault("bits", {})
-            if "CLB_IO_CLK" not in bits:
-                bits["CLB_IO_CLK"] = {"baseaddr": f"0x{ba:08X}"}
+            if "CLB_IO_CLK" in bits:
+                continue
+            col = (ba >> BASEADDR_COLUMN_SHIFT) & BASEADDR_COLUMN_MASK
+            frames = fc.get("CLB_IO_CLK", {}).get(col)
+            if frames is None:
+                print(f"  {name}: no frame_count for column {col} -- skipped")
+                continue
+            bits["CLB_IO_CLK"] = {
+                "baseaddr": f"0x{ba:08X}",
+                "frames": frames,
+                "offset": offset,
+                "words": words,
+            }
+            written += 1
+    print(f"filled {written} tile(s) with a complete CLB_IO_CLK entry")
     with open(args.out, "w") as f:
         json.dump(grid, f, indent=2, sort_keys=True)
     print(f"\nwrote {args.out}")
