@@ -22,9 +22,9 @@ without `tilegrid.json`. Run it in this order; each step says why it exists.
 | 4 | `./designs/make_bitstream.sh` | FASM → `.bit` → `.bit.bin`, and round-trips our own bitstream back to FASM to check the assembler and disassembler agree |
 | 5 | `sudo fpgautil -b blink_ps.bit.bin -f Full` | on the board. Check `/sys/kernel/debug/clk/clk_summary` for `pl0` first -- `fpgautil` does not touch clocks |
 
-Step 1b can be skipped only if `rclk_pss_alto/build_*/segbits_tilegrid.tdb`
-already exists -- it is being built alongside step 1 in this session, and the
-script detects that and moves on.
+Step 1b still has to run, but its expensive half is already done:
+`rclk_pss_alto`'s `.tdb` was built alongside step 1 in this session and the
+script detects that, so it only edits the Makefile and regenerates.
 
 Only step 5 has never been exercised in any form.
 
@@ -550,7 +550,7 @@ Both `build.sh` scripts run it. On the PS design it drops exactly 11:
 
   | sub-fuzzer | site it looks for | where that site lives on the XCK26 | confirmed |
   | --- | --- | --- | --- |
-  | `rclk_pss_alto` | `BUFG_PS` | 96 in `RCLK_INTF_LEFT_TERM_ALTO` (4 tiles) | **yes** |
+  | `rclk_pss_alto` | `BUFG_PS` | 96 in `RCLK_INTF_LEFT_TERM_ALTO` (4 tiles) | **built, solved** |
   | `cmt_right` | `BUFCE_ROW` | 96 in `CMT_L` (4) | **yes** |
   | `bitslice_tiles` | `BITSLICE_RX_TX` | 208 in `XIPHY_BYTE_L` (16) | **yes** |
   | `hpio_right` | `HPIOB_M`/`_S` | 164 in `HPIO_L` (8) | not tested |
@@ -585,6 +585,20 @@ Both `build.sh` scripts run it. On the PS design it drops exactly 11:
 
   The other three sub-fuzzers cost tile types this design does not use, but
   they are wrong for the database all the same.
+
+  **`rclk_pss_alto` has now been run on this die and it works.** Five
+  specimens, eleven minutes at `-j2` alongside the main build, exit 0, and a
+  `.tdb` naming all four tiles:
+
+      RCLK_INTF_LEFT_TERM_ALTO_X0Y149  00080008_047_31
+      RCLK_INTF_LEFT_TERM_ALTO_X0Y209  000C0008_047_31
+      RCLK_INTF_LEFT_TERM_ALTO_X0Y29   00000008_047_31
+      RCLK_INTF_LEFT_TERM_ALTO_X0Y89   00040008_047_31
+
+  Two independent checks that those addresses are sane. The row fields
+  `0x00000`/`0x40000`/`0x80000`/`0xC0000` are this die's four clock regions,
+  matching `part.yaml`'s rows 0-3 against the ZU3EG's 0-2. And `X0Y29`'s
+  address agrees with the ZU3EG's `0x00000000` for the tile of the same name.
 
   `env/add_missing_tilegrid_fuzzers.sh` repairs it after 002 finishes: it
   builds each `.tdb` on its own first and adds it to the dependency list only
