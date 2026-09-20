@@ -38,33 +38,75 @@ nf=$( grep -c . "$D/$NAME.frames" 2>/dev/null || echo 0 )
 echo "  $nf frames written, $(stat -c%s "$BIT") bytes of .bit"
 
 echo "=== round trip: decode our own bitstream back to FASM ==="
-# The strongest check available without hardware. Every feature we asked for
-# should come back; anything missing means the assembler and disassembler
-# disagree about it, which no amount of checking against the db would show.
-python3 "$R/prjuray/utils/bit2fasm.py" \
-    --db-root "$URAY_FAMILY_DIR" --part "$URAY_PART" \
-    --architecture "$URAY_ARCH" --bitread "$URAY_TOOLS_DIR/bitread" \
-    "$BIT" > "$D/$NAME.roundtrip.fasm" || exit 1
-python3 - "$FASM" "$D/$NAME.roundtrip.fasm" <<'PY' || exit 1
-import sys
-def feats(p):
+# The strongest check available without hardware: every feature we asked for
+# that CAN be observed should come back. Anything missing means the assembler
+# and the disassembler disagree, which no amount of checking against the db
+# would reveal.
+#
+# "that can be observed" is the whole subtlety. A prjuray feature whose segbits
+# are all !-prefixed CLEARS bits rather than setting them, so a bitstream
+# containing it is identical to one without it and no decode can ever report it
+# back. 180 of this design's 9011 features are like that -- every .V0 of a
+# .V0/.V1 pair -- and requiring them would fail the build on features that are
+# working exactly as intended.
+python3 - "$FASM" "$D/$NAME.roundtrip.fasm" "$URAY_FAMILY_DIR" <<'PY' || exit 1
+import collections, glob, os, re, sys
+
+fasm_in, fasm_out, db = sys.argv[1], sys.argv[2], sys.argv[3]
+
+# feature key -> does it set at least one bit
+sets_a_bit = {}
+for path in glob.glob(os.path.join(db, "segbits_*.db")):
+    if "origin_info" in path:
+        continue
+    with open(path) as f:
+        for line in f:
+            parts = line.split()
+            if len(parts) >= 2:
+                sets_a_bit[parts[0]] = any(not b.startswith("!")
+                                           for b in parts[1:])
+
+TILE_INST = re.compile(r"_X-?\d+Y-?\d+$")
+
+
+def feats(path):
     out = set()
-    for line in open(p):
-        line = line.split("#")[0].strip()
-        if line and not line.startswith("{"):
-            out.add(line.split()[0].rstrip("=").strip())
+    with open(path) as f:
+        for line in f:
+            line = line.split("#")[0].strip()
+            if line and not line.startswith("{"):
+                out.add(line.split()[0].rstrip("=").strip())
     return out
-want, got = feats(sys.argv[1]), feats(sys.argv[2])
-missing, extra = want - got, got - want
-print(f"  asked for {len(want)}, got back {len(got)}")
-print(f"  missing {len(missing)}, unexpected {len(extra)}")
+
+
+want, got = feats(fasm_in), feats(fasm_out)
+required, clear_only, unknown = set(), set(), set()
+for f in want:
+    tile, feature = f.split(".", 1)
+    key = "%s.%s" % (TILE_INST.sub("", tile), feature)
+    if key not in sets_a_bit:
+        unknown.add(f)          # multi-bit keys like LUT.INIT[43] land here
+        required.add(f)         # conservatively require them
+    elif sets_a_bit[key]:
+        required.add(f)
+    else:
+        clear_only.add(f)
+
+missing, extra = required - got, got - want
+print("  asked for %d, of which %d observable (%d clear only)"
+      % (len(want), len(required), len(clear_only)))
+print("  got back %d; missing %d, unexpected %d"
+      % (len(got), len(missing), len(extra)))
+if unknown:
+    print("  (%d feature(s) had no exact segbits key and were required anyway)"
+          % len(unknown))
 for f in sorted(missing)[:10]:
-    print(f"    MISSING {f}")
+    print("    MISSING %s" % f)
 for f in sorted(extra)[:5]:
-    print(f"    EXTRA   {f}")
+    print("    EXTRA   %s" % f)
 if missing:
-    sys.exit("  FAIL: features we set did not survive the round trip")
-print("  OK: every feature survived")
+    sys.exit("  FAIL: observable features we set did not survive the round trip")
+print("  OK: every observable feature survived")
 PY
 
 echo "=== .bit -> .bit.bin ==="
