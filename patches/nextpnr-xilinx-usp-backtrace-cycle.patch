@@ -1,0 +1,114 @@
+--- xilinx/arch.cc.orig	2026-09-19 14:10:19.177967700 -0700
++++ xilinx/arch.cc	2026-09-19 18:01:23.452713600 -0700
+@@ -713,6 +713,9 @@
+         if (sink == WireId())
+             log_error("Pin '%s' of bel '%s' has no associated wire\n", usr.port.c_str(this), nameOfBel(usr.cell->bel));
+         visit.push(sink);
++        // Seed the root so a pip pair leading back to it cannot re-parent it and
++        // close a cycle in backtrace; see the note in findSourceSinkLocations().
++        backtrace[sink] = PipId();
+         while (!visit.empty()) {
+             WireId curr = visit.front();
+             visit.pop();
+@@ -733,7 +736,7 @@
+             }
+         }
+         NPNR_ASSERT(dest != WireId());
+-        while (backtrace.count(dest)) {
++        while (backtrace.count(dest) && backtrace.at(dest) != PipId()) {
+             auto uh = backtrace[dest];
+             dest = getPipDstWire(uh);
+             bindWire(dest, vcc, STRENGTH_STRONG);
+@@ -785,6 +788,9 @@
+             }
+ 
+             visit.push(sink_wire);
++            // Seed the root so a pip pair leading back to it cannot re-parent it and
++            // close a cycle in backtrace; see the note in findSourceSinkLocations().
++            backtrace[sink_wire] = PipId();
+             while (!visit.empty()) {
+                 WireId curr = visit.front();
+                 visit.pop();
+@@ -804,7 +810,20 @@
+                         intent == ID_NODE_CLE_OUTPUT || intent == ID_NODE_OPTDELAY || intent == ID_BENTQUAD ||
+                         intent == ID_DOUBLE || intent == ID_HLONG || intent == ID_HQUAD || intent == ID_OPTDELAY ||
+                         intent == ID_SINGLE || intent == ID_VLONG || intent == ID_VLONG12 || intent == ID_VQUAD ||
+-                        intent == ID_PINBOUNCE)
++                        intent == ID_PINBOUNCE ||
++                        // ID_PINBOUNCE is the 7-series spelling and never matches
++                        // an UltraScale+ device, which reports NODE_PINBOUNCE.
++                        // Same resource, so prune it for the same reason.
++                        intent == ID_NODE_PINBOUNCE ||
++                        // The global constant network. bbaexport builds ONE VCC
++                        // node and ONE GND node per device, each tied to every
++                        // tile, so stepping into either puts the whole die on the
++                        // frontier: measured on XCK26, popping
++                        // DSP_X12Y150/VCC_WIRE14 took the queue from 9 to 457 in
++                        // a single expansion. A clock is never routed through the
++                        // constant network, so this prunes nothing a clock could
++                        // legally use.
++                        intent == ID_PSEUDO_GND || intent == ID_PSEUDO_VCC)
+                         continue;
+                     if (!checkWireAvail(src) && getBoundWireNet(src) != clk_net)
+                         continue;
+@@ -821,6 +840,7 @@
+                     std::swap(visit, empty);
+                     backtrace.clear();
+                     visit.push(sink_wire);
++                    backtrace[sink_wire] = PipId();
+                     while (!visit.empty()) {
+                         WireId curr = visit.front();
+                         visit.pop();
+@@ -846,7 +866,7 @@
+                     continue;
+                 }
+             }
+-            while (backtrace.count(dest)) {
++            while (backtrace.count(dest) && backtrace.at(dest) != PipId()) {
+                 auto uh = backtrace[dest];
+                 dest = getPipDstWire(uh);
+                 if (getCtx()->debug)
+@@ -912,6 +932,12 @@
+             // don't spend too long with a nice low iteration limit
+             const int iter_max = 500;
+             visit.push(sink);
++            // The BFS below parents each wire by whichever wire discovered it. That makes
++            // backtrace a forest ONLY if the root can never be re-parented -- and it can:
++            // nothing ever puts sink into backtrace, so a pip pair leading back to it closes
++            // a 2-cycle and the backtrace walk below spins forever. UltraScale+ hits this;
++            // 7-series apparently does not. Seed the root with a null parent to mark it.
++            backtrace[sink] = WireId();
+             while (!visit.empty() && iter < iter_max) {
+                 ++iter;
+                 WireId cursor = visit.front();
+@@ -927,7 +953,7 @@
+                             log_info("%s <---- %s\n", nameOfWire(sink), nameOfWire(cursor));
+                         }
+ 
+-                        while (backtrace.count(cursor)) {
++                        while (backtrace.count(cursor) && backtrace.at(cursor) != WireId()) {
+                             cursor = backtrace.at(cursor);
+                             if (!sink_locs.count(cursor)) {
+                                 sink_locs[cursor] = Loc(tile % chip_info->width, tile / chip_info->width, 0);
+@@ -962,6 +988,12 @@
+             // don't spend too long with a nice low iteration limit
+             const int iter_max = 500;
+             visit.push(source);
++            // The BFS below parents each wire by whichever wire discovered it. That makes
++            // backtrace a forest ONLY if the root can never be re-parented -- and it can:
++            // nothing ever puts source into backtrace, so a pip pair leading back to it closes
++            // a 2-cycle and the backtrace walk below spins forever. UltraScale+ hits this;
++            // 7-series apparently does not. Seed the root with a null parent to mark it.
++            backtrace[source] = WireId();
+             while (!visit.empty() && iter < iter_max) {
+                 ++iter;
+                 WireId cursor = visit.front();
+@@ -977,7 +1009,7 @@
+                             log_info("%s ----> %s\n", nameOfWire(source), nameOfWire(cursor));
+                         }
+ 
+-                        while (backtrace.count(cursor)) {
++                        while (backtrace.count(cursor) && backtrace.at(cursor) != WireId()) {
+                             cursor = backtrace.at(cursor);
+                             if (!source_locs.count(cursor)) {
+                                 source_locs[cursor] = Loc(tile % chip_info->width, tile / chip_info->width, 0);
