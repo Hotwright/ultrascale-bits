@@ -8,6 +8,29 @@
 > tool, and 977 of the 978 features it emits are known to prjuray-db.
 > `part.yaml` is done; `tilegrid.json` is the remaining blocker.
 
+## Coverage boundaries this package imposes
+
+The SFVC784 package does not bond every IO site, and 002 addresses a tile by
+placing something in it and routing to a pad. Where there is no pad there is
+no address, however the fuzzers are configured. Measured:
+
+| tile | sites | bonded | addressed |
+| --- | ---: | ---: | --- |
+| `HDIO_BOT_RIGHT_X7Y{0,60,120}` | 31 | 12 | yes |
+| `HDIO_TOP_RIGHT_X7Y{30,90,150}` | 28-31 | 10-12 | yes |
+| `HDIO_BOT_RIGHT_X7Y180` | 13 | **0** | **no** |
+| `HDIO_TOP_RIGHT_X7Y210` | 13 | **0** | **no** |
+
+The two unaddressed ones are the truncated top bank, with no package pins at
+all. **Both designs here use only bonded tiles** -- `blink_ps.fasm` touches
+`HDIO_BOT_RIGHT_X7Y120` and `HDIO_TOP_RIGHT_X7Y150`, both addressed -- but a
+design placed in the top bank would hit this, and `fill_rclk_baseaddr.py` will
+not rescue it: that only walks RCLK rows.
+
+The same package limit is why `bitslice_tiles` cannot run at all (its
+BITSLICE-adjacent IOBs report "not bonded") while `hpio_right` can: 119 of the
+die's 189 bonded IO sites are in `HPIO_L`.
+
 ## What to run, in order
 
 Everything below the first line is staged and tested as far as it can be
