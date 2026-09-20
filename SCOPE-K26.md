@@ -506,6 +506,20 @@ Both `build.sh` scripts run it. On the PS design it drops exactly 11:
   (`CLK_HDISTR_FT1_0`) from the live path in a tile whose HDISTR was never
   touched, and is simply **unknown**.
 
+  **A checkable prediction, made before `002` finished.** The three tiles are
+  not in the same situation, and the basicdb grid already says which:
+
+  | tile instance | grid | sites | needs |
+  | --- | --- | ---: | --- |
+  | `RCLK_INTF_LEFT_TERM_ALTO_X0Y149` | (159,93) | **24** | nothing -- 002 addresses it directly; its gap is segbits, not an address |
+  | `RCLK_CLEM_CLKBUF_L_X15Y149` | (226,93) | 0 | a derived address; `RCLK_INT_L` (32 sites) sits at dx=1 right and `RCLK_DSP_INTF_L` at dx=2 left, so the span is short and should pin |
+  | `RCLK_RCLK_XIPHY_INNER_FT_X16Y149` | (278,93) | 0 | a derived address; nearest addressable anchor is dx=3 right across `RCLK_INTF_L_IBRK_IO_L`, so this one may stay free |
+
+  Two distinct failures hide behind one symptom, and only the last two are
+  base-address problems. `LEFT_TERM_ALTO` has sites and will get its address
+  from 002 like any other tile; what it lacks is a *segbit* for the HDISTR
+  enable, which no amount of address derivation supplies.
+
   **Settle it with one Vivado run, not 405.** The reference build
   (`env/reference_build.sh`) produces a bitstream for the same design;
   `bit2fasm.py --verbose` then reports unknown bits per tile. If Vivado sets
