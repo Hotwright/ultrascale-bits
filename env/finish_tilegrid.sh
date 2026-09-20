@@ -64,6 +64,17 @@ for d in "$R"/designs/*/; do
 done
 
 echo
+echo "=== 0c. did segmatch solve every tag? ==="
+# add_tdb.py feeds .tdb address tokens straight to int(x, 16) and asserts the
+# base is 0x100-aligned, so ONE unsolvable tag out of 13920 used to abort the
+# whole tilegrid with a message naming neither file nor tile. Both failures are
+# expected at a low rate - <const0> is a sampling artefact of a random-value
+# fuzzer (2**-N per tile), an unaligned base means segmatch picked the wrong
+# bit - and both are now skipped. This reports what was lost and, more to the
+# point, whether it is recoverable from the tile's column.
+python3 "$R/tools/audit_tilegrid_tdb.py" \
+    --fuzzer-dir "$R/prjuray/fuzzers/002-tilegrid" --build-dir "build_$URAY_PART" || true
+
 echo "=== 1. base addresses ==="
 python3 - "$TG" <<'PY'
 import json, sys, collections
@@ -80,14 +91,46 @@ PY
 
 # Keep the pushed file recoverable: the filler is derived, not measured, and
 # being able to diff against the original is how a wrong span gets caught.
-# Refresh .orig whenever the pushed tilegrid is newer, so re-running 002 does
-# not leave us filling from a stale snapshot.
-if [ ! -f "$TG.orig" ] || [ "$TG" -nt "$TG.orig" ]; then cp -p "$TG" "$TG.orig"; fi
+#
+# The refresh test is on CONTENT, not mtime. Using "$TG is newer than $TG.orig"
+# is self-defeating: this script writes $TG at step 1, so $TG is always newer
+# on the next run, and .orig would be overwritten with our own FILLED output -
+# after which the pristine pushed file is gone and every later diff compares
+# filled against filled. Instead we stamp the checksum of what we wrote; if $TG
+# still matches that stamp it is our own output and .orig stays as it is, and
+# if it does not, 002 has pushed a new one and .orig is refreshed.
+sum_of() { sha256sum "$1" 2>/dev/null | cut -d" " -f1; }
+if [ ! -f "$TG.orig" ] || [ "$(sum_of "$TG")" != "$(cat "$TG.stamp" 2>/dev/null)" ]; then
+    cp -p "$TG" "$TG.orig"
+    echo "  snapshot refreshed: $TG.orig (002 pushed a new tilegrid)"
+else
+    echo "  $TG is this script's own output; keeping the existing $TG.orig"
+fi
 python3 "$R/tools/fill_rclk_baseaddr.py" --cross-validate "$TG.orig" || {
     echo "cross-validation reported a WRONG prediction -- not filling" >&2; exit 1; }
 python3 "$R/tools/fill_rclk_baseaddr.py" "$TG.orig" "$TG" || exit 1
 
 echo
+echo "=== 1a. INT tiles 002 left unaddressed ==="
+# clel_int/clem_int miss 88 INT tiles outright (Y31/Y91/Y151 in the 15
+# DSP-adjacent columns, and Y239 in all 43) plus the ~535 tags segmatch could
+# not solve. Two of them are used by the reference designs. The fill is from
+# measurement, not inference: RCLK_INT_L/_R share a frame column with the INT
+# tiles beside them and cover all 43 columns, and the geometry is a function of
+# Y that the tool verifies before using. --cross-validate predicts every
+# already-solved INT tile and refuses to write unless all of them come back
+# right. Only a Y solved nowhere on this die falls back to the reference.
+REF="$R/prjuray-db/zynqusp/xczu3eg-sfvc784-1-e/tilegrid.json"
+if python3 "$R/tools/fill_int_tilegrid.py" "$TG" --cross-validate \
+        ${REF:+--reference "$REF"} -o "$TG.int" ; then
+    [ -s "$TG.int" ] && mv "$TG.int" "$TG" && echo "  INT fill applied to $TG"
+else
+    rm -f "$TG.int"
+    echo "  INT fill REFUSED -- tilegrid left untouched (see the message above)"
+fi
+# Record what we produced, so the next run can tell our output from a fresh push.
+sha256sum "$TG" | cut -d" " -f1 > "$TG.stamp"
+
 echo "=== 2. round-trip smoke test ==="
 # Decode a bitstream we did NOT build, and check the result against what the
 # fuzzer is known to have put in it. The subject is 002's own cle/specimen_003
