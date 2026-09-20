@@ -422,8 +422,31 @@ and finishes in well under a minute.
 ### Acceptance: 977 of 978 emitted features are known to prjuray-db
 
 `tools/check_fasm_vs_uraydb.py` checks every feature the FASM emits against
-prjuray-db's segbits, per tile type. This is the test that matters, because a
-feature prjuray has never heard of assembles to **nothing, silently**.
+prjuray-db's segbits, per tile type. It matters because prjuray's assembler does
+**not** ignore a feature it has never heard of: `utils/fasm_assembler.py`
+collects every one and then raises
+
+    FasmLookupError: Segment DB <tile type>, key <feature> not found ...
+
+so one stray name makes `fasm2bit.py` refuse the whole file, and there is no
+flag to relax it. (An earlier version of this section said such a feature
+"assembles to nothing, silently". That was wrong, and wrong in the optimistic
+direction -- it is a hard error, which is the better behaviour but a harder
+constraint.)
+
+`--filter` writes a copy with the unknown features removed and names each one.
+Both `build.sh` scripts run it. On the PS design it drops exactly 11:
+
+* 8 `INT_INTF_R_PCIE4.PIP.IMUXOUT16.IMUX16`. Safe: the fan-in analysis above
+  shows the pad-to-fabric direction of that tile is unconditional wiring, fan-in
+  1, with nothing to configure.
+* 3 `WIRE.CLK_HDISTR_*.USED.V1`, in `RCLK_RCLK_XIPHY_INNER_FT`,
+  `RCLK_INTF_LEFT_TERM_ALTO` and `RCLK_CLEM_CLKBUF_L` -- three tile types with
+  no segbits file at all. **These are the real risk.** All three sit on the
+  clock spine at Y149, between the PS clock buffer and the leaf buffer that
+  feeds the flip-flops. If the distribution track needs a per-tile enable in
+  each, dropping them means the clock never arrives and the LEDs never blink.
+  Nothing measured so far says either way; the reference build below settles it.
 
 | tile type | known | unknown | % |
 | --- | ---: | ---: | ---: |
@@ -519,5 +542,24 @@ falsified. Reading the Tcl settled every one of them in minutes.
    left unwritten rather than emitting 7-series features, so a design using them
    loses its configuration instead of getting a wrong one.
 
-5. `.bit.bin` packaging and the `xmutil`/`fpgautil` load sequence. **Nothing has
-   been loaded onto the board yet.**
+5. **The test that does not exist yet: required ⊆ emitted.** Build the same
+   design in Vivado once, run prjuray's own `bit2fasm.py` on the result, and
+   diff the *feature classes per tile type* against ours -- not bytes, since
+   placement differs and LUT INIT is pin-permuted at write time. This is
+   validation of the open flow, not Vivado in the design loop, and it is what
+   prjxray's own tests do. One run settles five things at once: whether our
+   INIT bit order is right (the checker only compares names), any feature kind
+   Vivado writes that we never do, what Vivado ties PS8's 4,613 fabric inputs
+   to, which distribution track the clock really takes through the three
+   unfuzzed RCLK tile types, and -- building the CARRY=1 variant -- the
+   encoding of `CARRY8.CI.CIN`, by reading bits 10_18 and 14_01 in a non-root
+   CLEM. Before any of it, smoke-test the chain: `bit2fasm.py` on
+   `001-part-yaml`'s own `design.bit`. If part.yaml + tilegrid + segbits cannot
+   round-trip a Vivado bitstream on this die, nothing downstream is
+   trustworthy.
+
+6. `.bit.bin` packaging is done and verified byte-for-byte against bootgen
+   (`tools/bit2binfile.py`), but **nothing has been loaded onto the board yet**.
+   When it is: `fpgautil` does not touch clocks, so check
+   `/sys/kernel/debug/clk/clk_summary` for `pl0` on the board first, or the
+   counter will not run and the wrong layer gets debugged.

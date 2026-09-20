@@ -16,3 +16,4 @@ __pycache__/
 # are reproducible in seconds. The .fasm IS kept, as the reference output that
 # tools/check_fasm_vs_uraydb.py is checked against.
 designs/*/*.json
+designs/*/*.filtered.fasm

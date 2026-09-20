@@ -24,4 +24,9 @@ yosys -q -p "read_verilog blink_ps.v
     --write blink_ps_routed.json \
     --fasm blink_ps.fasm
 
-python3 "$ROOT/tools/check_fasm_vs_uraydb.py" blink_ps.fasm
+# prjuray's assembler does not ignore a feature it has never heard of --
+# fasm_assembler.py collects every one and raises FasmLookupError, so a single
+# stray name makes fasm2bit.py refuse the whole file. --filter writes a copy
+# with the unknowns removed and names each one. SCOPE-K26.md says which tile
+# types those are and why dropping them is safe.
+python3 "$ROOT/tools/check_fasm_vs_uraydb.py" blink_ps.fasm --filter blink_ps.filtered.fasm
