@@ -890,6 +890,84 @@ all-clear region legitimately decodes to — and 16 are narrowed spellings of
 ours. Five set bits, four of those are ours, and the fifth is the collision
 above.
 
+## The Vivado reference found a real bug on the LED path (2026-09-20)
+
+`env/reference_build.sh` built `kv260_ps_blink` in Vivado and decoded the
+result. Both bitstreams LOC the same eight package pins, so the two HDIO tiles
+can be compared bit for bit. They differ in exactly nine bits, and eight of
+them are ours to fix.
+
+### 1. nextpnr never writes `OQ_MUX`, so the pad is left on the OPTFF
+
+Vivado sets `HDIOLOGIC_{M,S}_X0Y<k>.OQ_MUX.NOT_OPTFF` on every one of the eight
+sites driving a PMOD pin. We emit **no `OQ_MUX` feature at all** --
+`nextpnr-xilinx/xilinx/fasm.cc` has no notion of it -- so those bits stay clear,
+which matches neither `NOT_OPTFF` (`!00_826 01_825`) nor `OPTFF`
+(`00_826 !01_825`). The combinational route through the site is selected by the
+site's own output mux, not by the route-through pip: prjuray models it as two
+features, and we were writing only one.
+
+| | |
+| --- | --- |
+| we write | `PIP.HDIO_LOGICPAIR_35_OPFFM_Q.HDIO_LOGICPAIR_35_OPFFM_D1` = `00_830` |
+| we omit | `HDIOLOGIC_M_X0Y3.OQ_MUX.NOT_OPTFF` = `!00_826 01_825` |
+
+Verified by adding the eight features to the FASM by hand and re-assembling:
+both HDIO tiles then match Vivado's bitstream exactly, bar the one bit below.
+Site mapping confirmed against the segbits, not guessed -- the pip's bit is
+`00_N` and the site's mux bit is `01_(N-5)`:
+
+```
+HDIO_TOP_RIGHT_X7Y150  LOGICPAIR 14->M_X0Y0  15->S_X0Y0  21->M_X0Y1  22->S_X0Y1
+                                 28->M_X0Y2  29->S_X0Y2  35->M_X0Y3
+HDIO_BOT_RIGHT_X7Y120  LOGICPAIR 36->S_X0Y3
+```
+
+`PipInfoPOD` carries `site` (the site index in the tile), so fasm.cc can get the
+site from the chipdb and does not need a generated table like
+`usp_bufce_leaf.inc`.
+
+### 2. prjuray mis-solved one bit of `IOB_X0Y4.IOSTANDARD_OUT`
+
+The last differing bit is `01_605`: we set it, Vivado clears it. It is claimed
+by two features at once --
+
+```
+HDIO_TOP_RIGHT.IOB_X0Y4.IOSTANDARD_OUT.LVCMOS33_IDRIVE_I12_SLEW_SLEW_SLOW  ... 01_605 ...
+HDIO_TOP_RIGHT.HDIOLOGIC_M_X0Y2.OPTFF.OSERDESE3.OSERDES_T_BYPASS.TRUE      !01_605
+```
+
+-- and it is a solve artefact, not a real part of the IO standard. The
+canonical `IOSTANDARD_OUT` encoding is **26 bits**; four of the twelve IOBs
+carry a 27th at the same relative offset (+28 in frame 1), negated in three of
+them and positive only in `IOB_X0Y4`. Of that IOB's 40 `IOSTANDARD_OUT`
+variants, exactly **one** carries a positive `01_605` -- and it is the variant
+this design uses. Every other LED pin matches Vivado's bitstream bit for bit.
+
+Setting it means `OSERDES_T_BYPASS` false on `HDIOLOGIC_M_X0Y2`, i.e. the pad's
+output enable comes from an OSERDES nothing configures, so that one pin may not
+drive. `prjuray-db` is read only, and the working `database/zynqusp/*.db` are
+symlinks into it, so the correction cannot live there.
+
+### 3. What the reference settled about the clock spine
+
+`--filter` is right to drop the three `CLK_HDISTR_*.USED.V1` features. The class
+diff shows `RCLK_INTF_LEFT_TERM_ALTO:WIRE.CLK_HDISTR_*.USED.*` is a class **only
+we emit**: Vivado configures that tile type (25 PIP + 24 WIRE features) and
+writes `CLK_HROUTE*.USED.*` there, never an HDISTR one, in any instance. For its
+own equivalent route Vivado sets exactly one HDISTR enable,
+`RCLK_HDIO_X7Y149.WIRE.CLK_HDISTR_FT0_8.USED.V1`, in a tile we also emit. And
+`RCLK_CLEM_CLKBUF_L_X15Y149` -- which has a frame window from the fill and no
+segbits, so any set bit would show as undecoded -- has **0 undecoded bits**.
+nextpnr is marking `.USED` on every tile a distribution node passes through;
+only the endpoints carry a bit. `RCLK_RCLK_XIPHY_INNER_FT` still has no frame
+window, so it is the one tile this could not test.
+
+Beware the class diff's "classes ONLY in the reference (114)" list: `ref.fasm`
+is a full-die **decode** of 1.2M features and ours is a 9k **emit**, so it is
+dominated by the default encodings of 100k untouched CLE tiles. Only the
+"only in ours" list and the per-tile bit diffs mean anything.
+
 ## Open, in priority order
 
 1. **DONE.** `part.yaml` and `tilegrid.json` both exist for the XCK26 and
