@@ -946,8 +946,39 @@ this design uses. Every other LED pin matches Vivado's bitstream bit for bit.
 
 Setting it means `OSERDES_T_BYPASS` false on `HDIOLOGIC_M_X0Y2`, i.e. the pad's
 output enable comes from an OSERDES nothing configures, so that one pin may not
-drive. `prjuray-db` is read only, and the working `database/zynqusp/*.db` are
-symlinks into it, so the correction cannot live there.
+drive.
+
+`prjuray-db` is read only and the working `database/zynqusp/*.db` are symlinks
+into it, so the correction lives in `db-corrections/` as data plus its
+evidence, and `tools/apply_db_corrections.py` writes a corrected real copy into
+the overlay in place of that one symlink. `mk_uray_overlay.sh` runs it after
+linking, so it survives a re-link. The applier **fails** rather than warns when
+a correction no longer applies, so a db update that fixes this upstream is
+noticed instead of silently absorbed.
+
+### Result: the LED path is bit-identical to Vivado's
+
+After both fixes, `tools/diff_tile_bits.py` on the two LOC-matched IO tiles:
+
+```
+  HDIO_TOP_RIGHT_X7Y150   reference  91 bits, ours  91, common  91
+  HDIO_BOT_RIGHT_X7Y120   reference  13 bits, ours  13, common  13
+  OK: every named tile is bit-identical
+```
+
+### One frame column Vivado configures and 002 never mapped
+
+Both bitstreams carry **20940** configuration frames -- the earlier "20812" is
+the `.frames` file, i.e. the frames fasm2bit writes, and `xcframes2bit` pads the
+rest. Of the 128 frames Vivado's dump has that our `.frames` does not, 127 are
+all-zero. The exception is `0x00083202`, where Vivado sets 8 bits and **no tile
+in our tilegrid owns the frame at all**: the column list runs `0x83100 HPIO_L`,
+then nothing, then `0x83300 CMT_L`. Those are part of the 17 undecoded bits
+`locate_unknown_bits.py` could attribute to no tile. Not on this design's path
+-- the PMOD pins are HDIO in bank 45, not HPIO -- but it is a real hole in
+002's column coverage and the place to start if an HPIO design misbehaves.
+
+
 
 ### 3. What the reference settled about the clock spine
 
