@@ -446,43 +446,76 @@ Both `build.sh` scripts run it. On the PS design it drops exactly 11:
   feeds the flip-flops. If the distribution track needs a per-tile enable in
   each, dropping one means the clock never arrives and the LEDs never blink.
 
-  **This has now been measured, and the three split two to one.**
-  `tools/explain_missing_feature.py` asks the question that matters: is the
-  feature missing because the fuzzer looked and found nothing, or because it
-  never looked? The two call for opposite responses, and the answer is in
-  prjuray-db already.
+  **This has now been measured.** `tools/explain_missing_feature.py` asks the
+  question that matters: is a feature missing because the fuzzer looked and
+  found nothing, or because it never looked? The two call for opposite
+  responses.
 
-  Every `.USED.` bit in every RCLK tile type was solved by one fuzzer,
-  `060-rclk-seed`. So where a tile type has a segbits file, that fuzzer
-  reached it, and an absent feature family is a **solved negative**.
+  **The discriminating check is not "does the tile type have a segbits file".**
+  That was the first answer here and it was wrong. segmaker drops a tag that
+  never varies, so "fuzzed and found no bit" and "never drove this wire" leave
+  an identical, empty trace. The check that separates them is whether the tile
+  type has *any* feature at all -- a pip, anything -- naming a `CLK_HDISTR`
+  wire, and whether the tile type has those wires to begin with
+  (`prjuray-db/zynqusp/tile_types/tile_type_*.json`).
 
-  | tile type | on the ZU3EG | segbits | `CLK_HDISTR.*USED` | verdict |
-  | --- | ---: | --- | ---: | --- |
-  | `RCLK_INTF_LEFT_TERM_ALTO` | 3 | yes, 456 bits | **0** (48 `CLK_HROUTE`) | solved negative -- **safe** |
-  | `RCLK_CLEM_CLKBUF_L` | **0** | none | -- | coverage gap |
-  | `RCLK_RCLK_XIPHY_INNER_FT` | **0** | none | -- | coverage gap |
+  | tile type | HDISTR wires | any HDISTR feature | HDISTR `.USED.` | reading |
+  | --- | ---: | ---: | ---: | --- |
+  | `RCLK_INT_L` | 24 | **768** | **0** | exercised hard, no enable exists |
+  | `RCLK_HDIO` | 24 | 96 | 48 | enable per wire (24x2) |
+  | `RCLK_DSP_INTF_CLKBUF_L` | 48 | 144 | 96 | enable per wire |
+  | `RCLK_XIPHY_OUTER_RIGHT` | 48 | 48 | 48 | enable per wire |
+  | `CMT_RIGHT` | 24 | 48 | 48 | enable per wire |
+  | `RCLK_CLEM_L`, `_R`, `RCLK_CLEL_L_L`, `RCLK_DSP_INTF_L` | 24 | **0** | 0 | never exercised -- unknown |
+  | `RCLK_INTF_LEFT_TERM_ALTO` | 24 | **0** | 0 | never exercised -- unknown |
+  | `RCLK_CLEM_CLKBUF_L` | -- | no tile_type json | -- | absent from the ZU3EG |
+  | `RCLK_RCLK_XIPHY_INNER_FT` | -- | no tile_type json | -- | absent from the ZU3EG |
 
-  `RCLK_INTF_LEFT_TERM_ALTO` exists on the ZU3EG, was fuzzed, and got 48
-  `CLK_HROUTE` enables and **no** `CLK_HDISTR` ones. The enable does not exist
-  in that tile type; we over-emit and dropping it is right.
+  `RCLK_INT_L` is the positive control and the one clean negative: 768 HDISTR
+  features and not one enable bit, so a track crossing `RCLK_INT_L` needs no
+  per-tile enable. Every tile type that *taps or sources* a clock -- HDIO, the
+  CLKBUF tiles, XIPHY, CMT -- has an enable for every HDISTR wire it carries.
 
-  The other two **do not exist on the ZU3EG at all**, which is the whole
-  reason prjuray-db has nothing for them -- not a fuzzer that gave up, a die
-  that lacks the tiles. So nothing is known, and the analogy runs the wrong
-  way for us: the comparable characterised tile types do have the bits.
-  `RCLK_DSP_INTF_CLKBUF_L`, the other CLKBUF tile, carries 48 `CLK_HDISTR_L`
-  plus 48 `CLK_HDISTR_R` enables; `RCLK_XIPHY_OUTER_RIGHT` carries 48. Plain
-  pass-through RCLK tiles (`RCLK_CLEM_L`, `RCLK_CLEM_R`, `RCLK_CLEL_L_L`)
-  carry 12 USED bits each and **none is HDISTR** -- only VDISTR/VROUTE. The
-  consistent physical reading is that HDISTR is a buffered horizontal spine
-  whose enable lives in the tiles that re-drive it, and `RCLK_CLEM_CLKBUF_L`
-  is by its name one of those.
+  An earlier version of this section called `RCLK_INTF_LEFT_TERM_ALTO` a
+  solved negative and therefore **safe**. That was wrong, and wrong in the
+  expensive direction: it has the 24 HDISTR wires and the fuzzers produced
+  **zero** features on any of them. It is unknown, not safe. What its segbits
+  do contain is 360 `PIP.CLK_BUFG_PS_*_CLK_IN` features and 48 `CLK_HROUTE`
+  enables -- `071-ps8-bufg` fuzzed exactly the PS-to-fabric path through this
+  tile, and the path it found leaves `BUFG_PS` onto **HROUTE**.
 
-  **So the two dropped `CLKBUF`/`XIPHY_INNER` enables are probably real bits
-  we are failing to set.** The fix is not a guess: run `060-rclk-seed` on the
-  XCK26 after `002-tilegrid` lands. Because this die *has* these tiles, its
-  random clock designs will route through them and solve what the ZU3EG never
-  could. That is ~405 specimens, so budget hours, not minutes.
+  **Our FASM agrees with that, which is the reassuring part.** The whole clock
+  path in `blink_ps.fasm` is characterised end to end:
+
+      RCLK_INTF_LEFT_TERM_ALTO  PS_TO_PL_CLK0 -> CLK_BUFG_PS_0_CLK_IN
+                                CLK_BUFG_PS_0_CLK_OUT -> CLK_HROUTE0   (+USED)
+      RCLK_DSP_INTF_L           CLK_HROUTE_CORE_OPT0 -> CLK_CMT_MUX_3TO1_0
+                                -> CLK_VDISTR_BOT0                     (+USED)
+      RCLK_HDIO                 CLK_HROUTE_L0, CLK_HDISTR_FT0_0        (+USED)
+      RCLK_INT_L                CLK_HDISTR_FT0_0 -> CLK_LEAF_SITES_3_CLK_IN
+                                BUFCE_LEAF_X0Y2.IN_USE
+
+  Every one of those is known to prjuray-db. The three dropped features are
+  `USED` marks on the HDISTR node where it crosses three *other* tiles in the
+  same row. `RCLK_HDIO` proves the mark is needed where a bit exists for it.
+
+  So the position is: two of the three (`RCLK_CLEM_CLKBUF_L`,
+  `RCLK_RCLK_XIPHY_INNER_FT`) are tile types the ZU3EG does not have at all,
+  their characterised siblings all carry the enable, and they are **probably
+  real bits we fail to set**. The third is on a different wire
+  (`CLK_HDISTR_FT1_0`) from the live path in a tile whose HDISTR was never
+  touched, and is simply **unknown**.
+
+  **Settle it with one Vivado run, not 405.** The reference build
+  (`env/reference_build.sh`) produces a bitstream for the same design;
+  `bit2fasm.py --verbose` then reports unknown bits per tile. If Vivado sets
+  bits in `RCLK_CLEM_CLKBUF_L` and `RCLK_RCLK_XIPHY_INNER_FT` at Y149, that is
+  proof in a single run, and it shows which wire Vivado uses at
+  `LEFT_TERM_ALTO` as well. Only if that says the bits are real is
+  `060-rclk-seed` (~405 specimens, hours) needed to *solve* them -- and there
+  may be a cheaper fix, since if Vivado reaches the leaf over a fully
+  characterised path, nextpnr can be steered onto it by forbidding the
+  unfuzzed pips, with no new characterisation at all.
 
 | tile type | known | unknown | % |
 | --- | ---: | ---: | ---: |
