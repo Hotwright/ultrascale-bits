@@ -43,7 +43,7 @@
         }
       },
       "cells": {
-        "$specify$29": {
+        "$specify$32": {
           "hide_name": 1,
           "type": "$specify2",
           "parameters": {
@@ -74,7 +74,7 @@
             "SRC": [ 3 ]
           }
         },
-        "$specify$30": {
+        "$specify$33": {
           "hide_name": 1,
           "type": "$specify2",
           "parameters": {
@@ -105,7 +105,7 @@
             "SRC": [ 4 ]
           }
         },
-        "$specify$31": {
+        "$specify$34": {
           "hide_name": 1,
           "type": "$specify2",
           "parameters": {
@@ -136,7 +136,7 @@
             "SRC": [ 5 ]
           }
         },
-        "$specify$32": {
+        "$specify$35": {
           "hide_name": 1,
           "type": "$specify2",
           "parameters": {
@@ -167,7 +167,7 @@
             "SRC": [ 6 ]
           }
         },
-        "$specify$33": {
+        "$specify$36": {
           "hide_name": 1,
           "type": "$specify2",
           "parameters": {
@@ -198,7 +198,7 @@
             "SRC": [ 7 ]
           }
         },
-        "$specify$34": {
+        "$specify$37": {
           "hide_name": 1,
           "type": "$specify2",
           "parameters": {
@@ -229,7 +229,7 @@
             "SRC": [ 8 ]
           }
         },
-        "$specify$35": {
+        "$specify$38": {
           "hide_name": 1,
           "type": "$specify2",
           "parameters": {
@@ -366,7 +366,7 @@
         }
       },
       "cells": {
-        "$specify$36": {
+        "$specify$39": {
           "hide_name": 1,
           "type": "$specify2",
           "parameters": {
@@ -397,7 +397,7 @@
             "SRC": [ 3 ]
           }
         },
-        "$specify$37": {
+        "$specify$40": {
           "hide_name": 1,
           "type": "$specify2",
           "parameters": {
@@ -428,7 +428,7 @@
             "SRC": [ 4 ]
           }
         },
-        "$specify$38": {
+        "$specify$41": {
           "hide_name": 1,
           "type": "$specify2",
           "parameters": {
@@ -459,7 +459,7 @@
             "SRC": [ 5 ]
           }
         },
-        "$specify$39": {
+        "$specify$42": {
           "hide_name": 1,
           "type": "$specify2",
           "parameters": {
@@ -490,7 +490,7 @@
             "SRC": [ 6 ]
           }
         },
-        "$specify$40": {
+        "$specify$43": {
           "hide_name": 1,
           "type": "$specify2",
           "parameters": {
@@ -521,7 +521,7 @@
             "SRC": [ 7 ]
           }
         },
-        "$specify$41": {
+        "$specify$44": {
           "hide_name": 1,
           "type": "$specify2",
           "parameters": {
@@ -552,7 +552,7 @@
             "SRC": [ 8 ]
           }
         },
-        "$specify$42": {
+        "$specify$45": {
           "hide_name": 1,
           "type": "$specify2",
           "parameters": {
@@ -583,7 +583,7 @@
             "SRC": [ 9 ]
           }
         },
-        "$specify$43": {
+        "$specify$46": {
           "hide_name": 1,
           "type": "$specify2",
           "parameters": {
@@ -2331,7 +2331,7 @@
         }
       },
       "cells": {
-        "$specify$6": {
+        "$specify$9": {
           "hide_name": 1,
           "type": "$specify2",
           "parameters": {
@@ -4113,8 +4113,9 @@
     },
     "CARRY4": {
       "attributes": {
-        "abc9_box": "00000000000000000000000000000001",
         "blackbox": "00000000000000000000000000000001",
+        "abc9_box": "00000000000000000000000000000001",
+        "cells_not_processed": "00000000000000000000000000000001",
         "src": "/usr/bin/../share/yosys/xilinx/cells_sim.v:372.1-441.10"
       },
       "ports": {
@@ -16634,7 +16635,7 @@
         }
       },
       "cells": {
-        "$logic_and$/usr/bin/../share/yosys/xilinx/cells_sim.v:3518$1353": {
+        "$logic_and$/usr/bin/../share/yosys/xilinx/cells_sim.v:3518$1356": {
           "hide_name": 1,
           "type": "$logic_and",
           "parameters": {
@@ -16658,7 +16659,7 @@
             "Y": [ 419 ]
           }
         },
-        "$logic_and$/usr/bin/../share/yosys/xilinx/cells_sim.v:3519$1354": {
+        "$logic_and$/usr/bin/../share/yosys/xilinx/cells_sim.v:3519$1357": {
           "hide_name": 1,
           "type": "$logic_and",
           "parameters": {
@@ -16682,7 +16683,7 @@
             "Y": [ 420 ]
           }
         },
-        "$logic_and$/usr/bin/../share/yosys/xilinx/cells_sim.v:3520$1355": {
+        "$logic_and$/usr/bin/../share/yosys/xilinx/cells_sim.v:3520$1358": {
           "hide_name": 1,
           "type": "$logic_and",
           "parameters": {
@@ -16706,7 +16707,7 @@
             "Y": [ 421 ]
           }
         },
-        "$logic_and$/usr/bin/../share/yosys/xilinx/cells_sim.v:3521$1356": {
+        "$logic_and$/usr/bin/../share/yosys/xilinx/cells_sim.v:3521$1359": {
           "hide_name": 1,
           "type": "$logic_and",
           "parameters": {
@@ -16730,7 +16731,7 @@
             "Y": [ 422 ]
           }
         },
-        "genblk1.$specify$459": {
+        "genblk1.$specify$462": {
           "hide_name": 0,
           "type": "$specrule",
           "parameters": {
@@ -16765,7 +16766,7 @@
             "SRC_EN": [ "1" ]
           }
         },
-        "genblk1.$specify$460": {
+        "genblk1.$specify$463": {
           "hide_name": 0,
           "type": "$specrule",
           "parameters": {
@@ -16800,7 +16801,7 @@
             "SRC_EN": [ "1" ]
           }
         },
-        "genblk2.$specify$463": {
+        "genblk2.$specify$466": {
           "hide_name": 0,
           "type": "$specrule",
           "parameters": {
@@ -16835,7 +16836,7 @@
             "SRC_EN": [ "1" ]
           }
         },
-        "genblk2.$specify$464": {
+        "genblk2.$specify$467": {
           "hide_name": 0,
           "type": "$specrule",
           "parameters": {
@@ -16870,7 +16871,7 @@
             "SRC_EN": [ "1" ]
           }
         },
-        "genblk3.$specify$467": {
+        "genblk3.$specify$470": {
           "hide_name": 0,
           "type": "$specrule",
           "parameters": {
@@ -16905,7 +16906,7 @@
             "SRC_EN": [ "1" ]
           }
         },
-        "genblk3.$specify$468": {
+        "genblk3.$specify$471": {
           "hide_name": 0,
           "type": "$specrule",
           "parameters": {
@@ -16940,7 +16941,7 @@
             "SRC_EN": [ "1" ]
           }
         },
-        "genblk4.$specify$471": {
+        "genblk4.$specify$474": {
           "hide_name": 0,
           "type": "$specrule",
           "parameters": {
@@ -16975,7 +16976,7 @@
             "SRC_EN": [ "1" ]
           }
         },
-        "genblk4.$specify$472": {
+        "genblk4.$specify$475": {
           "hide_name": 0,
           "type": "$specrule",
           "parameters": {
@@ -17010,7 +17011,7 @@
             "SRC_EN": [ "1" ]
           }
         },
-        "genblk5.$specify$475": {
+        "genblk5.$specify$478": {
           "hide_name": 0,
           "type": "$specrule",
           "parameters": {
@@ -17045,7 +17046,7 @@
             "SRC_EN": [ "1" ]
           }
         },
-        "genblk5.$specify$476": {
+        "genblk5.$specify$479": {
           "hide_name": 0,
           "type": "$specrule",
           "parameters": {
@@ -17080,7 +17081,7 @@
             "SRC_EN": [ "1" ]
           }
         },
-        "genblk6.$specify$477": {
+        "genblk6.$specify$480": {
           "hide_name": 0,
           "type": "$specify3",
           "parameters": {
@@ -17117,7 +17118,7 @@
             "SRC": [ 322 ]
           }
         },
-        "genblk6.$specify$478": {
+        "genblk6.$specify$481": {
           "hide_name": 0,
           "type": "$specify3",
           "parameters": {
@@ -17154,7 +17155,7 @@
             "SRC": [ 322 ]
           }
         },
-        "genblk6.$specify$479": {
+        "genblk6.$specify$482": {
           "hide_name": 0,
           "type": "$specify3",
           "parameters": {
@@ -17191,7 +17192,7 @@
             "SRC": [ 322 ]
           }
         },
-        "genblk6.$specify$480": {
+        "genblk6.$specify$483": {
           "hide_name": 0,
           "type": "$specify3",
           "parameters": {
@@ -17230,28 +17231,28 @@
         }
       },
       "netnames": {
-        "$logic_and$/usr/bin/../share/yosys/xilinx/cells_sim.v:3518$1353_Y": {
+        "$logic_and$/usr/bin/../share/yosys/xilinx/cells_sim.v:3518$1356_Y": {
           "hide_name": 1,
           "bits": [ 419 ],
           "attributes": {
             "src": "/usr/bin/../share/yosys/xilinx/cells_sim.v:3518.21-3518.44"
           }
         },
-        "$logic_and$/usr/bin/../share/yosys/xilinx/cells_sim.v:3519$1354_Y": {
+        "$logic_and$/usr/bin/../share/yosys/xilinx/cells_sim.v:3519$1357_Y": {
           "hide_name": 1,
           "bits": [ 420 ],
           "attributes": {
             "src": "/usr/bin/../share/yosys/xilinx/cells_sim.v:3519.22-3519.44"
           }
         },
-        "$logic_and$/usr/bin/../share/yosys/xilinx/cells_sim.v:3520$1355_Y": {
+        "$logic_and$/usr/bin/../share/yosys/xilinx/cells_sim.v:3520$1358_Y": {
           "hide_name": 1,
           "bits": [ 421 ],
           "attributes": {
             "src": "/usr/bin/../share/yosys/xilinx/cells_sim.v:3520.21-3520.44"
           }
         },
-        "$logic_and$/usr/bin/../share/yosys/xilinx/cells_sim.v:3521$1356_Y": {
+        "$logic_and$/usr/bin/../share/yosys/xilinx/cells_sim.v:3521$1359_Y": {
           "hide_name": 1,
           "bits": [ 422 ],
           "attributes": {
@@ -102155,7 +102156,7 @@
         }
       },
       "cells": {
-        "$specify$1": {
+        "$specify$4": {
           "hide_name": 1,
           "type": "$specify2",
           "parameters": {
@@ -110313,7 +110314,7 @@
         }
       },
       "cells": {
-        "$specify$7": {
+        "$specify$10": {
           "hide_name": 1,
           "type": "$specify2",
           "parameters": {
@@ -110734,7 +110735,7 @@
         }
       },
       "cells": {
-        "$specify$3": {
+        "$specify$6": {
           "hide_name": 1,
           "type": "$specify2",
           "parameters": {
@@ -110765,7 +110766,7 @@
             "SRC": [ 4 ]
           }
         },
-        "$specify$4": {
+        "$specify$7": {
           "hide_name": 1,
           "type": "$specify2",
           "parameters": {
@@ -114679,7 +114680,7 @@
         }
       },
       "cells": {
-        "$specify$8": {
+        "$specify$11": {
           "hide_name": 1,
           "type": "$specify2",
           "parameters": {
@@ -114730,9 +114731,8 @@
     },
     "LUT2": {
       "attributes": {
-        "blackbox": "00000000000000000000000000000001",
         "abc9_lut": "00000000000000000000000000000010",
-        "cells_not_processed": "00000000000000000000000000000001",
+        "blackbox": "00000000000000000000000000000001",
         "src": "/usr/bin/../share/yosys/xilinx/cells_sim.v:199.1-207.10"
       },
       "parameter_default_values": {
@@ -114753,38 +114753,7 @@
         }
       },
       "cells": {
-        "$specify$10": {
-          "hide_name": 1,
-          "type": "$specify2",
-          "parameters": {
-            "DST_WIDTH": "00000000000000000000000000000001",
-            "FULL": "0",
-            "SRC_DST_PEN": "0",
-            "SRC_DST_POL": "0",
-            "SRC_WIDTH": "00000000000000000000000000000001",
-            "T_FALL_MAX": "00000000000000000000000001111111",
-            "T_FALL_MIN": "00000000000000000000000001111111",
-            "T_FALL_TYP": "00000000000000000000000001111111",
-            "T_RISE_MAX": "00000000000000000000000001111111",
-            "T_RISE_MIN": "00000000000000000000000001111111",
-            "T_RISE_TYP": "00000000000000000000000001111111"
-          },
-          "attributes": {
-            "module_not_derived": "00000000000000000000000000000001",
-            "src": "/usr/bin/../share/yosys/xilinx/cells_sim.v:205.5-205.21"
-          },
-          "port_directions": {
-            "DST": "input",
-            "EN": "input",
-            "SRC": "input"
-          },
-          "connections": {
-            "DST": [ 2 ],
-            "EN": [ "1" ],
-            "SRC": [ 4 ]
-          }
-        },
-        "$specify$9": {
+        "$specify$12": {
           "hide_name": 1,
           "type": "$specify2",
           "parameters": {
@@ -114814,6 +114783,37 @@
             "EN": [ "1" ],
             "SRC": [ 3 ]
           }
+        },
+        "$specify$13": {
+          "hide_name": 1,
+          "type": "$specify2",
+          "parameters": {
+            "DST_WIDTH": "00000000000000000000000000000001",
+            "FULL": "0",
+            "SRC_DST_PEN": "0",
+            "SRC_DST_POL": "0",
+            "SRC_WIDTH": "00000000000000000000000000000001",
+            "T_FALL_MAX": "00000000000000000000000001111111",
+            "T_FALL_MIN": "00000000000000000000000001111111",
+            "T_FALL_TYP": "00000000000000000000000001111111",
+            "T_RISE_MAX": "00000000000000000000000001111111",
+            "T_RISE_MIN": "00000000000000000000000001111111",
+            "T_RISE_TYP": "00000000000000000000000001111111"
+          },
+          "attributes": {
+            "module_not_derived": "00000000000000000000000000000001",
+            "src": "/usr/bin/../share/yosys/xilinx/cells_sim.v:205.5-205.21"
+          },
+          "port_directions": {
+            "DST": "input",
+            "EN": "input",
+            "SRC": "input"
+          },
+          "connections": {
+            "DST": [ 2 ],
+            "EN": [ "1" ],
+            "SRC": [ 4 ]
+          }
         }
       },
       "netnames": {
@@ -114842,9 +114842,8 @@
     },
     "LUT3": {
       "attributes": {
-        "blackbox": "00000000000000000000000000000001",
         "abc9_lut": "00000000000000000000000000000011",
-        "cells_not_processed": "00000000000000000000000000000001",
+        "blackbox": "00000000000000000000000000000001",
         "src": "/usr/bin/../share/yosys/xilinx/cells_sim.v:210.1-220.10"
       },
       "parameter_default_values": {
@@ -114869,7 +114868,7 @@
         }
       },
       "cells": {
-        "$specify$11": {
+        "$specify$14": {
           "hide_name": 1,
           "type": "$specify2",
           "parameters": {
@@ -114900,7 +114899,7 @@
             "SRC": [ 3 ]
           }
         },
-        "$specify$12": {
+        "$specify$15": {
           "hide_name": 1,
           "type": "$specify2",
           "parameters": {
@@ -114931,7 +114930,7 @@
             "SRC": [ 4 ]
           }
         },
-        "$specify$13": {
+        "$specify$16": {
           "hide_name": 1,
           "type": "$specify2",
           "parameters": {
@@ -114996,9 +114995,8 @@
     },
     "LUT4": {
       "attributes": {
-        "blackbox": "00000000000000000000000000000001",
         "abc9_lut": "00000000000000000000000000000011",
-        "cells_not_processed": "00000000000000000000000000000001",
+        "blackbox": "00000000000000000000000000000001",
         "src": "/usr/bin/../share/yosys/xilinx/cells_sim.v:223.1-235.10"
       },
       "parameter_default_values": {
@@ -115027,7 +115025,7 @@
         }
       },
       "cells": {
-        "$specify$14": {
+        "$specify$17": {
           "hide_name": 1,
           "type": "$specify2",
           "parameters": {
@@ -115058,7 +115056,7 @@
             "SRC": [ 3 ]
           }
         },
-        "$specify$15": {
+        "$specify$18": {
           "hide_name": 1,
           "type": "$specify2",
           "parameters": {
@@ -115089,7 +115087,7 @@
             "SRC": [ 4 ]
           }
         },
-        "$specify$16": {
+        "$specify$19": {
           "hide_name": 1,
           "type": "$specify2",
           "parameters": {
@@ -115120,7 +115118,7 @@
             "SRC": [ 5 ]
           }
         },
-        "$specify$17": {
+        "$specify$20": {
           "hide_name": 1,
           "type": "$specify2",
           "parameters": {
@@ -115192,9 +115190,8 @@
     },
     "LUT5": {
       "attributes": {
-        "blackbox": "00000000000000000000000000000001",
         "abc9_lut": "00000000000000000000000000000011",
-        "cells_not_processed": "00000000000000000000000000000001",
+        "blackbox": "00000000000000000000000000000001",
         "src": "/usr/bin/../share/yosys/xilinx/cells_sim.v:238.1-252.10"
       },
       "parameter_default_values": {
@@ -115227,7 +115224,7 @@
         }
       },
       "cells": {
-        "$specify$18": {
+        "$specify$21": {
           "hide_name": 1,
           "type": "$specify2",
           "parameters": {
@@ -115258,7 +115255,7 @@
             "SRC": [ 3 ]
           }
         },
-        "$specify$19": {
+        "$specify$22": {
           "hide_name": 1,
           "type": "$specify2",
           "parameters": {
@@ -115289,7 +115286,7 @@
             "SRC": [ 4 ]
           }
         },
-        "$specify$20": {
+        "$specify$23": {
           "hide_name": 1,
           "type": "$specify2",
           "parameters": {
@@ -115320,7 +115317,7 @@
             "SRC": [ 5 ]
           }
         },
-        "$specify$21": {
+        "$specify$24": {
           "hide_name": 1,
           "type": "$specify2",
           "parameters": {
@@ -115351,7 +115348,7 @@
             "SRC": [ 6 ]
           }
         },
-        "$specify$22": {
+        "$specify$25": {
           "hide_name": 1,
           "type": "$specify2",
           "parameters": {
@@ -115430,9 +115427,8 @@
     },
     "LUT6": {
       "attributes": {
-        "blackbox": "00000000000000000000000000000001",
         "abc9_lut": "00000000000000000000000000000101",
-        "cells_not_processed": "00000000000000000000000000000001",
+        "blackbox": "00000000000000000000000000000001",
         "src": "/usr/bin/../share/yosys/xilinx/cells_sim.v:258.1-274.10"
       },
       "parameter_default_values": {
@@ -115469,7 +115465,7 @@
         }
       },
       "cells": {
-        "$specify$23": {
+        "$specify$26": {
           "hide_name": 1,
           "type": "$specify2",
           "parameters": {
@@ -115500,7 +115496,7 @@
             "SRC": [ 3 ]
           }
         },
-        "$specify$24": {
+        "$specify$27": {
           "hide_name": 1,
           "type": "$specify2",
           "parameters": {
@@ -115531,7 +115527,7 @@
             "SRC": [ 4 ]
           }
         },
-        "$specify$25": {
+        "$specify$28": {
           "hide_name": 1,
           "type": "$specify2",
           "parameters": {
@@ -115562,7 +115558,7 @@
             "SRC": [ 5 ]
           }
         },
-        "$specify$26": {
+        "$specify$29": {
           "hide_name": 1,
           "type": "$specify2",
           "parameters": {
@@ -115593,7 +115589,7 @@
             "SRC": [ 6 ]
           }
         },
-        "$specify$27": {
+        "$specify$30": {
           "hide_name": 1,
           "type": "$specify2",
           "parameters": {
@@ -115624,7 +115620,7 @@
             "SRC": [ 7 ]
           }
         },
-        "$specify$28": {
+        "$specify$31": {
           "hide_name": 1,
           "type": "$specify2",
           "parameters": {
@@ -121307,9 +121303,8 @@
     },
     "MUXF7": {
       "attributes": {
-        "blackbox": "00000000000000000000000000000001",
         "abc9_box": "00000000000000000000000000000001",
-        "cells_not_processed": "00000000000000000000000000000001",
+        "blackbox": "00000000000000000000000000000001",
         "src": "/usr/bin/../share/yosys/xilinx/cells_sim.v:342.1-350.10"
       },
       "ports": {
@@ -121365,9 +121360,8 @@
     },
     "MUXF8": {
       "attributes": {
-        "blackbox": "00000000000000000000000000000001",
         "abc9_box": "00000000000000000000000000000001",
-        "cells_not_processed": "00000000000000000000000000000001",
+        "blackbox": "00000000000000000000000000000001",
         "src": "/usr/bin/../share/yosys/xilinx/cells_sim.v:353.1-361.10"
       },
       "ports": {
@@ -121424,7 +121418,6 @@
     "MUXF9": {
       "attributes": {
         "blackbox": "00000000000000000000000000000001",
-        "cells_not_processed": "00000000000000000000000000000001",
         "src": "/usr/bin/../share/yosys/xilinx/cells_sim.v:363.1-365.10"
       },
       "ports": {
@@ -121500,7 +121493,7 @@
         }
       },
       "cells": {
-        "$specify$2": {
+        "$specify$5": {
           "hide_name": 1,
           "type": "$specify2",
           "parameters": {
@@ -122126,7 +122119,7 @@
         }
       },
       "cells": {
-        "$specify$5": {
+        "$specify$8": {
           "hide_name": 1,
           "type": "$specify2",
           "parameters": {
@@ -200250,7 +200243,7 @@
         }
       },
       "cells": {
-        "$specify$239": {
+        "$specify$242": {
           "hide_name": 1,
           "type": "$specrule",
           "parameters": {
@@ -200285,7 +200278,7 @@
             "SRC_EN": [ "1" ]
           }
         },
-        "$specify$240": {
+        "$specify$243": {
           "hide_name": 1,
           "type": "$specrule",
           "parameters": {
@@ -200320,7 +200313,7 @@
             "SRC_EN": [ "1" ]
           }
         },
-        "$specify$241": {
+        "$specify$244": {
           "hide_name": 1,
           "type": "$specrule",
           "parameters": {
@@ -200355,7 +200348,7 @@
             "SRC_EN": [ "1" ]
           }
         },
-        "$specify$242": {
+        "$specify$245": {
           "hide_name": 1,
           "type": "$specrule",
           "parameters": {
@@ -200390,7 +200383,7 @@
             "SRC_EN": [ "1" ]
           }
         },
-        "$specify$243": {
+        "$specify$246": {
           "hide_name": 1,
           "type": "$specrule",
           "parameters": {
@@ -200425,7 +200418,7 @@
             "SRC_EN": [ "1" ]
           }
         },
-        "$specify$244": {
+        "$specify$247": {
           "hide_name": 1,
           "type": "$specrule",
           "parameters": {
@@ -200460,7 +200453,7 @@
             "SRC_EN": [ "1" ]
           }
         },
-        "$specify$245": {
+        "$specify$248": {
           "hide_name": 1,
           "type": "$specrule",
           "parameters": {
@@ -200495,7 +200488,7 @@
             "SRC_EN": [ "1" ]
           }
         },
-        "$specify$246": {
+        "$specify$249": {
           "hide_name": 1,
           "type": "$specrule",
           "parameters": {
@@ -200530,7 +200523,7 @@
             "SRC_EN": [ "1" ]
           }
         },
-        "$specify$247": {
+        "$specify$250": {
           "hide_name": 1,
           "type": "$specify3",
           "parameters": {
@@ -200567,7 +200560,7 @@
             "SRC": [ 5 ]
           }
         },
-        "$specify$248": {
+        "$specify$251": {
           "hide_name": 1,
           "type": "$specify3",
           "parameters": {
@@ -200604,7 +200597,7 @@
             "SRC": [ 5 ]
           }
         },
-        "$specify$249": {
+        "$specify$252": {
           "hide_name": 1,
           "type": "$specify2",
           "parameters": {
@@ -200635,7 +200628,7 @@
             "SRC": [ 7 ]
           }
         },
-        "$specify$250": {
+        "$specify$253": {
           "hide_name": 1,
           "type": "$specify2",
           "parameters": {
@@ -200666,7 +200659,7 @@
             "SRC": [ 13 ]
           }
         },
-        "$specify$251": {
+        "$specify$254": {
           "hide_name": 1,
           "type": "$specify2",
           "parameters": {
@@ -200697,7 +200690,7 @@
             "SRC": [ 8 ]
           }
         },
-        "$specify$252": {
+        "$specify$255": {
           "hide_name": 1,
           "type": "$specify2",
           "parameters": {
@@ -200728,7 +200721,7 @@
             "SRC": [ 14 ]
           }
         },
-        "$specify$253": {
+        "$specify$256": {
           "hide_name": 1,
           "type": "$specify2",
           "parameters": {
@@ -200759,7 +200752,7 @@
             "SRC": [ 9 ]
           }
         },
-        "$specify$254": {
+        "$specify$257": {
           "hide_name": 1,
           "type": "$specify2",
           "parameters": {
@@ -200790,7 +200783,7 @@
             "SRC": [ 15 ]
           }
         },
-        "$specify$255": {
+        "$specify$258": {
           "hide_name": 1,
           "type": "$specify2",
           "parameters": {
@@ -200821,7 +200814,7 @@
             "SRC": [ 10 ]
           }
         },
-        "$specify$256": {
+        "$specify$259": {
           "hide_name": 1,
           "type": "$specify2",
           "parameters": {
@@ -200852,7 +200845,7 @@
             "SRC": [ 16 ]
           }
         },
-        "$specify$257": {
+        "$specify$260": {
           "hide_name": 1,
           "type": "$specify2",
           "parameters": {
@@ -200883,7 +200876,7 @@
             "SRC": [ 11 ]
           }
         },
-        "$specify$258": {
+        "$specify$261": {
           "hide_name": 1,
           "type": "$specify2",
           "parameters": {
@@ -200914,7 +200907,7 @@
             "SRC": [ 17 ]
           }
         },
-        "$specify$259": {
+        "$specify$262": {
           "hide_name": 1,
           "type": "$specify2",
           "parameters": {
@@ -200945,7 +200938,7 @@
             "SRC": [ 12 ]
           }
         },
-        "$specify$260": {
+        "$specify$263": {
           "hide_name": 1,
           "type": "$specify2",
           "parameters": {
@@ -211389,7 +211382,7 @@
         }
       },
       "cells": {
-        "$specify$481": {
+        "$specify$484": {
           "hide_name": 1,
           "type": "$specrule",
           "parameters": {
@@ -211424,7 +211417,7 @@
             "SRC_EN": [ "1" ]
           }
         },
-        "$specify$482": {
+        "$specify$485": {
           "hide_name": 1,
           "type": "$specrule",
           "parameters": {
@@ -211459,7 +211452,7 @@
             "SRC_EN": [ "1" ]
           }
         },
-        "$specify$483": {
+        "$specify$486": {
           "hide_name": 1,
           "type": "$specrule",
           "parameters": {
@@ -211494,7 +211487,7 @@
             "SRC_EN": [ "1" ]
           }
         },
-        "$specify$484": {
+        "$specify$487": {
           "hide_name": 1,
           "type": "$specrule",
           "parameters": {
@@ -211529,7 +211522,7 @@
             "SRC_EN": [ "1" ]
           }
         },
-        "$specify$485": {
+        "$specify$488": {
           "hide_name": 1,
           "type": "$specrule",
           "parameters": {
@@ -211564,7 +211557,7 @@
             "SRC_EN": [ "1" ]
           }
         },
-        "$specify$486": {
+        "$specify$489": {
           "hide_name": 1,
           "type": "$specrule",
           "parameters": {
@@ -211599,7 +211592,7 @@
             "SRC_EN": [ "1" ]
           }
         },
-        "$specify$487": {
+        "$specify$490": {
           "hide_name": 1,
           "type": "$specrule",
           "parameters": {
@@ -211634,7 +211627,7 @@
             "SRC_EN": [ "1" ]
           }
         },
-        "$specify$488": {
+        "$specify$491": {
           "hide_name": 1,
           "type": "$specrule",
           "parameters": {
@@ -211669,7 +211662,7 @@
             "SRC_EN": [ "1" ]
           }
         },
-        "$specify$489": {
+        "$specify$492": {
           "hide_name": 1,
           "type": "$specrule",
           "parameters": {
@@ -211704,7 +211697,7 @@
             "SRC_EN": [ "1" ]
           }
         },
-        "$specify$490": {
+        "$specify$493": {
           "hide_name": 1,
           "type": "$specrule",
           "parameters": {
@@ -211739,7 +211732,7 @@
             "SRC_EN": [ "1" ]
           }
         },
-        "$specify$491": {
+        "$specify$494": {
           "hide_name": 1,
           "type": "$specrule",
           "parameters": {
@@ -211774,7 +211767,7 @@
             "SRC_EN": [ "1" ]
           }
         },
-        "$specify$492": {
+        "$specify$495": {
           "hide_name": 1,
           "type": "$specrule",
           "parameters": {
@@ -211809,7 +211802,7 @@
             "SRC_EN": [ "1" ]
           }
         },
-        "$specify$493": {
+        "$specify$496": {
           "hide_name": 1,
           "type": "$specify3",
           "parameters": {
@@ -211846,7 +211839,7 @@
             "SRC": [ 2 ]
           }
         },
-        "$specify$494": {
+        "$specify$497": {
           "hide_name": 1,
           "type": "$specify3",
           "parameters": {
@@ -211883,7 +211876,7 @@
             "SRC": [ 2 ]
           }
         },
-        "$specify$495": {
+        "$specify$498": {
           "hide_name": 1,
           "type": "$specify3",
           "parameters": {
@@ -211920,7 +211913,7 @@
             "SRC": [ 2 ]
           }
         },
-        "$specify$496": {
+        "$specify$499": {
           "hide_name": 1,
           "type": "$specify3",
           "parameters": {
@@ -211957,7 +211950,7 @@
             "SRC": [ 2 ]
           }
         },
-        "$specify$497": {
+        "$specify$500": {
           "hide_name": 1,
           "type": "$specify3",
           "parameters": {
@@ -211994,7 +211987,7 @@
             "SRC": [ 3 ]
           }
         },
-        "$specify$498": {
+        "$specify$501": {
           "hide_name": 1,
           "type": "$specify3",
           "parameters": {
@@ -212031,7 +212024,7 @@
             "SRC": [ 3 ]
           }
         },
-        "$specify$499": {
+        "$specify$502": {
           "hide_name": 1,
           "type": "$specify3",
           "parameters": {
@@ -212068,7 +212061,7 @@
             "SRC": [ 3 ]
           }
         },
-        "$specify$500": {
+        "$specify$503": {
           "hide_name": 1,
           "type": "$specify3",
           "parameters": {
@@ -214042,7 +214035,7 @@
         }
       },
       "cells": {
-        "$specify$501": {
+        "$specify$504": {
           "hide_name": 1,
           "type": "$specrule",
           "parameters": {
@@ -214077,7 +214070,7 @@
             "SRC_EN": [ "1" ]
           }
         },
-        "$specify$502": {
+        "$specify$505": {
           "hide_name": 1,
           "type": "$specrule",
           "parameters": {
@@ -214112,7 +214105,7 @@
             "SRC_EN": [ "1" ]
           }
         },
-        "$specify$503": {
+        "$specify$506": {
           "hide_name": 1,
           "type": "$specrule",
           "parameters": {
@@ -214147,7 +214140,7 @@
             "SRC_EN": [ "1" ]
           }
         },
-        "$specify$504": {
+        "$specify$507": {
           "hide_name": 1,
           "type": "$specrule",
           "parameters": {
@@ -214182,7 +214175,7 @@
             "SRC_EN": [ "1" ]
           }
         },
-        "$specify$505": {
+        "$specify$508": {
           "hide_name": 1,
           "type": "$specrule",
           "parameters": {
@@ -214217,7 +214210,7 @@
             "SRC_EN": [ "1" ]
           }
         },
-        "$specify$506": {
+        "$specify$509": {
           "hide_name": 1,
           "type": "$specrule",
           "parameters": {
@@ -214252,7 +214245,7 @@
             "SRC_EN": [ "1" ]
           }
         },
-        "$specify$507": {
+        "$specify$510": {
           "hide_name": 1,
           "type": "$specrule",
           "parameters": {
@@ -214287,7 +214280,7 @@
             "SRC_EN": [ "1" ]
           }
         },
-        "$specify$508": {
+        "$specify$511": {
           "hide_name": 1,
           "type": "$specrule",
           "parameters": {
@@ -214322,7 +214315,7 @@
             "SRC_EN": [ "1" ]
           }
         },
-        "$specify$509": {
+        "$specify$512": {
           "hide_name": 1,
           "type": "$specrule",
           "parameters": {
@@ -214357,7 +214350,7 @@
             "SRC_EN": [ "1" ]
           }
         },
-        "$specify$510": {
+        "$specify$513": {
           "hide_name": 1,
           "type": "$specrule",
           "parameters": {
@@ -214392,7 +214385,7 @@
             "SRC_EN": [ "1" ]
           }
         },
-        "$specify$511": {
+        "$specify$514": {
           "hide_name": 1,
           "type": "$specrule",
           "parameters": {
@@ -214427,7 +214420,7 @@
             "SRC_EN": [ "1" ]
           }
         },
-        "$specify$512": {
+        "$specify$515": {
           "hide_name": 1,
           "type": "$specrule",
           "parameters": {
@@ -214462,7 +214455,7 @@
             "SRC_EN": [ "1" ]
           }
         },
-        "$specify$513": {
+        "$specify$516": {
           "hide_name": 1,
           "type": "$specify3",
           "parameters": {
@@ -214499,7 +214492,7 @@
             "SRC": [ 96 ]
           }
         },
-        "$specify$514": {
+        "$specify$517": {
           "hide_name": 1,
           "type": "$specify3",
           "parameters": {
@@ -214536,7 +214529,7 @@
             "SRC": [ 96 ]
           }
         },
-        "$specify$515": {
+        "$specify$518": {
           "hide_name": 1,
           "type": "$specify3",
           "parameters": {
@@ -214573,7 +214566,7 @@
             "SRC": [ 96 ]
           }
         },
-        "$specify$516": {
+        "$specify$519": {
           "hide_name": 1,
           "type": "$specify3",
           "parameters": {
@@ -214610,7 +214603,7 @@
             "SRC": [ 96 ]
           }
         },
-        "$specify$517": {
+        "$specify$520": {
           "hide_name": 1,
           "type": "$specify3",
           "parameters": {
@@ -214647,7 +214640,7 @@
             "SRC": [ 102 ]
           }
         },
-        "$specify$518": {
+        "$specify$521": {
           "hide_name": 1,
           "type": "$specify3",
           "parameters": {
@@ -214684,7 +214677,7 @@
             "SRC": [ 102 ]
           }
         },
-        "$specify$519": {
+        "$specify$522": {
           "hide_name": 1,
           "type": "$specify3",
           "parameters": {
@@ -214721,7 +214714,7 @@
             "SRC": [ 102 ]
           }
         },
-        "$specify$520": {
+        "$specify$523": {
           "hide_name": 1,
           "type": "$specify3",
           "parameters": {
@@ -232456,7 +232449,6 @@
     },
     "top": {
       "attributes": {
-        "hdlname": "\\top",
         "top": "00000000000000000000000000000001",
         "src": "blink.v:11.1-22.10"
       },
@@ -232471,7 +232463,1090 @@
         }
       },
       "cells": {
-        "$abc$2227$auto$blifparse.cc:525:parse_blif$2228": {
+        "$abc$2528$auto$blifparse.cc:525:parse_blif$2529": {
+          "hide_name": 1,
+          "type": "LUT2",
+          "parameters": {
+            "INIT": "0110"
+          },
+          "attributes": {
+            "module_not_derived": "00000000000000000000000000000001",
+            "src": "/usr/bin/../share/yosys/xilinx/lut_map.v:43.26-44.30"
+          },
+          "port_directions": {
+            "I0": "input",
+            "I1": "input",
+            "O": "output"
+          },
+          "connections": {
+            "I0": [ 11 ],
+            "I1": [ 12 ],
+            "O": [ 13 ]
+          }
+        },
+        "$abc$2528$auto$blifparse.cc:525:parse_blif$2530": {
+          "hide_name": 1,
+          "type": "LUT2",
+          "parameters": {
+            "INIT": "0110"
+          },
+          "attributes": {
+            "module_not_derived": "00000000000000000000000000000001",
+            "src": "/usr/bin/../share/yosys/xilinx/lut_map.v:43.26-44.30"
+          },
+          "port_directions": {
+            "I0": "input",
+            "I1": "input",
+            "O": "output"
+          },
+          "connections": {
+            "I0": [ 14 ],
+            "I1": [ 15 ],
+            "O": [ 16 ]
+          }
+        },
+        "$abc$2528$auto$blifparse.cc:525:parse_blif$2531": {
+          "hide_name": 1,
+          "type": "LUT2",
+          "parameters": {
+            "INIT": "1000"
+          },
+          "attributes": {
+            "module_not_derived": "00000000000000000000000000000001",
+            "src": "/usr/bin/../share/yosys/xilinx/lut_map.v:43.26-44.30"
+          },
+          "port_directions": {
+            "I0": "input",
+            "I1": "input",
+            "O": "output"
+          },
+          "connections": {
+            "I0": [ 11 ],
+            "I1": [ 12 ],
+            "O": [ 14 ]
+          }
+        },
+        "$abc$2528$auto$blifparse.cc:525:parse_blif$2532": {
+          "hide_name": 1,
+          "type": "LUT2",
+          "parameters": {
+            "INIT": "0110"
+          },
+          "attributes": {
+            "module_not_derived": "00000000000000000000000000000001",
+            "src": "/usr/bin/../share/yosys/xilinx/lut_map.v:43.26-44.30"
+          },
+          "port_directions": {
+            "I0": "input",
+            "I1": "input",
+            "O": "output"
+          },
+          "connections": {
+            "I0": [ 17 ],
+            "I1": [ 18 ],
+            "O": [ 19 ]
+          }
+        },
+        "$abc$2528$auto$blifparse.cc:525:parse_blif$2533": {
+          "hide_name": 1,
+          "type": "LUT2",
+          "parameters": {
+            "INIT": "1000"
+          },
+          "attributes": {
+            "module_not_derived": "00000000000000000000000000000001",
+            "src": "/usr/bin/../share/yosys/xilinx/lut_map.v:43.26-44.30"
+          },
+          "port_directions": {
+            "I0": "input",
+            "I1": "input",
+            "O": "output"
+          },
+          "connections": {
+            "I0": [ 14 ],
+            "I1": [ 15 ],
+            "O": [ 17 ]
+          }
+        },
+        "$abc$2528$auto$blifparse.cc:525:parse_blif$2534": {
+          "hide_name": 1,
+          "type": "LUT3",
+          "parameters": {
+            "INIT": "01111000"
+          },
+          "attributes": {
+            "module_not_derived": "00000000000000000000000000000001",
+            "src": "/usr/bin/../share/yosys/xilinx/lut_map.v:47.26-48.41"
+          },
+          "port_directions": {
+            "I0": "input",
+            "I1": "input",
+            "I2": "input",
+            "O": "output"
+          },
+          "connections": {
+            "I0": [ 17 ],
+            "I1": [ 18 ],
+            "I2": [ 20 ],
+            "O": [ 21 ]
+          }
+        },
+        "$abc$2528$auto$blifparse.cc:525:parse_blif$2535": {
+          "hide_name": 1,
+          "type": "LUT5",
+          "parameters": {
+            "INIT": "01111111111111111000000000000000"
+          },
+          "attributes": {
+            "module_not_derived": "00000000000000000000000000000001",
+            "src": "/usr/bin/../share/yosys/xilinx/lut_map.v:56.26-58.30"
+          },
+          "port_directions": {
+            "I0": "input",
+            "I1": "input",
+            "I2": "input",
+            "I3": "input",
+            "I4": "input",
+            "O": "output"
+          },
+          "connections": {
+            "I0": [ 14 ],
+            "I1": [ 15 ],
+            "I2": [ 18 ],
+            "I3": [ 20 ],
+            "I4": [ 22 ],
+            "O": [ 23 ]
+          }
+        },
+        "$abc$2528$auto$blifparse.cc:525:parse_blif$2536": {
+          "hide_name": 1,
+          "type": "LUT2",
+          "parameters": {
+            "INIT": "0110"
+          },
+          "attributes": {
+            "module_not_derived": "00000000000000000000000000000001",
+            "src": "/usr/bin/../share/yosys/xilinx/lut_map.v:43.26-44.30"
+          },
+          "port_directions": {
+            "I0": "input",
+            "I1": "input",
+            "O": "output"
+          },
+          "connections": {
+            "I0": [ 24 ],
+            "I1": [ 25 ],
+            "O": [ 26 ]
+          }
+        },
+        "$abc$2528$auto$blifparse.cc:525:parse_blif$2537": {
+          "hide_name": 1,
+          "type": "LUT5",
+          "parameters": {
+            "INIT": "10000000000000000000000000000000"
+          },
+          "attributes": {
+            "module_not_derived": "00000000000000000000000000000001",
+            "src": "/usr/bin/../share/yosys/xilinx/lut_map.v:56.26-58.30"
+          },
+          "port_directions": {
+            "I0": "input",
+            "I1": "input",
+            "I2": "input",
+            "I3": "input",
+            "I4": "input",
+            "O": "output"
+          },
+          "connections": {
+            "I0": [ 14 ],
+            "I1": [ 15 ],
+            "I2": [ 18 ],
+            "I3": [ 20 ],
+            "I4": [ 22 ],
+            "O": [ 24 ]
+          }
+        },
+        "$abc$2528$auto$blifparse.cc:525:parse_blif$2538": {
+          "hide_name": 1,
+          "type": "LUT3",
+          "parameters": {
+            "INIT": "01111000"
+          },
+          "attributes": {
+            "module_not_derived": "00000000000000000000000000000001",
+            "src": "/usr/bin/../share/yosys/xilinx/lut_map.v:47.26-48.41"
+          },
+          "port_directions": {
+            "I0": "input",
+            "I1": "input",
+            "I2": "input",
+            "O": "output"
+          },
+          "connections": {
+            "I0": [ 24 ],
+            "I1": [ 25 ],
+            "I2": [ 27 ],
+            "O": [ 28 ]
+          }
+        },
+        "$abc$2528$auto$blifparse.cc:525:parse_blif$2539": {
+          "hide_name": 1,
+          "type": "LUT4",
+          "parameters": {
+            "INIT": "0111111110000000"
+          },
+          "attributes": {
+            "module_not_derived": "00000000000000000000000000000001",
+            "src": "/usr/bin/../share/yosys/xilinx/lut_map.v:51.26-53.19"
+          },
+          "port_directions": {
+            "I0": "input",
+            "I1": "input",
+            "I2": "input",
+            "I3": "input",
+            "O": "output"
+          },
+          "connections": {
+            "I0": [ 25 ],
+            "I1": [ 27 ],
+            "I2": [ 24 ],
+            "I3": [ 29 ],
+            "O": [ 30 ]
+          }
+        },
+        "$abc$2528$auto$blifparse.cc:525:parse_blif$2540.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.lut0.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.lut0.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.mux7": {
+          "hide_name": 1,
+          "type": "MUXF7",
+          "parameters": {
+          },
+          "attributes": {
+            "module_not_derived": "00000000000000000000000000000001",
+            "src": "/usr/bin/../share/yosys/xilinx/lut_map.v:91.46-91.71|/usr/bin/../share/yosys/xilinx/lut_map.v:85.46-85.71|/usr/bin/../share/yosys/xilinx/lut_map.v:81.13-81.52"
+          },
+          "port_directions": {
+            "I0": "input",
+            "I1": "input",
+            "O": "output",
+            "S": "input"
+          },
+          "connections": {
+            "I0": [ "0" ],
+            "I1": [ "0" ],
+            "O": [ 31 ],
+            "S": [ 25 ]
+          }
+        },
+        "$abc$2528$auto$blifparse.cc:525:parse_blif$2540.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.lut0.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.lut1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.mux7": {
+          "hide_name": 1,
+          "type": "MUXF7",
+          "parameters": {
+          },
+          "attributes": {
+            "module_not_derived": "00000000000000000000000000000001",
+            "src": "/usr/bin/../share/yosys/xilinx/lut_map.v:91.46-91.71|/usr/bin/../share/yosys/xilinx/lut_map.v:86.46-86.71|/usr/bin/../share/yosys/xilinx/lut_map.v:81.13-81.52"
+          },
+          "port_directions": {
+            "I0": "input",
+            "I1": "input",
+            "O": "output",
+            "S": "input"
+          },
+          "connections": {
+            "I0": [ "0" ],
+            "I1": [ "0" ],
+            "O": [ 32 ],
+            "S": [ 25 ]
+          }
+        },
+        "$abc$2528$auto$blifparse.cc:525:parse_blif$2540.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.lut0.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.mux8": {
+          "hide_name": 1,
+          "type": "MUXF8",
+          "parameters": {
+          },
+          "attributes": {
+            "module_not_derived": "00000000000000000000000000000001",
+            "src": "/usr/bin/../share/yosys/xilinx/lut_map.v:91.46-91.71|/usr/bin/../share/yosys/xilinx/lut_map.v:87.13-87.52"
+          },
+          "port_directions": {
+            "I0": "input",
+            "I1": "input",
+            "O": "output",
+            "S": "input"
+          },
+          "connections": {
+            "I0": [ 31 ],
+            "I1": [ 32 ],
+            "O": [ 33 ],
+            "S": [ 27 ]
+          }
+        },
+        "$abc$2528$auto$blifparse.cc:525:parse_blif$2540.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.lut1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.lut0.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.mux7": {
+          "hide_name": 1,
+          "type": "MUXF7",
+          "parameters": {
+          },
+          "attributes": {
+            "module_not_derived": "00000000000000000000000000000001",
+            "src": "/usr/bin/../share/yosys/xilinx/lut_map.v:92.46-92.71|/usr/bin/../share/yosys/xilinx/lut_map.v:85.46-85.71|/usr/bin/../share/yosys/xilinx/lut_map.v:81.13-81.52"
+          },
+          "port_directions": {
+            "I0": "input",
+            "I1": "input",
+            "O": "output",
+            "S": "input"
+          },
+          "connections": {
+            "I0": [ "0" ],
+            "I1": [ "0" ],
+            "O": [ 34 ],
+            "S": [ 25 ]
+          }
+        },
+        "$abc$2528$auto$blifparse.cc:525:parse_blif$2540.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.lut1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.lut1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.lut1": {
+          "hide_name": 1,
+          "type": "LUT6",
+          "parameters": {
+            "INIT": "1000000000000000000000000000000000000000000000000000000000000000"
+          },
+          "attributes": {
+            "module_not_derived": "00000000000000000000000000000001",
+            "src": "/usr/bin/../share/yosys/xilinx/lut_map.v:92.46-92.71|/usr/bin/../share/yosys/xilinx/lut_map.v:86.46-86.71|/usr/bin/../share/yosys/xilinx/lut_map.v:80.45-80.70|/usr/bin/../share/yosys/xilinx/lut_map.v:61.26-63.41"
+          },
+          "port_directions": {
+            "I0": "input",
+            "I1": "input",
+            "I2": "input",
+            "I3": "input",
+            "I4": "input",
+            "I5": "input",
+            "O": "output"
+          },
+          "connections": {
+            "I0": [ 11 ],
+            "I1": [ 12 ],
+            "I2": [ 15 ],
+            "I3": [ 18 ],
+            "I4": [ 20 ],
+            "I5": [ 22 ],
+            "O": [ 35 ]
+          }
+        },
+        "$abc$2528$auto$blifparse.cc:525:parse_blif$2540.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.lut1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.lut1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.mux7": {
+          "hide_name": 1,
+          "type": "MUXF7",
+          "parameters": {
+          },
+          "attributes": {
+            "module_not_derived": "00000000000000000000000000000001",
+            "src": "/usr/bin/../share/yosys/xilinx/lut_map.v:92.46-92.71|/usr/bin/../share/yosys/xilinx/lut_map.v:86.46-86.71|/usr/bin/../share/yosys/xilinx/lut_map.v:81.13-81.52"
+          },
+          "port_directions": {
+            "I0": "input",
+            "I1": "input",
+            "O": "output",
+            "S": "input"
+          },
+          "connections": {
+            "I0": [ "0" ],
+            "I1": [ 35 ],
+            "O": [ 36 ],
+            "S": [ 25 ]
+          }
+        },
+        "$abc$2528$auto$blifparse.cc:525:parse_blif$2540.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.lut1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.mux8": {
+          "hide_name": 1,
+          "type": "MUXF8",
+          "parameters": {
+          },
+          "attributes": {
+            "module_not_derived": "00000000000000000000000000000001",
+            "src": "/usr/bin/../share/yosys/xilinx/lut_map.v:92.46-92.71|/usr/bin/../share/yosys/xilinx/lut_map.v:87.13-87.52"
+          },
+          "port_directions": {
+            "I0": "input",
+            "I1": "input",
+            "O": "output",
+            "S": "input"
+          },
+          "connections": {
+            "I0": [ 34 ],
+            "I1": [ 36 ],
+            "O": [ 37 ],
+            "S": [ 27 ]
+          }
+        },
+        "$abc$2528$auto$blifparse.cc:525:parse_blif$2540.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.mux9": {
+          "hide_name": 1,
+          "type": "MUXF9",
+          "parameters": {
+          },
+          "attributes": {
+            "module_not_derived": "00000000000000000000000000000001",
+            "src": "/usr/bin/../share/yosys/xilinx/lut_map.v:93.13-93.52"
+          },
+          "port_directions": {
+            "I0": "input",
+            "I1": "input",
+            "O": "output",
+            "S": "input"
+          },
+          "connections": {
+            "I0": [ 33 ],
+            "I1": [ 37 ],
+            "O": [ 38 ],
+            "S": [ 29 ]
+          }
+        },
+        "$abc$2528$auto$blifparse.cc:525:parse_blif$2541": {
+          "hide_name": 1,
+          "type": "LUT2",
+          "parameters": {
+            "INIT": "0110"
+          },
+          "attributes": {
+            "module_not_derived": "00000000000000000000000000000001",
+            "src": "/usr/bin/../share/yosys/xilinx/lut_map.v:43.26-44.30"
+          },
+          "port_directions": {
+            "I0": "input",
+            "I1": "input",
+            "O": "output"
+          },
+          "connections": {
+            "I0": [ 38 ],
+            "I1": [ 39 ],
+            "O": [ 40 ]
+          }
+        },
+        "$abc$2528$auto$blifparse.cc:525:parse_blif$2542": {
+          "hide_name": 1,
+          "type": "LUT3",
+          "parameters": {
+            "INIT": "01111000"
+          },
+          "attributes": {
+            "module_not_derived": "00000000000000000000000000000001",
+            "src": "/usr/bin/../share/yosys/xilinx/lut_map.v:47.26-48.41"
+          },
+          "port_directions": {
+            "I0": "input",
+            "I1": "input",
+            "I2": "input",
+            "O": "output"
+          },
+          "connections": {
+            "I0": [ 38 ],
+            "I1": [ 39 ],
+            "I2": [ 41 ],
+            "O": [ 42 ]
+          }
+        },
+        "$abc$2528$auto$blifparse.cc:525:parse_blif$2543": {
+          "hide_name": 1,
+          "type": "LUT4",
+          "parameters": {
+            "INIT": "0111111110000000"
+          },
+          "attributes": {
+            "module_not_derived": "00000000000000000000000000000001",
+            "src": "/usr/bin/../share/yosys/xilinx/lut_map.v:51.26-53.19"
+          },
+          "port_directions": {
+            "I0": "input",
+            "I1": "input",
+            "I2": "input",
+            "I3": "input",
+            "O": "output"
+          },
+          "connections": {
+            "I0": [ 38 ],
+            "I1": [ 39 ],
+            "I2": [ 41 ],
+            "I3": [ 43 ],
+            "O": [ 44 ]
+          }
+        },
+        "$abc$2528$auto$blifparse.cc:525:parse_blif$2544": {
+          "hide_name": 1,
+          "type": "LUT5",
+          "parameters": {
+            "INIT": "01111111111111111000000000000000"
+          },
+          "attributes": {
+            "module_not_derived": "00000000000000000000000000000001",
+            "src": "/usr/bin/../share/yosys/xilinx/lut_map.v:56.26-58.30"
+          },
+          "port_directions": {
+            "I0": "input",
+            "I1": "input",
+            "I2": "input",
+            "I3": "input",
+            "I4": "input",
+            "O": "output"
+          },
+          "connections": {
+            "I0": [ 38 ],
+            "I1": [ 39 ],
+            "I2": [ 41 ],
+            "I3": [ 43 ],
+            "I4": [ 45 ],
+            "O": [ 46 ]
+          }
+        },
+        "$abc$2528$auto$blifparse.cc:525:parse_blif$2545": {
+          "hide_name": 1,
+          "type": "LUT2",
+          "parameters": {
+            "INIT": "0110"
+          },
+          "attributes": {
+            "module_not_derived": "00000000000000000000000000000001",
+            "src": "/usr/bin/../share/yosys/xilinx/lut_map.v:43.26-44.30"
+          },
+          "port_directions": {
+            "I0": "input",
+            "I1": "input",
+            "O": "output"
+          },
+          "connections": {
+            "I0": [ 47 ],
+            "I1": [ 48 ],
+            "O": [ 49 ]
+          }
+        },
+        "$abc$2528$auto$blifparse.cc:525:parse_blif$2546": {
+          "hide_name": 1,
+          "type": "LUT5",
+          "parameters": {
+            "INIT": "10000000000000000000000000000000"
+          },
+          "attributes": {
+            "module_not_derived": "00000000000000000000000000000001",
+            "src": "/usr/bin/../share/yosys/xilinx/lut_map.v:56.26-58.30"
+          },
+          "port_directions": {
+            "I0": "input",
+            "I1": "input",
+            "I2": "input",
+            "I3": "input",
+            "I4": "input",
+            "O": "output"
+          },
+          "connections": {
+            "I0": [ 38 ],
+            "I1": [ 39 ],
+            "I2": [ 41 ],
+            "I3": [ 43 ],
+            "I4": [ 45 ],
+            "O": [ 47 ]
+          }
+        },
+        "$abc$2528$auto$blifparse.cc:525:parse_blif$2547": {
+          "hide_name": 1,
+          "type": "LUT3",
+          "parameters": {
+            "INIT": "01111000"
+          },
+          "attributes": {
+            "module_not_derived": "00000000000000000000000000000001",
+            "src": "/usr/bin/../share/yosys/xilinx/lut_map.v:47.26-48.41"
+          },
+          "port_directions": {
+            "I0": "input",
+            "I1": "input",
+            "I2": "input",
+            "O": "output"
+          },
+          "connections": {
+            "I0": [ 47 ],
+            "I1": [ 48 ],
+            "I2": [ 50 ],
+            "O": [ 51 ]
+          }
+        },
+        "$abc$2528$auto$blifparse.cc:525:parse_blif$2548": {
+          "hide_name": 1,
+          "type": "LUT4",
+          "parameters": {
+            "INIT": "0111111110000000"
+          },
+          "attributes": {
+            "module_not_derived": "00000000000000000000000000000001",
+            "src": "/usr/bin/../share/yosys/xilinx/lut_map.v:51.26-53.19"
+          },
+          "port_directions": {
+            "I0": "input",
+            "I1": "input",
+            "I2": "input",
+            "I3": "input",
+            "O": "output"
+          },
+          "connections": {
+            "I0": [ 48 ],
+            "I1": [ 50 ],
+            "I2": [ 47 ],
+            "I3": [ 52 ],
+            "O": [ 53 ]
+          }
+        },
+        "$abc$2528$auto$blifparse.cc:525:parse_blif$2549.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.lut0.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.mux7": {
+          "hide_name": 1,
+          "type": "MUXF7",
+          "parameters": {
+          },
+          "attributes": {
+            "module_not_derived": "00000000000000000000000000000001",
+            "src": "/usr/bin/../share/yosys/xilinx/lut_map.v:85.46-85.71|/usr/bin/../share/yosys/xilinx/lut_map.v:81.13-81.52"
+          },
+          "port_directions": {
+            "I0": "input",
+            "I1": "input",
+            "O": "output",
+            "S": "input"
+          },
+          "connections": {
+            "I0": [ "0" ],
+            "I1": [ "0" ],
+            "O": [ 54 ],
+            "S": [ 50 ]
+          }
+        },
+        "$abc$2528$auto$blifparse.cc:525:parse_blif$2549.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.lut1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.lut1": {
+          "hide_name": 1,
+          "type": "LUT6",
+          "parameters": {
+            "INIT": "1000000000000000000000000000000000000000000000000000000000000000"
+          },
+          "attributes": {
+            "module_not_derived": "00000000000000000000000000000001",
+            "src": "/usr/bin/../share/yosys/xilinx/lut_map.v:86.46-86.71|/usr/bin/../share/yosys/xilinx/lut_map.v:80.45-80.70|/usr/bin/../share/yosys/xilinx/lut_map.v:61.26-63.41"
+          },
+          "port_directions": {
+            "I0": "input",
+            "I1": "input",
+            "I2": "input",
+            "I3": "input",
+            "I4": "input",
+            "I5": "input",
+            "O": "output"
+          },
+          "connections": {
+            "I0": [ 38 ],
+            "I1": [ 39 ],
+            "I2": [ 41 ],
+            "I3": [ 43 ],
+            "I4": [ 45 ],
+            "I5": [ 48 ],
+            "O": [ 55 ]
+          }
+        },
+        "$abc$2528$auto$blifparse.cc:525:parse_blif$2549.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.lut1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.mux7": {
+          "hide_name": 1,
+          "type": "MUXF7",
+          "parameters": {
+          },
+          "attributes": {
+            "module_not_derived": "00000000000000000000000000000001",
+            "src": "/usr/bin/../share/yosys/xilinx/lut_map.v:86.46-86.71|/usr/bin/../share/yosys/xilinx/lut_map.v:81.13-81.52"
+          },
+          "port_directions": {
+            "I0": "input",
+            "I1": "input",
+            "O": "output",
+            "S": "input"
+          },
+          "connections": {
+            "I0": [ "0" ],
+            "I1": [ 55 ],
+            "O": [ 56 ],
+            "S": [ 50 ]
+          }
+        },
+        "$abc$2528$auto$blifparse.cc:525:parse_blif$2549.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.mux8": {
+          "hide_name": 1,
+          "type": "MUXF8",
+          "parameters": {
+          },
+          "attributes": {
+            "module_not_derived": "00000000000000000000000000000001",
+            "src": "/usr/bin/../share/yosys/xilinx/lut_map.v:87.13-87.52"
+          },
+          "port_directions": {
+            "I0": "input",
+            "I1": "input",
+            "O": "output",
+            "S": "input"
+          },
+          "connections": {
+            "I0": [ 54 ],
+            "I1": [ 56 ],
+            "O": [ 57 ],
+            "S": [ 52 ]
+          }
+        },
+        "$abc$2528$auto$blifparse.cc:525:parse_blif$2550": {
+          "hide_name": 1,
+          "type": "LUT2",
+          "parameters": {
+            "INIT": "0110"
+          },
+          "attributes": {
+            "module_not_derived": "00000000000000000000000000000001",
+            "src": "/usr/bin/../share/yosys/xilinx/lut_map.v:43.26-44.30"
+          },
+          "port_directions": {
+            "I0": "input",
+            "I1": "input",
+            "O": "output"
+          },
+          "connections": {
+            "I0": [ 57 ],
+            "I1": [ 58 ],
+            "O": [ 59 ]
+          }
+        },
+        "$abc$2528$auto$blifparse.cc:525:parse_blif$2551": {
+          "hide_name": 1,
+          "type": "LUT3",
+          "parameters": {
+            "INIT": "01111000"
+          },
+          "attributes": {
+            "module_not_derived": "00000000000000000000000000000001",
+            "src": "/usr/bin/../share/yosys/xilinx/lut_map.v:47.26-48.41"
+          },
+          "port_directions": {
+            "I0": "input",
+            "I1": "input",
+            "I2": "input",
+            "O": "output"
+          },
+          "connections": {
+            "I0": [ 57 ],
+            "I1": [ 58 ],
+            "I2": [ 60 ],
+            "O": [ 61 ]
+          }
+        },
+        "$abc$2528$auto$blifparse.cc:525:parse_blif$2552": {
+          "hide_name": 1,
+          "type": "LUT2",
+          "parameters": {
+            "INIT": "0110"
+          },
+          "attributes": {
+            "module_not_derived": "00000000000000000000000000000001",
+            "src": "/usr/bin/../share/yosys/xilinx/lut_map.v:43.26-44.30"
+          },
+          "port_directions": {
+            "I0": "input",
+            "I1": "input",
+            "O": "output"
+          },
+          "connections": {
+            "I0": [ 62 ],
+            "I1": [ 63 ],
+            "O": [ 64 ]
+          }
+        },
+        "$abc$2528$auto$blifparse.cc:525:parse_blif$2553": {
+          "hide_name": 1,
+          "type": "LUT3",
+          "parameters": {
+            "INIT": "10000000"
+          },
+          "attributes": {
+            "module_not_derived": "00000000000000000000000000000001",
+            "src": "/usr/bin/../share/yosys/xilinx/lut_map.v:47.26-48.41"
+          },
+          "port_directions": {
+            "I0": "input",
+            "I1": "input",
+            "I2": "input",
+            "O": "output"
+          },
+          "connections": {
+            "I0": [ 57 ],
+            "I1": [ 58 ],
+            "I2": [ 60 ],
+            "O": [ 62 ]
+          }
+        },
+        "$abc$2528$auto$blifparse.cc:525:parse_blif$2554": {
+          "hide_name": 1,
+          "type": "LUT3",
+          "parameters": {
+            "INIT": "01111000"
+          },
+          "attributes": {
+            "module_not_derived": "00000000000000000000000000000001",
+            "src": "/usr/bin/../share/yosys/xilinx/lut_map.v:47.26-48.41"
+          },
+          "port_directions": {
+            "I0": "input",
+            "I1": "input",
+            "I2": "input",
+            "O": "output"
+          },
+          "connections": {
+            "I0": [ 62 ],
+            "I1": [ 63 ],
+            "I2": [ 65 ],
+            "O": [ 66 ]
+          }
+        },
+        "$abc$2528$auto$blifparse.cc:525:parse_blif$2555": {
+          "hide_name": 1,
+          "type": "LUT4",
+          "parameters": {
+            "INIT": "0111111110000000"
+          },
+          "attributes": {
+            "module_not_derived": "00000000000000000000000000000001",
+            "src": "/usr/bin/../share/yosys/xilinx/lut_map.v:51.26-53.19"
+          },
+          "port_directions": {
+            "I0": "input",
+            "I1": "input",
+            "I2": "input",
+            "I3": "input",
+            "O": "output"
+          },
+          "connections": {
+            "I0": [ 63 ],
+            "I1": [ 65 ],
+            "I2": [ 62 ],
+            "I3": [ 67 ],
+            "O": [ 68 ]
+          }
+        },
+        "$abc$2528$auto$blifparse.cc:525:parse_blif$2556": {
+          "hide_name": 1,
+          "type": "LUT6",
+          "parameters": {
+            "INIT": "1000000000000000000000000000000000000000000000000000000000000000"
+          },
+          "attributes": {
+            "module_not_derived": "00000000000000000000000000000001",
+            "src": "/usr/bin/../share/yosys/xilinx/lut_map.v:61.26-63.41"
+          },
+          "port_directions": {
+            "I0": "input",
+            "I1": "input",
+            "I2": "input",
+            "I3": "input",
+            "I4": "input",
+            "I5": "input",
+            "O": "output"
+          },
+          "connections": {
+            "I0": [ 57 ],
+            "I1": [ 58 ],
+            "I2": [ 60 ],
+            "I3": [ 63 ],
+            "I4": [ 65 ],
+            "I5": [ 67 ],
+            "O": [ 69 ]
+          }
+        },
+        "$abc$2528$auto$blifparse.cc:525:parse_blif$2557": {
+          "hide_name": 1,
+          "type": "LUT2",
+          "parameters": {
+            "INIT": "0110"
+          },
+          "attributes": {
+            "module_not_derived": "00000000000000000000000000000001",
+            "src": "/usr/bin/../share/yosys/xilinx/lut_map.v:43.26-44.30"
+          },
+          "port_directions": {
+            "I0": "input",
+            "I1": "input",
+            "O": "output"
+          },
+          "connections": {
+            "I0": [ 70 ],
+            "I1": [ 69 ],
+            "O": [ 71 ]
+          }
+        },
+        "$abc$2528$auto$blifparse.cc:525:parse_blif$2558.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.lut1": {
+          "hide_name": 1,
+          "type": "LUT6",
+          "parameters": {
+            "INIT": "1000000000000000000000000000000000000000000000000000000000000000"
+          },
+          "attributes": {
+            "module_not_derived": "00000000000000000000000000000001",
+            "src": "/usr/bin/../share/yosys/xilinx/lut_map.v:80.45-80.70|/usr/bin/../share/yosys/xilinx/lut_map.v:61.26-63.41"
+          },
+          "port_directions": {
+            "I0": "input",
+            "I1": "input",
+            "I2": "input",
+            "I3": "input",
+            "I4": "input",
+            "I5": "input",
+            "O": "output"
+          },
+          "connections": {
+            "I0": [ 57 ],
+            "I1": [ 58 ],
+            "I2": [ 60 ],
+            "I3": [ 63 ],
+            "I4": [ 65 ],
+            "I5": [ 67 ],
+            "O": [ 72 ]
+          }
+        },
+        "$abc$2528$auto$blifparse.cc:525:parse_blif$2558.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.mux7": {
+          "hide_name": 1,
+          "type": "MUXF7",
+          "parameters": {
+          },
+          "attributes": {
+            "module_not_derived": "00000000000000000000000000000001",
+            "src": "/usr/bin/../share/yosys/xilinx/lut_map.v:81.13-81.52"
+          },
+          "port_directions": {
+            "I0": "input",
+            "I1": "input",
+            "O": "output",
+            "S": "input"
+          },
+          "connections": {
+            "I0": [ "0" ],
+            "I1": [ 72 ],
+            "O": [ 73 ],
+            "S": [ 70 ]
+          }
+        },
+        "$abc$2528$auto$blifparse.cc:525:parse_blif$2559": {
+          "hide_name": 1,
+          "type": "LUT2",
+          "parameters": {
+            "INIT": "0110"
+          },
+          "attributes": {
+            "module_not_derived": "00000000000000000000000000000001",
+            "src": "/usr/bin/../share/yosys/xilinx/lut_map.v:43.26-44.30"
+          },
+          "port_directions": {
+            "I0": "input",
+            "I1": "input",
+            "O": "output"
+          },
+          "connections": {
+            "I0": [ 73 ],
+            "I1": [ 74 ],
+            "O": [ 75 ]
+          }
+        },
+        "$abc$2528$auto$blifparse.cc:525:parse_blif$2560": {
+          "hide_name": 1,
+          "type": "LUT3",
+          "parameters": {
+            "INIT": "01111000"
+          },
+          "attributes": {
+            "module_not_derived": "00000000000000000000000000000001",
+            "src": "/usr/bin/../share/yosys/xilinx/lut_map.v:47.26-48.41"
+          },
+          "port_directions": {
+            "I0": "input",
+            "I1": "input",
+            "I2": "input",
+            "O": "output"
+          },
+          "connections": {
+            "I0": [ 73 ],
+            "I1": [ 74 ],
+            "I2": [ 76 ],
+            "O": [ 77 ]
+          }
+        },
+        "$abc$2528$auto$blifparse.cc:525:parse_blif$2561": {
+          "hide_name": 1,
+          "type": "LUT4",
+          "parameters": {
+            "INIT": "0111111110000000"
+          },
+          "attributes": {
+            "module_not_derived": "00000000000000000000000000000001",
+            "src": "/usr/bin/../share/yosys/xilinx/lut_map.v:51.26-53.19"
+          },
+          "port_directions": {
+            "I0": "input",
+            "I1": "input",
+            "I2": "input",
+            "I3": "input",
+            "O": "output"
+          },
+          "connections": {
+            "I0": [ 73 ],
+            "I1": [ 74 ],
+            "I2": [ 76 ],
+            "I3": [ 78 ],
+            "O": [ 79 ]
+          }
+        },
+        "$abc$2528$auto$blifparse.cc:525:parse_blif$2562": {
+          "hide_name": 1,
+          "type": "LUT5",
+          "parameters": {
+            "INIT": "01111111111111111000000000000000"
+          },
+          "attributes": {
+            "module_not_derived": "00000000000000000000000000000001",
+            "src": "/usr/bin/../share/yosys/xilinx/lut_map.v:56.26-58.30"
+          },
+          "port_directions": {
+            "I0": "input",
+            "I1": "input",
+            "I2": "input",
+            "I3": "input",
+            "I4": "input",
+            "O": "output"
+          },
+          "connections": {
+            "I0": [ 73 ],
+            "I1": [ 74 ],
+            "I2": [ 76 ],
+            "I3": [ 78 ],
+            "I4": [ 80 ],
+            "O": [ 81 ]
+          }
+        },
+        "$abc$2528$auto$blifparse.cc:525:parse_blif$2563": {
+          "hide_name": 1,
+          "type": "LUT6",
+          "parameters": {
+            "INIT": "0111111111111111111111111111111110000000000000000000000000000000"
+          },
+          "attributes": {
+            "module_not_derived": "00000000000000000000000000000001",
+            "src": "/usr/bin/../share/yosys/xilinx/lut_map.v:61.26-63.41"
+          },
+          "port_directions": {
+            "I0": "input",
+            "I1": "input",
+            "I2": "input",
+            "I3": "input",
+            "I4": "input",
+            "I5": "input",
+            "O": "output"
+          },
+          "connections": {
+            "I0": [ 73 ],
+            "I1": [ 74 ],
+            "I2": [ 76 ],
+            "I3": [ 78 ],
+            "I4": [ 80 ],
+            "I5": [ 82 ],
+            "O": [ 83 ]
+          }
+        },
+        "$abc$2528$auto$blifparse.cc:525:parse_blif$2564": {
           "hide_name": 1,
           "type": "INV",
           "parameters": {
@@ -232486,192 +233561,10 @@
           },
           "connections": {
             "I": [ 11 ],
-            "O": [ 12 ]
+            "O": [ 84 ]
           }
         },
-        "$auto$alumacc.cc:485:replace_alu$1614.genblk1.slice[0].genblk1.carry4": {
-          "hide_name": 1,
-          "type": "CARRY4",
-          "parameters": {
-          },
-          "attributes": {
-            "module_not_derived": "00000000000000000000000000000001",
-            "src": "blink.v:19.16-19.26|/usr/bin/../share/yosys/xilinx/arith_map.v:176.11-184.5"
-          },
-          "port_directions": {
-            "CI": "input",
-            "CO": "output",
-            "CYINIT": "input",
-            "DI": "input",
-            "O": "output",
-            "S": "input"
-          },
-          "connections": {
-            "CI": [ "0" ],
-            "CO": [ 13, 14, 15, 16 ],
-            "CYINIT": [ "0" ],
-            "DI": [ "1", "0", "0", "0" ],
-            "O": [ 17, 18, 19, 20 ],
-            "S": [ 12, 21, 22, 23 ]
-          }
-        },
-        "$auto$alumacc.cc:485:replace_alu$1614.genblk1.slice[1].genblk1.carry4": {
-          "hide_name": 1,
-          "type": "CARRY4",
-          "parameters": {
-          },
-          "attributes": {
-            "module_not_derived": "00000000000000000000000000000001",
-            "src": "blink.v:19.16-19.26|/usr/bin/../share/yosys/xilinx/arith_map.v:186.14-194.8"
-          },
-          "port_directions": {
-            "CI": "input",
-            "CO": "output",
-            "CYINIT": "input",
-            "DI": "input",
-            "O": "output",
-            "S": "input"
-          },
-          "connections": {
-            "CI": [ 16 ],
-            "CO": [ 24, 25, 26, 27 ],
-            "CYINIT": [ "0" ],
-            "DI": [ "0", "0", "0", "0" ],
-            "O": [ 28, 29, 30, 31 ],
-            "S": [ 32, 33, 34, 35 ]
-          }
-        },
-        "$auto$alumacc.cc:485:replace_alu$1614.genblk1.slice[2].genblk1.carry4": {
-          "hide_name": 1,
-          "type": "CARRY4",
-          "parameters": {
-          },
-          "attributes": {
-            "module_not_derived": "00000000000000000000000000000001",
-            "src": "blink.v:19.16-19.26|/usr/bin/../share/yosys/xilinx/arith_map.v:186.14-194.8"
-          },
-          "port_directions": {
-            "CI": "input",
-            "CO": "output",
-            "CYINIT": "input",
-            "DI": "input",
-            "O": "output",
-            "S": "input"
-          },
-          "connections": {
-            "CI": [ 27 ],
-            "CO": [ 36, 37, 38, 39 ],
-            "CYINIT": [ "0" ],
-            "DI": [ "0", "0", "0", "0" ],
-            "O": [ 40, 41, 42, 43 ],
-            "S": [ 44, 45, 46, 47 ]
-          }
-        },
-        "$auto$alumacc.cc:485:replace_alu$1614.genblk1.slice[3].genblk1.carry4": {
-          "hide_name": 1,
-          "type": "CARRY4",
-          "parameters": {
-          },
-          "attributes": {
-            "module_not_derived": "00000000000000000000000000000001",
-            "src": "blink.v:19.16-19.26|/usr/bin/../share/yosys/xilinx/arith_map.v:186.14-194.8"
-          },
-          "port_directions": {
-            "CI": "input",
-            "CO": "output",
-            "CYINIT": "input",
-            "DI": "input",
-            "O": "output",
-            "S": "input"
-          },
-          "connections": {
-            "CI": [ 39 ],
-            "CO": [ 48, 49, 50, 51 ],
-            "CYINIT": [ "0" ],
-            "DI": [ "0", "0", "0", "0" ],
-            "O": [ 52, 53, 54, 55 ],
-            "S": [ 56, 57, 58, 59 ]
-          }
-        },
-        "$auto$alumacc.cc:485:replace_alu$1614.genblk1.slice[4].genblk1.carry4": {
-          "hide_name": 1,
-          "type": "CARRY4",
-          "parameters": {
-          },
-          "attributes": {
-            "module_not_derived": "00000000000000000000000000000001",
-            "src": "blink.v:19.16-19.26|/usr/bin/../share/yosys/xilinx/arith_map.v:186.14-194.8"
-          },
-          "port_directions": {
-            "CI": "input",
-            "CO": "output",
-            "CYINIT": "input",
-            "DI": "input",
-            "O": "output",
-            "S": "input"
-          },
-          "connections": {
-            "CI": [ 51 ],
-            "CO": [ 60, 61, 62, 63 ],
-            "CYINIT": [ "0" ],
-            "DI": [ "0", "0", "0", "0" ],
-            "O": [ 64, 65, 66, 67 ],
-            "S": [ 68, 69, 70, 71 ]
-          }
-        },
-        "$auto$alumacc.cc:485:replace_alu$1614.genblk1.slice[5].genblk1.carry4": {
-          "hide_name": 1,
-          "type": "CARRY4",
-          "parameters": {
-          },
-          "attributes": {
-            "module_not_derived": "00000000000000000000000000000001",
-            "src": "blink.v:19.16-19.26|/usr/bin/../share/yosys/xilinx/arith_map.v:186.14-194.8"
-          },
-          "port_directions": {
-            "CI": "input",
-            "CO": "output",
-            "CYINIT": "input",
-            "DI": "input",
-            "O": "output",
-            "S": "input"
-          },
-          "connections": {
-            "CI": [ 63 ],
-            "CO": [ 72, 73, 74, 75 ],
-            "CYINIT": [ "0" ],
-            "DI": [ "0", "0", "0", "0" ],
-            "O": [ 76, 77, 78, 79 ],
-            "S": [ 80, 81, 82, 83 ]
-          }
-        },
-        "$auto$alumacc.cc:485:replace_alu$1614.genblk1.slice[6].genblk1.carry4": {
-          "hide_name": 1,
-          "type": "CARRY4",
-          "parameters": {
-          },
-          "attributes": {
-            "module_not_derived": "00000000000000000000000000000001",
-            "src": "blink.v:19.16-19.26|/usr/bin/../share/yosys/xilinx/arith_map.v:186.14-194.8"
-          },
-          "port_directions": {
-            "CI": "input",
-            "CO": "output",
-            "CYINIT": "input",
-            "DI": "input",
-            "O": "output",
-            "S": "input"
-          },
-          "connections": {
-            "CI": [ 75 ],
-            "CO": [ 84, 85, 86, 87 ],
-            "CYINIT": [ "0" ],
-            "DI": [ "0", "0", "0", "0" ],
-            "O": [ 88, 89, 90, 91 ],
-            "S": [ 92, 93, 94, "0" ]
-          }
-        },
-        "$auto$clkbufmap.cc:261:execute$2260": {
+        "$auto$clkbufmap.cc:261:execute$2642": {
           "hide_name": 1,
           "type": "BUFG",
           "parameters": {
@@ -232683,8 +233576,83 @@
             "O": "output"
           },
           "connections": {
-            "I": [ 95 ],
-            "O": [ 96 ]
+            "I": [ 85 ],
+            "O": [ 86 ]
+          }
+        },
+        "$auto$ff.cc:266:slice$2034": {
+          "hide_name": 1,
+          "type": "FDRE",
+          "parameters": {
+            "INIT": "0"
+          },
+          "attributes": {
+            "module_not_derived": "00000000000000000000000000000001",
+            "src": "blink.v:18.5-19.27|/usr/bin/../share/yosys/xilinx/ff_map.v:68.41-68.95"
+          },
+          "port_directions": {
+            "C": "input",
+            "CE": "input",
+            "D": "input",
+            "Q": "output",
+            "R": "input"
+          },
+          "connections": {
+            "C": [ 86 ],
+            "CE": [ "1" ],
+            "D": [ 84 ],
+            "Q": [ 11 ],
+            "R": [ "0" ]
+          }
+        },
+        "$auto$ff.cc:266:slice$2035": {
+          "hide_name": 1,
+          "type": "FDRE",
+          "parameters": {
+            "INIT": "0"
+          },
+          "attributes": {
+            "module_not_derived": "00000000000000000000000000000001",
+            "src": "blink.v:18.5-19.27|/usr/bin/../share/yosys/xilinx/ff_map.v:68.41-68.95"
+          },
+          "port_directions": {
+            "C": "input",
+            "CE": "input",
+            "D": "input",
+            "Q": "output",
+            "R": "input"
+          },
+          "connections": {
+            "C": [ 86 ],
+            "CE": [ "1" ],
+            "D": [ 13 ],
+            "Q": [ 12 ],
+            "R": [ "0" ]
+          }
+        },
+        "$auto$ff.cc:266:slice$2036": {
+          "hide_name": 1,
+          "type": "FDRE",
+          "parameters": {
+            "INIT": "0"
+          },
+          "attributes": {
+            "module_not_derived": "00000000000000000000000000000001",
+            "src": "blink.v:18.5-19.27|/usr/bin/../share/yosys/xilinx/ff_map.v:68.41-68.95"
+          },
+          "port_directions": {
+            "C": "input",
+            "CE": "input",
+            "D": "input",
+            "Q": "output",
+            "R": "input"
+          },
+          "connections": {
+            "C": [ 86 ],
+            "CE": [ "1" ],
+            "D": [ 16 ],
+            "Q": [ 15 ],
+            "R": [ "0" ]
           }
         },
         "$auto$ff.cc:266:slice$2037": {
@@ -232705,10 +233673,10 @@
             "R": "input"
           },
           "connections": {
-            "C": [ 96 ],
+            "C": [ 86 ],
             "CE": [ "1" ],
-            "D": [ 17 ],
-            "Q": [ 11 ],
+            "D": [ 19 ],
+            "Q": [ 18 ],
             "R": [ "0" ]
           }
         },
@@ -232730,10 +233698,10 @@
             "R": "input"
           },
           "connections": {
-            "C": [ 96 ],
+            "C": [ 86 ],
             "CE": [ "1" ],
-            "D": [ 18 ],
-            "Q": [ 21 ],
+            "D": [ 21 ],
+            "Q": [ 20 ],
             "R": [ "0" ]
           }
         },
@@ -232755,9 +233723,9 @@
             "R": "input"
           },
           "connections": {
-            "C": [ 96 ],
+            "C": [ 86 ],
             "CE": [ "1" ],
-            "D": [ 19 ],
+            "D": [ 23 ],
             "Q": [ 22 ],
             "R": [ "0" ]
           }
@@ -232780,10 +233748,10 @@
             "R": "input"
           },
           "connections": {
-            "C": [ 96 ],
+            "C": [ 86 ],
             "CE": [ "1" ],
-            "D": [ 20 ],
-            "Q": [ 23 ],
+            "D": [ 26 ],
+            "Q": [ 25 ],
             "R": [ "0" ]
           }
         },
@@ -232805,10 +233773,10 @@
             "R": "input"
           },
           "connections": {
-            "C": [ 96 ],
+            "C": [ 86 ],
             "CE": [ "1" ],
             "D": [ 28 ],
-            "Q": [ 32 ],
+            "Q": [ 27 ],
             "R": [ "0" ]
           }
         },
@@ -232830,10 +233798,10 @@
             "R": "input"
           },
           "connections": {
-            "C": [ 96 ],
+            "C": [ 86 ],
             "CE": [ "1" ],
-            "D": [ 29 ],
-            "Q": [ 33 ],
+            "D": [ 30 ],
+            "Q": [ 29 ],
             "R": [ "0" ]
           }
         },
@@ -232855,10 +233823,10 @@
             "R": "input"
           },
           "connections": {
-            "C": [ 96 ],
+            "C": [ 86 ],
             "CE": [ "1" ],
-            "D": [ 30 ],
-            "Q": [ 34 ],
+            "D": [ 40 ],
+            "Q": [ 39 ],
             "R": [ "0" ]
           }
         },
@@ -232880,10 +233848,10 @@
             "R": "input"
           },
           "connections": {
-            "C": [ 96 ],
+            "C": [ 86 ],
             "CE": [ "1" ],
-            "D": [ 31 ],
-            "Q": [ 35 ],
+            "D": [ 42 ],
+            "Q": [ 41 ],
             "R": [ "0" ]
           }
         },
@@ -232905,10 +233873,10 @@
             "R": "input"
           },
           "connections": {
-            "C": [ 96 ],
+            "C": [ 86 ],
             "CE": [ "1" ],
-            "D": [ 40 ],
-            "Q": [ 44 ],
+            "D": [ 44 ],
+            "Q": [ 43 ],
             "R": [ "0" ]
           }
         },
@@ -232930,9 +233898,9 @@
             "R": "input"
           },
           "connections": {
-            "C": [ 96 ],
+            "C": [ 86 ],
             "CE": [ "1" ],
-            "D": [ 41 ],
+            "D": [ 46 ],
             "Q": [ 45 ],
             "R": [ "0" ]
           }
@@ -232955,10 +233923,10 @@
             "R": "input"
           },
           "connections": {
-            "C": [ 96 ],
+            "C": [ 86 ],
             "CE": [ "1" ],
-            "D": [ 42 ],
-            "Q": [ 46 ],
+            "D": [ 49 ],
+            "Q": [ 48 ],
             "R": [ "0" ]
           }
         },
@@ -232980,10 +233948,10 @@
             "R": "input"
           },
           "connections": {
-            "C": [ 96 ],
+            "C": [ 86 ],
             "CE": [ "1" ],
-            "D": [ 43 ],
-            "Q": [ 47 ],
+            "D": [ 51 ],
+            "Q": [ 50 ],
             "R": [ "0" ]
           }
         },
@@ -233005,10 +233973,10 @@
             "R": "input"
           },
           "connections": {
-            "C": [ 96 ],
+            "C": [ 86 ],
             "CE": [ "1" ],
-            "D": [ 52 ],
-            "Q": [ 56 ],
+            "D": [ 53 ],
+            "Q": [ 52 ],
             "R": [ "0" ]
           }
         },
@@ -233030,10 +233998,10 @@
             "R": "input"
           },
           "connections": {
-            "C": [ 96 ],
+            "C": [ 86 ],
             "CE": [ "1" ],
-            "D": [ 53 ],
-            "Q": [ 57 ],
+            "D": [ 59 ],
+            "Q": [ 58 ],
             "R": [ "0" ]
           }
         },
@@ -233055,10 +234023,10 @@
             "R": "input"
           },
           "connections": {
-            "C": [ 96 ],
+            "C": [ 86 ],
             "CE": [ "1" ],
-            "D": [ 54 ],
-            "Q": [ 58 ],
+            "D": [ 61 ],
+            "Q": [ 60 ],
             "R": [ "0" ]
           }
         },
@@ -233080,10 +234048,10 @@
             "R": "input"
           },
           "connections": {
-            "C": [ 96 ],
+            "C": [ 86 ],
             "CE": [ "1" ],
-            "D": [ 55 ],
-            "Q": [ 59 ],
+            "D": [ 64 ],
+            "Q": [ 63 ],
             "R": [ "0" ]
           }
         },
@@ -233105,10 +234073,10 @@
             "R": "input"
           },
           "connections": {
-            "C": [ 96 ],
+            "C": [ 86 ],
             "CE": [ "1" ],
-            "D": [ 64 ],
-            "Q": [ 68 ],
+            "D": [ 66 ],
+            "Q": [ 65 ],
             "R": [ "0" ]
           }
         },
@@ -233130,10 +234098,10 @@
             "R": "input"
           },
           "connections": {
-            "C": [ 96 ],
+            "C": [ 86 ],
             "CE": [ "1" ],
-            "D": [ 65 ],
-            "Q": [ 69 ],
+            "D": [ 68 ],
+            "Q": [ 67 ],
             "R": [ "0" ]
           }
         },
@@ -233155,9 +234123,9 @@
             "R": "input"
           },
           "connections": {
-            "C": [ 96 ],
+            "C": [ 86 ],
             "CE": [ "1" ],
-            "D": [ 66 ],
+            "D": [ 71 ],
             "Q": [ 70 ],
             "R": [ "0" ]
           }
@@ -233180,10 +234148,10 @@
             "R": "input"
           },
           "connections": {
-            "C": [ 96 ],
+            "C": [ 86 ],
             "CE": [ "1" ],
-            "D": [ 67 ],
-            "Q": [ 71 ],
+            "D": [ 75 ],
+            "Q": [ 74 ],
             "R": [ "0" ]
           }
         },
@@ -233205,10 +234173,10 @@
             "R": "input"
           },
           "connections": {
-            "C": [ 96 ],
+            "C": [ 86 ],
             "CE": [ "1" ],
-            "D": [ 76 ],
-            "Q": [ 80 ],
+            "D": [ 77 ],
+            "Q": [ 76 ],
             "R": [ "0" ]
           }
         },
@@ -233230,10 +234198,10 @@
             "R": "input"
           },
           "connections": {
-            "C": [ 96 ],
+            "C": [ 86 ],
             "CE": [ "1" ],
-            "D": [ 77 ],
-            "Q": [ 81 ],
+            "D": [ 79 ],
+            "Q": [ 78 ],
             "R": [ "0" ]
           }
         },
@@ -233255,10 +234223,10 @@
             "R": "input"
           },
           "connections": {
-            "C": [ 96 ],
+            "C": [ 86 ],
             "CE": [ "1" ],
-            "D": [ 78 ],
-            "Q": [ 82 ],
+            "D": [ 81 ],
+            "Q": [ 80 ],
             "R": [ "0" ]
           }
         },
@@ -233280,85 +234248,10 @@
             "R": "input"
           },
           "connections": {
-            "C": [ 96 ],
+            "C": [ 86 ],
             "CE": [ "1" ],
-            "D": [ 79 ],
-            "Q": [ 83 ],
-            "R": [ "0" ]
-          }
-        },
-        "$auto$ff.cc:266:slice$2061": {
-          "hide_name": 1,
-          "type": "FDRE",
-          "parameters": {
-            "INIT": "0"
-          },
-          "attributes": {
-            "module_not_derived": "00000000000000000000000000000001",
-            "src": "blink.v:18.5-19.27|/usr/bin/../share/yosys/xilinx/ff_map.v:68.41-68.95"
-          },
-          "port_directions": {
-            "C": "input",
-            "CE": "input",
-            "D": "input",
-            "Q": "output",
-            "R": "input"
-          },
-          "connections": {
-            "C": [ 96 ],
-            "CE": [ "1" ],
-            "D": [ 88 ],
-            "Q": [ 92 ],
-            "R": [ "0" ]
-          }
-        },
-        "$auto$ff.cc:266:slice$2062": {
-          "hide_name": 1,
-          "type": "FDRE",
-          "parameters": {
-            "INIT": "0"
-          },
-          "attributes": {
-            "module_not_derived": "00000000000000000000000000000001",
-            "src": "blink.v:18.5-19.27|/usr/bin/../share/yosys/xilinx/ff_map.v:68.41-68.95"
-          },
-          "port_directions": {
-            "C": "input",
-            "CE": "input",
-            "D": "input",
-            "Q": "output",
-            "R": "input"
-          },
-          "connections": {
-            "C": [ 96 ],
-            "CE": [ "1" ],
-            "D": [ 89 ],
-            "Q": [ 93 ],
-            "R": [ "0" ]
-          }
-        },
-        "$auto$ff.cc:266:slice$2063": {
-          "hide_name": 1,
-          "type": "FDRE",
-          "parameters": {
-            "INIT": "0"
-          },
-          "attributes": {
-            "module_not_derived": "00000000000000000000000000000001",
-            "src": "blink.v:18.5-19.27|/usr/bin/../share/yosys/xilinx/ff_map.v:68.41-68.95"
-          },
-          "port_directions": {
-            "C": "input",
-            "CE": "input",
-            "D": "input",
-            "Q": "output",
-            "R": "input"
-          },
-          "connections": {
-            "C": [ 96 ],
-            "CE": [ "1" ],
-            "D": [ 90 ],
-            "Q": [ 94 ],
+            "D": [ 83 ],
+            "Q": [ 82 ],
             "R": [ "0" ]
           }
         },
@@ -233376,7 +234269,7 @@
           },
           "connections": {
             "I": [ 2 ],
-            "O": [ 95 ]
+            "O": [ 85 ]
           }
         },
         "$iopadmap$top.pmod": {
@@ -233392,7 +234285,7 @@
             "O": "output"
           },
           "connections": {
-            "I": [ 71 ],
+            "I": [ 65 ],
             "O": [ 3 ]
           }
         },
@@ -233409,7 +234302,7 @@
             "O": "output"
           },
           "connections": {
-            "I": [ 80 ],
+            "I": [ 67 ],
             "O": [ 4 ]
           }
         },
@@ -233426,7 +234319,7 @@
             "O": "output"
           },
           "connections": {
-            "I": [ 81 ],
+            "I": [ 70 ],
             "O": [ 5 ]
           }
         },
@@ -233443,7 +234336,7 @@
             "O": "output"
           },
           "connections": {
-            "I": [ 82 ],
+            "I": [ 74 ],
             "O": [ 6 ]
           }
         },
@@ -233460,7 +234353,7 @@
             "O": "output"
           },
           "connections": {
-            "I": [ 83 ],
+            "I": [ 76 ],
             "O": [ 7 ]
           }
         },
@@ -233477,7 +234370,7 @@
             "O": "output"
           },
           "connections": {
-            "I": [ 92 ],
+            "I": [ 78 ],
             "O": [ 8 ]
           }
         },
@@ -233494,7 +234387,7 @@
             "O": "output"
           },
           "connections": {
-            "I": [ 93 ],
+            "I": [ 80 ],
             "O": [ 9 ]
           }
         },
@@ -233511,65 +234404,187 @@
             "O": "output"
           },
           "connections": {
-            "I": [ 94 ],
+            "I": [ 82 ],
             "O": [ 10 ]
           }
         }
       },
       "netnames": {
-        "$auto$alumacc.cc:485:replace_alu$1614.CO": {
+        "$abc$2528$auto$blifparse.cc:525:parse_blif$2540.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.f0": {
           "hide_name": 1,
-          "bits": [ 13, 14, 15, 16, 24, 25, 26, 27, 36, 37, 38, 39, 48, 49, 50, 51, 60, 61, 62, 63, 72, 73, 74, 75, 84, 85, 86 ],
+          "bits": [ 33 ],
+          "attributes": {
+            "src": "/usr/bin/../share/yosys/xilinx/lut_map.v:90.12-90.14"
+          }
+        },
+        "$abc$2528$auto$blifparse.cc:525:parse_blif$2540.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.f1": {
+          "hide_name": 1,
+          "bits": [ 37 ],
+          "attributes": {
+            "src": "/usr/bin/../share/yosys/xilinx/lut_map.v:90.16-90.18"
+          }
+        },
+        "$abc$2528$auto$blifparse.cc:525:parse_blif$2540.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.lut0.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.f0": {
+          "hide_name": 1,
+          "bits": [ 31 ],
+          "attributes": {
+            "src": "/usr/bin/../share/yosys/xilinx/lut_map.v:91.46-91.71|/usr/bin/../share/yosys/xilinx/lut_map.v:84.12-84.14"
+          }
+        },
+        "$abc$2528$auto$blifparse.cc:525:parse_blif$2540.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.lut0.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.f1": {
+          "hide_name": 1,
+          "bits": [ 32 ],
+          "attributes": {
+            "src": "/usr/bin/../share/yosys/xilinx/lut_map.v:91.46-91.71|/usr/bin/../share/yosys/xilinx/lut_map.v:84.16-84.18"
+          }
+        },
+        "$abc$2528$auto$blifparse.cc:525:parse_blif$2540.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.lut1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.f0": {
+          "hide_name": 1,
+          "bits": [ 34 ],
+          "attributes": {
+            "src": "/usr/bin/../share/yosys/xilinx/lut_map.v:92.46-92.71|/usr/bin/../share/yosys/xilinx/lut_map.v:84.12-84.14"
+          }
+        },
+        "$abc$2528$auto$blifparse.cc:525:parse_blif$2540.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.lut1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.f1": {
+          "hide_name": 1,
+          "bits": [ 36 ],
+          "attributes": {
+            "src": "/usr/bin/../share/yosys/xilinx/lut_map.v:92.46-92.71|/usr/bin/../share/yosys/xilinx/lut_map.v:84.16-84.18"
+          }
+        },
+        "$abc$2528$auto$blifparse.cc:525:parse_blif$2540.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.lut1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.lut1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.f1": {
+          "hide_name": 1,
+          "bits": [ 35 ],
+          "attributes": {
+            "src": "/usr/bin/../share/yosys/xilinx/lut_map.v:92.46-92.71|/usr/bin/../share/yosys/xilinx/lut_map.v:86.46-86.71|/usr/bin/../share/yosys/xilinx/lut_map.v:78.16-78.18"
+          }
+        },
+        "$abc$2528$auto$blifparse.cc:525:parse_blif$2549.A": {
+          "hide_name": 1,
+          "bits": [ 38, 39, 41, 43, 45, 48, 50, 52 ],
           "attributes": {
             "force_downto": "00000000000000000000000000000001",
-            "src": "blink.v:19.16-19.26|/usr/bin/../share/yosys/xilinx/arith_map.v:116.23-116.25",
-            "unused_bits": "0 1 2 4 5 6 8 9 10 12 13 14 16 17 18 20 21 22 24 25 26"
+            "src": "/usr/bin/../share/yosys/xilinx/lut_map.v:30.21-30.22"
+          }
+        },
+        "$abc$2528$auto$blifparse.cc:525:parse_blif$2549.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.f0": {
+          "hide_name": 1,
+          "bits": [ 54 ],
+          "attributes": {
+            "src": "/usr/bin/../share/yosys/xilinx/lut_map.v:84.12-84.14"
+          }
+        },
+        "$abc$2528$auto$blifparse.cc:525:parse_blif$2549.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.f1": {
+          "hide_name": 1,
+          "bits": [ 56 ],
+          "attributes": {
+            "src": "/usr/bin/../share/yosys/xilinx/lut_map.v:84.16-84.18"
+          }
+        },
+        "$abc$2528$auto$blifparse.cc:525:parse_blif$2549.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.lut1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.f1": {
+          "hide_name": 1,
+          "bits": [ 55 ],
+          "attributes": {
+            "src": "/usr/bin/../share/yosys/xilinx/lut_map.v:86.46-86.71|/usr/bin/../share/yosys/xilinx/lut_map.v:78.16-78.18"
+          }
+        },
+        "$abc$2528$auto$blifparse.cc:525:parse_blif$2558.A": {
+          "hide_name": 1,
+          "bits": [ 57, 58, 60, 63, 65, 67, 70 ],
+          "attributes": {
+            "force_downto": "00000000000000000000000000000001",
+            "src": "/usr/bin/../share/yosys/xilinx/lut_map.v:30.21-30.22"
+          }
+        },
+        "$abc$2528$auto$blifparse.cc:525:parse_blif$2558.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.genblk1.f1": {
+          "hide_name": 1,
+          "bits": [ 72 ],
+          "attributes": {
+            "src": "/usr/bin/../share/yosys/xilinx/lut_map.v:78.16-78.18"
           }
         },
         "$auto$alumacc.cc:485:replace_alu$1614.X": {
           "hide_name": 1,
-          "bits": [ 12, 21, 22, 23, 32, 33, 34, 35, 44, 45, 46, 47, 56, 57, 58, 59, 68, 69, 70, 71, 80, 81, 82, 83, 92, 93, 94 ],
+          "bits": [ 84, 12, 15, 18, 20, 22, 25, 27, 29, 39, 41, 43, 45, 48, 50, 52, 58, 60, 63, 65, 67, 70, 74, 76, 78, 80, 82 ],
           "attributes": {
             "force_downto": "00000000000000000000000000000001",
-            "src": "blink.v:19.16-19.26|/usr/bin/../share/yosys/xilinx/arith_map.v:112.23-112.24"
+            "src": "blink.v:19.16-19.26|/usr/bin/../share/yosys/techmap.v:270.23-270.24"
           }
         },
         "$auto$alumacc.cc:485:replace_alu$1614.Y": {
           "hide_name": 1,
-          "bits": [ 17, 18, 19, 20, 28, 29, 30, 31, 40, 41, 42, 43, 52, 53, 54, 55, 64, 65, 66, 67, 76, 77, 78, 79, 88, 89, 90 ],
+          "bits": [ 84, 13, 16, 19, 21, 23, 26, 28, 30, 40, 42, 44, 46, 49, 51, 53, 59, 61, 64, 66, 68, 71, 75, 77, 79, 81, 83 ],
           "attributes": {
             "force_downto": "00000000000000000000000000000001",
-            "src": "blink.v:19.16-19.26|/usr/bin/../share/yosys/xilinx/arith_map.v:112.26-112.27"
+            "src": "blink.v:19.16-19.26|/usr/bin/../share/yosys/techmap.v:270.26-270.27"
           }
         },
-        "$auto$alumacc.cc:485:replace_alu$1614.genblk1.C": {
+        "$auto$clkbufmap.cc:262:execute$2643": {
           "hide_name": 1,
-          "bits": [ 13, 14, 15, 16, 24, 25, 26, 27, 36, 37, 38, 39, 48, 49, 50, 51, 60, 61, 62, 63, 72, 73, 74, 75, 84, 85, 86, 87 ],
-          "attributes": {
-            "force_downto": "00000000000000000000000000000001",
-            "src": "blink.v:19.16-19.26|/usr/bin/../share/yosys/xilinx/arith_map.v:170.23-170.24",
-            "unused_bits": "0 1 2 4 5 6 8 9 10 12 13 14 16 17 18 20 21 22 24 25 26 27"
-          }
-        },
-        "$auto$alumacc.cc:485:replace_alu$1614.genblk1.O": {
-          "hide_name": 1,
-          "bits": [ 17, 18, 19, 20, 28, 29, 30, 31, 40, 41, 42, 43, 52, 53, 54, 55, 64, 65, 66, 67, 76, 77, 78, 79, 88, 89, 90, 91 ],
-          "attributes": {
-            "force_downto": "00000000000000000000000000000001",
-            "src": "blink.v:19.16-19.26|/usr/bin/../share/yosys/xilinx/arith_map.v:168.23-168.24",
-            "unused_bits": "27"
-          }
-        },
-        "$auto$clkbufmap.cc:262:execute$2261": {
-          "hide_name": 1,
-          "bits": [ 95 ],
+          "bits": [ 85 ],
           "attributes": {
           }
         },
         "$iopadmap$clk": {
           "hide_name": 1,
-          "bits": [ 96 ],
+          "bits": [ 86 ],
           "attributes": {
+          }
+        },
+        "$techmap2596$abc$2528$auto$blifparse.cc:525:parse_blif$2547.A": {
+          "hide_name": 1,
+          "bits": [ 47, 48, 50 ],
+          "attributes": {
+            "force_downto": "00000000000000000000000000000001",
+            "src": "/usr/bin/../share/yosys/xilinx/lut_map.v:30.21-30.22"
+          }
+        },
+        "$techmap2599$abc$2528$auto$blifparse.cc:525:parse_blif$2537.A": {
+          "hide_name": 1,
+          "bits": [ 14, 15, 18, 20, 22 ],
+          "attributes": {
+            "force_downto": "00000000000000000000000000000001",
+            "src": "/usr/bin/../share/yosys/xilinx/lut_map.v:30.21-30.22"
+          }
+        },
+        "$techmap2600$abc$2528$auto$blifparse.cc:525:parse_blif$2538.A": {
+          "hide_name": 1,
+          "bits": [ 24, 25, 27 ],
+          "attributes": {
+            "force_downto": "00000000000000000000000000000001",
+            "src": "/usr/bin/../share/yosys/xilinx/lut_map.v:30.21-30.22"
+          }
+        },
+        "$techmap2608$abc$2528$auto$blifparse.cc:525:parse_blif$2534.A": {
+          "hide_name": 1,
+          "bits": [ 17, 18, 20 ],
+          "attributes": {
+            "force_downto": "00000000000000000000000000000001",
+            "src": "/usr/bin/../share/yosys/xilinx/lut_map.v:30.21-30.22"
+          }
+        },
+        "$techmap2613$abc$2528$auto$blifparse.cc:525:parse_blif$2554.A": {
+          "hide_name": 1,
+          "bits": [ 62, 63, 65 ],
+          "attributes": {
+            "force_downto": "00000000000000000000000000000001",
+            "src": "/usr/bin/../share/yosys/xilinx/lut_map.v:30.21-30.22"
+          }
+        },
+        "$techmap2615$abc$2528$auto$blifparse.cc:525:parse_blif$2563.A": {
+          "hide_name": 1,
+          "bits": [ 73, 74, 76, 78, 80, 82 ],
+          "attributes": {
+            "force_downto": "00000000000000000000000000000001",
+            "src": "/usr/bin/../share/yosys/xilinx/lut_map.v:30.21-30.22"
+          }
+        },
+        "$techmap2626$abc$2528$auto$blifparse.cc:525:parse_blif$2557.A": {
+          "hide_name": 1,
+          "bits": [ 70, 69 ],
+          "attributes": {
+            "force_downto": "00000000000000000000000000000001",
+            "src": "/usr/bin/../share/yosys/xilinx/lut_map.v:30.21-30.22"
           }
         },
         "clk": {
@@ -233581,7 +234596,7 @@
         },
         "ctr": {
           "hide_name": 0,
-          "bits": [ 11, 21, 22, 23, 32, 33, 34, 35, 44, 45, 46, 47, 56, 57, 58, 59, 68, 69, 70, 71, 80, 81, 82, 83, 92, 93, 94 ],
+          "bits": [ 11, 12, 15, 18, 20, 22, 25, 27, 29, 39, 41, 43, 45, 48, 50, 52, 58, 60, 63, 65, 67, 70, 74, 76, 78, 80, 82 ],
           "attributes": {
             "src": "blink.v:17.16-17.19"
           }

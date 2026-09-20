@@ -4,8 +4,7 @@
 # a feature prjuray has never heard of assembles to nothing, silently.
 # Usage: python3 tools/check_fasm_vs_uraydb.py <file.fasm>
 import re, sys, os, json, collections
-DB='prjuray-db/zynqusp'
-TG='prjuray-db/zynqusp/xczu3eg-sfvc784-1-e/tilegrid.json'   # only for tile-type spellings
+DB=os.environ.get('URAY_DB', os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'prjuray-db', 'zynqusp'))
 # Build: tile_type -> set of known feature names (with [i] normalised)
 known=collections.defaultdict(set)
 for fn in os.listdir(DB):

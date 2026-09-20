@@ -1,5 +1,5 @@
 --- nextpnr-xilinx/xilinx/fasm.cc.orig	2026-09-19 18:10:06.243029900 -0700
-+++ nextpnr-xilinx/xilinx/fasm.cc	2026-09-19 18:10:25.377030000 -0700
++++ nextpnr-xilinx/xilinx/fasm.cc	2026-09-19 18:24:19.129467600 -0700
 @@ -322,7 +322,13 @@
                      return; // missing, not sure if really a ppip?
              }
@@ -23,7 +23,7 @@
                      out << dst_name << ".";
                      out << src_name << std::endl;
                  }
-@@ -686,6 +694,253 @@
+@@ -686,6 +694,281 @@
          pop(3);
      }
  
@@ -113,8 +113,15 @@
 +                    wa8_used |= (lut->getPort(id_WA8) != nullptr);
 +                    wa9_used |= (lut->getPort(id_WA9) != nullptr);
 +                }
-+                write_choice("MODE", is_ram ? "RAM" : is_srl ? "SRL" : "LUT");
-+                write_choice("SIZE", is_small ? "SMALL" : "LARGE");
++                // MODE and SIZE exist only where the LUT can be memory. A
++                // SLICEL cannot, and prjuray has no CLEL_L/CLEL_R entry for
++                // either -- emitting them there assembles to nothing at all.
++                if (is_slicem) {
++                    write_choice("MODE", is_ram ? "RAM" : is_srl ? "SRL" : "LUT");
++                    write_choice("SIZE", is_small ? "SMALL" : "LARGE");
++                } else if (is_ram || is_srl) {
++                    log_error("LUT memory placed on a SLICEL in tile %s\n", tname.c_str());
++                }
 +                pop();
 +            }
 +            // OUTMUX<c> and, in a SLICEM, <c>LUT.DI1 come out of the chipdb
@@ -190,9 +197,17 @@
 +                g.latch = g.latch || is_latch;
 +                g.sync = g.sync || is_sync;
 +                g.clkinv = g.clkinv || negedge_ff || int_or_default(ff->params, id_IS_C_INVERTED) == 1;
-+                g.srinv = g.srinv || int_or_default(ff->params, id_IS_R_INVERTED) == 1 ||
-+                          int_or_default(ff->params, id_IS_S_INVERTED) == 1;
-+                g.srused[j] = g.srused[j] || (sr != nullptr && sr->name != ctx->id("$PACKER_GND_NET"));
++                // yosys spells "this FF has no reset" as SR tied to the constant
++                // VCC net with IS_R_INVERTED=1, so the effective reset is a
++                // constant 0. Testing only against GND, as the 7-series writer
++                // does, calls that a used reset and then SRINV.V1 has to undo
++                // it. Treat EITHER constant as unused and the question goes away.
++                bool sr_is_const = sr == nullptr || sr->name == ctx->id("$PACKER_GND_NET") ||
++                                   sr->name == ctx->id("$PACKER_VCC_NET");
++                g.srused[j] = g.srused[j] || !sr_is_const;
++                if (!sr_is_const)
++                    g.srinv = g.srinv || int_or_default(ff->params, id_IS_R_INVERTED) == 1 ||
++                              int_or_default(ff->params, id_IS_S_INVERTED) == 1;
 +                g.ceused[j] = g.ceused[j] || (ce != nullptr && ce->name != ctx->id("$PACKER_VCC_NET"));
 +
 +                // FFMUX<c><1|2> input select.
@@ -240,7 +255,20 @@
 +        // CIN state, because a chained CARRY8 takes CIN from the tile below
 +        // unconditionally. So write nothing when this cell is chained.
 +        NetInfo *ax = carry->getPort(id_AX);
-+        if (ax != nullptr) {
++        if (ax == nullptr) {
++            // A chained CARRY8 takes its carry-in from the CARRY8 below. prjuray
++            // fuzzes that state -- fuzzers/017-cle-precyinit emits the tag
++            // CARRY8.PRECYINIT_BOT.CIN -- but it is NOT in the solved database:
++            // segbits_clem.db carries only CARRY8.CI.{AX,V0,V1}, three of the
++            // four options in that tag group. Writing nothing leaves both bits
++            // (10_18, 14_01) clear, which is exactly CI.V0, constant zero -- so
++            // the chain would be quietly cut rather than obviously broken.
++            log_warning("CARRY8 at %s is chained, and CARRY8.CI.CIN has no entry in prjuray-db "
++                        "(only AX/V0/V1 of that tag group were solved). The carry-in bits will "
++                        "assemble as constant 0. Synthesise with -nocarry until this is "
++                        "characterised.\n",
++                        get_tile_name(tile).c_str());
++        } else {
 +            if (ax->name == ctx->id("$PACKER_GND_NET"))
 +                write_choice("CI", "V0");
 +            else if (ax->name == ctx->id("$PACKER_VCC_NET"))
@@ -277,7 +305,7 @@
      void write_logic()
      {
          std::set<int> used_logic_tiles;
-@@ -694,12 +949,18 @@
+@@ -694,12 +977,18 @@
                  used_logic_tiles.insert(cell.second->bel.tile);
          }
          for (int tile : used_logic_tiles) {
