@@ -50,3 +50,17 @@ if [ -n "$( git -C "$REF" status --porcelain 2>/dev/null )" ]; then
     exit 1
 fi
 echo "  prjuray-db clean: ok"
+
+# Hand-written settings live HERE, not in the clone. prjuray/ is gitignored, so
+# anything written inside it is lost on a fresh clone -- and settings/ holds the
+# XCK26 part definition, the ROI ranges derived from Vivado and the four fuzzer
+# harness pins, none of which is reproducible from upstream.
+for f in "${HERE}/settings"/*.sh; do
+    [ -e "$f" ] || continue
+    dest="${HERE}/prjuray/settings/$( basename "$f" )"
+    if [ -e "$dest" ] && ! cmp -s "$f" "$dest"; then
+        echo "  settings: $( basename "$f" ) differs in the clone; copying ours over it"
+    fi
+    cp -f "$f" "$dest"
+    echo "  settings: installed $( basename "$f" )"
+done
