@@ -17,15 +17,23 @@ set_property LOC B11 [get_ports pmod[7]]
 # 16 minutes of CPU on a 45-cell design. Giving it a real clock-capable pin
 # bounds the search.
 #
-# F12 is IO_L6P_HDGC_45 -- the P side of a clock-capable differential pair.
-# F11, used here before, is the N side of that same pair, and an N-side CCIO
-# cannot drive the global clock network. Vivado enforces that:
-#   ERROR: [DRC PLIO-9] Placement Constraints Check for IO constraints: The
-#   following clock source has been LOCed to a N-Type CCIO : clk
-# nextpnr does not run that check, so it placed F11 happily and the result
-# would not have worked on silicon.
+# Two independent constraints pick this pin, and the first version of this file
+# satisfied neither.
 #
-# NOTE: on the actual board this clock should come from PS8 pl_clk0, needing no
-# pin at all -- the KV260 PMOD is output-only and cannot supply a clock. This
-# constraint exists to exercise the chipdb end to end.
-set_property LOC F12 [get_ports clk]
+# 1. It must be the P side of a clock-capable pair. An N-side CCIO cannot drive
+#    the global clock network, and Vivado enforces it:
+#      ERROR: [DRC PLIO-9] Placement Constraints Check for IO constraints: The
+#      following clock source has been LOCed to a N-Type CCIO : clk
+#    nextpnr does not run that check. It placed the original F11 -- which is
+#    IO_L6N_HDGC_45, the N side -- happily, and produced a complete,
+#    self-consistent FASM that would not have worked on silicon.
+#
+# 2. It must actually be routed on the KV260 carrier. The board file
+#    (XilinxBoardStore/boards/Xilinx/kv260/1.1/part0_pins.xml) lists 39 pins;
+#    F12 is not among them. G11 is: IO_L5P_HDGC_45, brought out as som240_1_d16.
+#
+# READ THIS BEFORE BUILDING FOR THE BOARD: a PMOD LED module is output only and
+# supplies no clock, so nothing drives G11. The design that runs on hardware
+# needs PS8 pl_clk0 and no clock pin at all. This constraint exists to exercise
+# the chipdb and the FASM writers end to end.
+set_property LOC G11 [get_ports clk]

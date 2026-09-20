@@ -475,7 +475,7 @@
           },
           "attributes": {
             "BEL_STRENGTH": "00000000000000000000000000000110",
-            "NEXTPNR_BEL": "IOB_X0Y114/IBUFCTRL",
+            "NEXTPNR_BEL": "IOB_X0Y112/IBUFCTRL",
             "X_ORIG_PORT_IBUFDISABLE": "IBUFDISABLE",
             "X_ORIG_PORT_TRI": "T",
             "X_ORIG_PORT_O": "O",
@@ -504,7 +504,7 @@
           },
           "attributes": {
             "BEL_STRENGTH": "00000000000000000000000000000110",
-            "NEXTPNR_BEL": "IOB_X0Y114/INBUF",
+            "NEXTPNR_BEL": "IOB_X0Y112/INBUF",
             "X_ORIG_PORT_PAD": "PAD",
             "X_ORIG_PORT_OSC_EN": "OSC_EN",
             "X_ORIG_PORT_OSC0": "OSC[0]",
@@ -1126,12 +1126,12 @@
           },
           "attributes": {
             "BEL_STRENGTH": "00000000000000000000000000000110",
-            "NEXTPNR_BEL": "IOB_X0Y114/PAD",
+            "NEXTPNR_BEL": "IOB_X0Y112/PAD",
             "X_ORIG_TYPE": "PAD",
             "X_ORIG_PORT_PAD": "PAD",
             "X_IO_DIR": "IN",
             "src": "blink.v:12.23-12.26",
-            "LOC": "F12"
+            "LOC": "G11"
           },
           "port_directions": {
             "PAD": "inout"
@@ -3444,7 +3444,7 @@
           "hide_name": 1,
           "bits": [ 151555 ] ,
           "attributes": {
-            "ROUTING": "SITEWIRE/IOB_X0Y114/INPUTMUX_OUT;SITEPIP/IOB_X0Y114/INPUTMUX/SWITCH_OUT;1;SITEWIRE/IOB_X0Y114/SWITCH_OUT;;1"
+            "ROUTING": "SITEWIRE/IOB_X0Y112/INPUTMUX_OUT;SITEPIP/IOB_X0Y112/INPUTMUX/SWITCH_OUT;1;SITEWIRE/IOB_X0Y112/SWITCH_OUT;;1"
           }
         },
         "$iopadmap$clk": {
@@ -3458,7 +3458,7 @@
           "hide_name": 1,
           "bits": [ 151168 ] ,
           "attributes": {
-            "ROUTING": "HDIO_BOT_RIGHT_X7Y120/HDIO_IOBPAIR_53_I;HDIO_BOT_RIGHT_X7Y120/13413.1993;1;RCLK_HDIO_X7Y149/CLK_CMT_MUX_4TO1_0_CLK_OUT;RCLK_HDIO_X7Y149/174.3;1;RCLK_HDIO_X7Y149/CLK_BUFGCE_HDIO_0_CLK_IN;RCLK_HDIO_X7Y149/3.163;1;SITEWIRE/BUFGCE_HDIO_X0Y4/CLK_IN;RCLK_HDIO_X7Y149/163.218;1;SITEWIRE/BUFGCE_HDIO_X0Y4/IINV_I;SITEPIP/BUFGCE_HDIO_X0Y4/IINV/CLK_IN;1;SITEWIRE/IOB_X0Y114/I;;1"
+            "ROUTING": "HDIO_BOT_RIGHT_X7Y120/HDIO_IOBPAIR_46_I;HDIO_BOT_RIGHT_X7Y120/13337.1977;1;RCLK_HDIO_X7Y149/CLK_CMT_MUX_4TO1_0_CLK_OUT;RCLK_HDIO_X7Y149/173.3;1;RCLK_HDIO_X7Y149/CLK_BUFGCE_HDIO_0_CLK_IN;RCLK_HDIO_X7Y149/3.163;1;SITEWIRE/BUFGCE_HDIO_X0Y4/CLK_IN;RCLK_HDIO_X7Y149/163.218;1;SITEWIRE/BUFGCE_HDIO_X0Y4/IINV_I;SITEPIP/BUFGCE_HDIO_X0Y4/IINV/CLK_IN;1;SITEWIRE/IOB_X0Y112/I;;1"
           }
         },
         "$auto$alumacc.cc:485:replace_alu$1614.X[0]": {
@@ -3573,7 +3573,7 @@
           "hide_name": 0,
           "bits": [ 150962 ] ,
           "attributes": {
-            "ROUTING": "SITEWIRE/IOB_X0Y114/IO;;5",
+            "ROUTING": "SITEWIRE/IOB_X0Y112/IO;;5",
             "src": "blink.v:12.23-12.26"
           }
         },
