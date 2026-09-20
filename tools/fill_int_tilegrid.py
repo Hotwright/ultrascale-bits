@@ -38,6 +38,12 @@ elsewhere in the same fuzzer output:
 --cross-validate hides each solved INT tile in turn and predicts it from the
 rest. Anything less than 100% right means the model is wrong and the fill is
 refused.
+
+An independent check the tool does not perform itself, because it needs
+prjuray's env: part.yaml's own column map, via util.TileFrames.get_tile_frames,
+agrees with the stored `frames` for all 10320 INT tiles after the fill - and
+for CLEL_L, CLEM, RCLK_INT_L and HPIO_L as controls. That is a source the fill
+never consults, so it is real corroboration rather than a restatement.
 """
 import argparse, collections, json, os, re, sys
 
