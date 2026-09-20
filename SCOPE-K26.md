@@ -1,9 +1,16 @@
 # Scoping an open flow for the Kria K26 (XCK26-SFVC784-2LV-C)
 
-Scoping only — nothing here has been fuzzed or built. The question asked was
-"what would a real flow actually need", and the short answer is that **none of
-`0-xilinx-bits` reaches this part**, but the pieces for a different flow do
-exist and are in better shape than expected.
+> **This began as scoping and is no longer that.** Sections up to "Tooling
+> status" are the original survey, kept because their measurements still hold.
+> **For where the work actually stands, jump to
+> [STATUS 2026-09-19](#status-2026-09-19-the-fasm-path-now-exists-and-we-built-it).**
+> Short version: yosys → nextpnr-xilinx → FASM runs on the XCK26 with no vendor
+> tool, and 977 of the 978 features it emits are known to prjuray-db. There is
+> still no `.bit`, because the XCK26 has no `part.yaml`/`tilegrid.json`.
+
+The original question was "what would a real flow actually need", and the short
+answer was that **none of `0-xilinx-bits` reaches this part**, but the pieces
+for a different flow do exist and are in better shape than expected.
 
 ## The part
 
@@ -397,14 +404,120 @@ longer the blocking one.
    `projects/Kria/` already has the vendor boot artifacts, so this is a known
    quantity, but it is not part of an "open flow" in the way the 7-series work is.
 
-## Recommended next step if this is pursued
+## STATUS 2026-09-19: the FASM path now exists, and we built it
 
-Risk 1 is settled, so the next cheap-and-decisive test is **risk 2**: export the
-XCK26 (or `xczu5ev-sfvc784-1-e`) device with RapidWright's `rapidwright_bbaexport`
-and see how large the `.bba` is and whether `bbasm` completes inside 31 GB. That
-is one command and a wait, and it decides whether this flow is buildable on this
-machine at all. If it is, write `prjuray/settings/zynq_usp_5ev.sh` — the data for
-it is already derived (grid X 0–448 / Y 0–249; SLICE 14,640 `X0Y0:X60Y239`;
-DSP48E2 1,248 `X0Y0:X12Y95`; RAMB18 144; URAM288 64) — and run the per-part
-tilegrid fuzzer. If it is not, the honest answer is that the K26 needs a
-different chipdb strategy before any of the rest matters.
+Everything above stands as written, including the correction that *upstream*
+`nextpnr-xilinx` has no FASM path for UltraScale+. It does now, in this tree.
+
+`designs/kv260_pmod_blink/build.sh` runs the whole flow with **no vendor tool
+anywhere**:
+
+    blink.v -> yosys (synth_xilinx -family xcup -nocarry)
+            -> nextpnr-xilinx (chipdb xck26.bin, from RapidWright)
+            -> blink.fasm  (prjuray feature syntax)
+            -> tools/check_fasm_vs_uraydb.py
+
+and finishes in well under a minute.
+
+### Acceptance: 977 of 978 emitted features are known to prjuray-db
+
+`tools/check_fasm_vs_uraydb.py` checks every feature the FASM emits against
+prjuray-db's segbits, per tile type. This is the test that matters, because a
+feature prjuray has never heard of assembles to **nothing, silently**.
+
+| tile type | known | unknown | % |
+| --- | ---: | ---: | ---: |
+| CLEL_R | 86 | 0 | 100.0 |
+| CLEM | 197 | 0 | 100.0 |
+| HDIO_BOT_RIGHT | 5 | 0 | 100.0 |
+| HDIO_TOP_RIGHT | 22 | 0 | 100.0 |
+| INT | 648 | 0 | 100.0 |
+| RCLK_DSP_INTF_L | 8 | 0 | 100.0 |
+| RCLK_HDIO | 6 | 0 | 100.0 |
+| RCLK_INT_L | 4 | 0 | 100.0 |
+| RCLK_INTF_LEFT_TERM_ALTO | 1 | 1 | 50.0 |
+| **TOTAL** | **977** | **1** | **99.9** |
+
+plus 13 features in three tile types that have no segbits file at all
+(`INT_INTF_R_PCIE4`, `RCLK_RCLK_XIPHY_INNER_FT`, `RCLK_CLEM_CLKBUF_L`).
+
+**Read the direction of that test carefully.** It proves *emitted ⊆ known*. It
+cannot prove *required ⊆ emitted* — a feature we fail to write is invisible to
+it. It caught four real encoding faults today; it will not catch an omission.
+
+### prjuray/tools/dump_features.tcl is the specification
+
+That Tcl turns a Vivado-routed design into the feature list the fuzzers solve
+against, so it **is** prjuray's FASM model. The segbits only record which of
+those features were successfully solved. Three separate attempts to infer the
+model from the segbits alone each produced a rule that the next example
+falsified. Reading the Tcl settled every one of them in minutes.
+
+### Four bugs in nextpnr-xilinx, all in `patches/`
+
+1. **`findSourceSinkLocations` never terminated.** Its BFS parents each wire by
+   whichever wire discovered it, which is a forest only if the root can never be
+   re-parented — and nothing ever inserts the root into `backtrace`, so a
+   bidirectional pip leading back to it closes a 2-cycle. Same shape in
+   `routeVcc` and both `routeClock` BFS loops. UltraScale+ has such pips (this
+   is the same device property prjuray spells `.FWD`/`.REV`); 7-series
+   apparently does not, which is why this sat latent upstream.
+
+   **Five earlier diagnoses of this were wrong, and every one was inferred from
+   where the log stopped.** `Routing global clocks... routing clock '$iopadmap$clk'`
+   was simply the last line printed before a silent function; `routeClock` had
+   always completed. One `gdb` stack sample settled it. `ptrace_scope=1` forbids
+   attaching to a running process, so **gdb has to be the parent**: launch under
+   `gdb -batch -ex run --args ... &`, then `kill -INT` the gdb pid — commands
+   placed after `run` execute at the stop.
+
+2. **Chain-root CARRY8 sent its carry-in to CIN.** CIN is the dedicated input
+   from the CARRY8 below, so only a cell with a predecessor may use it. The
+   chain root sets `cluster = its own name`, which is not `ClusterId()`, so the
+   original test took the chained path and asked the router to reach SLICE/CIN
+   from the global GND node. A root's carry-in belongs on AX.
+
+3. **`fasm.cc` UltraScale+ writers** — CLE, IO, clocking, route-throughs and
+   the bidirectional-pip suffix. None of the 7-series writers could be reused,
+   because every difference changes the feature *name*.
+
+4. **`bbaexport.java` for RapidWright 2026** (six API fixes, four null guards).
+
+### Two traps worth remembering
+
+* **`getSiteLocInTile()` is not prjuray's site index.** `bbaexport` computes
+  `rel_x`/`rel_y` per site *type*, and an HDIO tile interleaves `HDIOB_M` and
+  `HDIOB_S`, so each type restarts at zero and the two collide: eight distinct
+  pads first came out as `IOB_X0Y{0,2,4,6}`, every name used twice. prjuray
+  counts over every site sharing a name *prefix*.
+* **A route-thru pip carries no site in the chipdb** — `pip.site`, the wire's
+  site and the bel-pin count are all -1/0 — and the wire number is not the site
+  number (`BUFCE_LEAF_X0Y2` is `CLK_LEAF_SITES_3`). Hence the generated table
+  `tools/gen_usp_bufce_leaf.py`.
+
+## Open, in priority order
+
+1. **No `part.yaml` or `tilegrid.json` for the XCK26**, so
+   `prjuray/utils/fasm2bit.py` cannot run at all and there is still no `.bit`.
+   prjuray-db ships part directories for two ZU3EG parts only. `001-part-yaml`
+   is one Vivado run — `gen_part_base_yaml` off a per-frame-CRC bitstream.
+   `002-tilegrid` has 20 sub-fuzzers and is the long pole. **This is
+   characterisation, run once per die, not Vivado in the design loop.**
+
+2. **`CARRY8.CI.CIN` is absent from prjuray-db.** `017-cle-precyinit` emits the
+   tag — its `tag_groups.txt` lists `PRECYINIT_BOT` as a four-way group
+   C0/C1/AX/CIN — but only `CI.{AX,V0,V1}` were solved. A chained CARRY8 would
+   therefore assemble with both carry-in bits clear, which *is* `CI.V0`,
+   constant zero: the chain is cut silently rather than failing. `build.sh`
+   defaults to `-nocarry` for that reason and nextpnr warns once per chained
+   CARRY8. Settling it needs one Vivado specimen on `xczu3eg-sfvc784-1-e`,
+   whose `part.yaml` prjuray-db already has.
+
+3. Genuine prjuray-db coverage gaps, listed above.
+
+4. BRAM, DSP and the PLL/MMCM are not ported in `fasm.cc`. They are deliberately
+   left unwritten rather than emitting 7-series features, so a design using them
+   loses its configuration instead of getting a wrong one.
+
+5. `.bit.bin` packaging and the `xmutil`/`fpgautil` load sequence. **Nothing has
+   been loaded onto the board yet.**
