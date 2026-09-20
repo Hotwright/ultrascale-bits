@@ -526,14 +526,44 @@ Both `build.sh` scripts run it. On the PS design it drops exactly 11:
 
   | tile instance | grid | sites | needs |
   | --- | --- | ---: | --- |
-  | `RCLK_INTF_LEFT_TERM_ALTO_X0Y149` | (159,93) | **24** | nothing -- 002 addresses it directly; its gap is segbits, not an address |
+  | `RCLK_INTF_LEFT_TERM_ALTO_X0Y149` | (159,93) | **24** | **`rclk_pss_alto`, which was wrongly disabled** -- see below |
   | `RCLK_CLEM_CLKBUF_L_X15Y149` | (226,93) | 0 | a derived address; `RCLK_INT_L` (32 sites) sits at dx=1 right and `RCLK_DSP_INTF_L` at dx=2 left, so the span is short and should pin |
   | `RCLK_RCLK_XIPHY_INNER_FT_X16Y149` | (278,93) | 0 | a derived address; nearest addressable anchor is dx=3 right across `RCLK_INTF_L_IBRK_IO_L`, so this one may stay free |
 
-  Two distinct failures hide behind one symptom, and only the last two are
-  base-address problems. `LEFT_TERM_ALTO` has sites and will get its address
-  from 002 like any other tile; what it lacks is a *segbit* for the HDISTR
-  enable, which no amount of address derivation supplies.
+  Two distinct failures hide behind one symptom. What `LEFT_TERM_ALTO` lacks
+  is a *segbit* for the HDISTR enable, which no amount of address derivation
+  supplies -- but it turns out to lack an address too, for a third reason
+  again.
+
+  **Four of 002's sub-fuzzers were disabled on the wrong criterion, and one of
+  them matters.** The justification recorded in
+  `patches/prjuray-002-tilegrid-xck26.patch` was that the tile types they are
+  *named after* have zero instances on this die. That reasoning does not apply
+  to them: each scans for a **site type** and configures whichever tile holds
+  it, and none mentions its namesake tile type anywhere. The XCK26 simply has
+  the left-hand variants where the ZU3EG had the right-hand ones.
+
+  | sub-fuzzer | site it looks for | where that site lives on the XCK26 |
+  | --- | --- | --- |
+  | `rclk_pss_alto` | `BUFG_PS` | 96 in `RCLK_INTF_LEFT_TERM_ALTO` (4 tiles) |
+  | `cmt_right` | `BUFCE_ROW` | 96 in `CMT_L` (4) |
+  | `bitslice_tiles` | `BITSLICE_RX_TX` | 208 in `XIPHY_BYTE_L` (16) |
+  | `hpio_right` | `HPIOB_M`/`_S` | 164 in `HPIO_L` (8) |
+
+  **`rclk_pss_alto` is not optional.** `RCLK_INTF_LEFT_TERM_ALTO` is where
+  `PL_CLK` enters the fabric -- our FASM's
+  `PIP.CLK_BUFG_PS_0_CLK_IN.PS_TO_PL_CLK0` is in it -- and with no base
+  address `fasm2bit` cannot place a single bit there. The design would
+  assemble into a bitstream whose clock is never connected, and every check
+  short of the hardware would pass. The other three cost tile types this
+  design does not use, but they are wrong for the database all the same.
+
+  `env/add_missing_tilegrid_fuzzers.sh` repairs it after 002 finishes: it
+  builds each `.tdb` on its own first and adds it to the dependency list only
+  once it exists, because `tilegrid.json` depends on *every* listed `.tdb`, so
+  adding one that cannot succeed means make never reaches the final target
+  however it fails. That is the same trap the original removal was avoiding --
+  the removal was right to worry and wrong about which ones qualify.
 
   **Settle it with one Vivado run, not 405.** The reference build
   (`env/reference_build.sh`) produces a bitstream for the same design;

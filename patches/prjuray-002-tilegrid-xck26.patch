@@ -1,3 +1,11 @@
+# SUPERSEDED IN PART -- see SCOPE-K26.md.
+# Three of these four removals were justified on the wrong criterion. These
+# sub-fuzzers scan for a SITE type and configure whichever tile holds it; none
+# of them mentions its namesake tile type. The XCK26 has the left-hand variants
+# where the ZU3EG had the right-hand ones, so BUFG_PS, BUFCE_ROW and
+# BITSLICE_RX_TX all exist here in CMT_L / XIPHY_BYTE_L / RCLK_INTF_LEFT_TERM_ALTO.
+# rclk_pss_alto in particular addresses RCLK_INTF_LEFT_TERM_ALTO, where PL_CLK
+# enters the fabric. env/add_missing_tilegrid_fuzzers.sh restores them.
 --- /tmp/claude-1000/-mnt-i-Hotwright-0-xilinx-bits/e8653efd-f53f-4c26-9851-65632759a9cd/scratchpad/002.Makefile.orig	2026-09-19 19:13:19.475441979 -0700
 +++ prjuray/fuzzers/002-tilegrid/Makefile	2026-09-19 19:13:33.381747600 -0700
 @@ -17,6 +17,19 @@
