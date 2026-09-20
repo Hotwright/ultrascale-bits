@@ -1,23 +1,36 @@
 --- nextpnr-xilinx/xilinx/fasm.cc.orig	2026-09-19 18:10:06.243029900 -0700
-+++ nextpnr-xilinx/xilinx/fasm.cc	2026-09-19 18:36:53.829128900 -0700
-@@ -209,6 +209,95 @@
++++ nextpnr-xilinx/xilinx/fasm.cc	2026-09-19 19:00:09.736091300 -0700
+@@ -209,6 +209,120 @@
          }
      }
  
 +    // A bidirectional pip appears in the chipdb twice: bbaexport emits
 +    // addPIP(p, false) then addPIP(p, true), so the canonical direction always
-+    // has the lower tile-local index. prjuray distinguishes the two with a
-+    // suffix -- INT.PIP.BYPASS_W14.INT_NODE_IMUX_50_INT_OUT0.FWD and .REV are
-+    // separate features on separate bits. Returns "" for a one-way pip.
-+    std::string usp_pip_direction_suffix(PipId pip)
++    // has the lower tile-local index. prjuray names the feature by the
++    // CANONICAL pair and says which way the signal goes with a suffix -- both
++    //   INT.PIP.BYPASS_W8.INT_NODE_IMUX_37_INT_OUT0.FWD
++    //   INT.PIP.BYPASS_W8.INT_NODE_IMUX_37_INT_OUT0.REV
++    // exist, on separate bits, with dst and src the same way round in each. So
++    // when this pip is the reverse one, the names must be swapped BACK before
++    // printing, not just tagged. Writing the swapped names plus ".REV" produces
++    // a feature prjuray has never heard of, which assembles to nothing.
++    //
++    // Sets swap=true when the caller should print (src, dst) instead of
++    // (dst, src). Returns "" for a one-way pip.
++    std::string usp_pip_direction_suffix(PipId pip, bool &swap)
 +    {
++        swap = false;
 +        auto &li = ctx->locInfo(pip);
 +        auto &pd = li.pip_data[pip.index];
 +        auto &dw = li.wire_data[pd.dst_index];
 +        for (int k = 0; k < dw.num_downhill; k++) {
 +            int idx = dw.pips_downhill[k];
-+            if (li.pip_data[idx].dst_index == pd.src_index)
-+                return (pip.index < idx) ? ".FWD" : ".REV";
++            if (li.pip_data[idx].dst_index == pd.src_index) {
++                if (pip.index < idx)
++                    return ".FWD";
++                swap = true;
++                return ".REV";
++            }
 +        }
 +        return "";
 +    }
@@ -36,11 +49,13 @@
 +#undef USP_BUFCE_LEAF
 +    }
 +
-+    // UltraScale+ route-throughs. A pip that passes through a site is not a
-+    // routing bit; the site's own configuration is what selects the path, and
-+    // prjuray has no pip feature for it at all -- writing one assembles to
-+    // nothing, silently. Returns true when the pip was consumed here.
-+    bool write_routethru_usp(PipId pip)
++    // UltraScale+ pips whose configuration is NOT a routing bit. Mostly
++    // route-throughs -- a pip that passes through a site is selected by that
++    // site's own configuration -- plus the PS interface, whose whole
++    // configuration is one tile-level enable. prjuray has no pip feature for
++    // any of them, and writing one assembles to nothing, silently.
++    // Returns true when the pip was consumed here.
++    bool write_pip_as_site_config_usp(PipId pip)
 +    {
 +        auto &li = ctx->locInfo(pip);
 +        auto &pd = li.pip_data[pip.index];
@@ -78,6 +93,16 @@
 +            return true;
 +        }
 +
++        // The PS interface. Record the tile so write_pss_intf_usp() can set its
++        // one enable bit; the pip itself has no bits, so drop it.
++        if (tt == "INT_INTF_LEFT_TERM_PSS") {
++            if (getenv("NEXTPNR_RT_TRACE"))
++                log_info("PSS %s  %s <- %s\n", get_tile_name(pip.tile).c_str(), dst.c_str(), src.c_str());
++            if (boost::contains(dst, "LOGIC_OUTS") || boost::contains(src, "LOGIC_OUTS"))
++                usp_pss_outputs_enabled.insert(pip.tile);
++            return true;
++        }
++
 +        // The clock tri-state/ESD driver. prjuray has a pip feature for what
 +        // drives ITS output onward (CLK_BUFCE_ROW_FSR_n_CLK_IN <- ..._SCHMITT_B)
 +        // but none for the track that drives the driver: that is carried by
@@ -96,12 +121,12 @@
      void write_pip(PipId pip, NetInfo *net)
      {
          const bool debug_this = false;
-@@ -279,7 +368,25 @@
+@@ -279,7 +393,25 @@
              if (!pp.empty())
                  last_was_blank = false;
          } else {
 -            if (pd.extra_data == 1)
-+            if (!ctx->xc7 && write_routethru_usp(pip))
++            if (!ctx->xc7 && write_pip_as_site_config_usp(pip))
 +                return;
 +            if (pd.extra_data == 1 && getenv("NEXTPNR_RT_TRACE")) {
 +                auto &li = ctx->locInfo(pip);
@@ -123,7 +148,7 @@
                  log_warning("Unprocessed route-thru %s.%s.%s\n!", get_tile_name(pip.tile).c_str(),
                              IdString(ctx->locInfo(pip).wire_data[pd.dst_index].name).c_str(ctx),
                              IdString(ctx->locInfo(pip).wire_data[pd.src_index].name).c_str(ctx));
-@@ -322,9 +429,18 @@
+@@ -322,9 +454,22 @@
                      return; // missing, not sure if really a ppip?
              }
  
@@ -134,16 +159,20 @@
              out << tile_name << ".";
 +            if (!ctx->xc7)
 +                out << "PIP.";
++            std::string dir_suffix;
++            if (!ctx->xc7) {
++                bool swap = false;
++                dir_suffix = usp_pip_direction_suffix(pip, swap);
++                if (swap)
++                    std::swap(dst_name, src_name);
++            }
              out << dst_name << ".";
 -            out << src_name << std::endl;
-+            out << src_name;
-+            if (!ctx->xc7)
-+                out << usp_pip_direction_suffix(pip);
-+            out << std::endl;
++            out << src_name << dir_suffix << std::endl;
  
              if (boost::contains(tile_name, "IOI") && boost::starts_with(dst_name, "IOI_OCLK_")) {
                  dst_name.insert(dst_name.find("OCLK") + 4, 1, 'M');
-@@ -334,6 +450,8 @@
+@@ -334,6 +479,8 @@
                  NPNR_ASSERT(w != WireId());
                  if (ctx->getBoundWireNet(w) == nullptr) {
                      out << tile_name << ".";
@@ -152,7 +181,7 @@
                      out << dst_name << ".";
                      out << src_name << std::endl;
                  }
-@@ -686,6 +804,281 @@
+@@ -686,6 +833,281 @@
          pop(3);
      }
  
@@ -434,7 +463,7 @@
      void write_logic()
      {
          std::set<int> used_logic_tiles;
-@@ -694,12 +1087,18 @@
+@@ -694,12 +1116,18 @@
                  used_logic_tiles.insert(cell.second->bel.tile);
          }
          for (int tile : used_logic_tiles) {
@@ -459,7 +488,7 @@
              blank();
          }
      }
-@@ -1614,15 +2013,209 @@
+@@ -1614,15 +2042,230 @@
          }
      }
  
@@ -646,6 +675,26 @@
 +        blank();
 +    }
 +
++    // The PS interface tile carries one tile-level enable, and prjuray sets it
++    // from the pips that pass through: fuzzers/070-ps8-int/dump_features.tcl
++    // writes OUTPUTS_ENABLED.1 for any INT_INTF_LEFT_TERM_PSS tile in which a
++    // LOGIC_OUTS pip is used, and .0 otherwise. The individual pips in that
++    // tile have no solved bits -- segbits_int_intf_left_term_pss.db holds
++    // OUTPUTS_ENABLED and nothing else -- so this single bit is the whole
++    // configuration, and without it every fabric output from the PS side is
++    // dead.
++    pool<int> usp_pss_outputs_enabled;
++
++    void write_pss_intf_usp()
++    {
++        for (int tile : usp_pss_outputs_enabled) {
++            push(get_tile_name(tile));
++            write_choice("OUTPUTS_ENABLED", "1");
++            pop();
++        }
++        blank();
++    }
++
      void write_fasm()
      {
          get_invertible_pins(ctx, invertible_pins);
@@ -669,6 +718,7 @@
 +            // missing its configuration rather than getting the 7-series one,
 +            // which would be worse.
 +            write_clocking_usp();
++            write_pss_intf_usp();
 +        }
      }
  };

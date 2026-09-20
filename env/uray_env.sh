@@ -54,7 +54,22 @@ export URAY_FAMILY_DIR="${URAY_DATABASE_DIR}/${URAY_DATABASE}"
 export URAY_TCL_REFORMAT="${URAY_UTILS_DIR}/tcl-reformat.sh"
 export URAY_CORRELATE="${URAY_TOOLS_DIR}/correlate_segdata"
 export URAY_SEGMATCH="${URAY_TOOLS_DIR}/segmatch"
-export URAY_BITREAD="${URAY_TOOLS_DIR}/bitread"
+# Everything below is copied verbatim from prjuray/utils/environment.sh, which
+# this file exists to bypass (it hard-gates on Vivado v2019.2 and otherwise
+# silently sets URAY_DIR=/bad/vivado/version). Copying means it can drift, and
+# it did: URAY_BITREAD was defined bare here, so 002-tilegrid ran
+#   bitread -F ... -o design.bits -z -y design.bit
+# with no part file and died on "Part file not found or invalid" after a full
+# Vivado run. Upstream passes the part file and the architecture. Keep this list
+# in step -- `comm -23` of the two files' `^export` names shows any drift.
+export URAY_PART_YAML="${URAY_DATABASE_DIR}/${URAY_DATABASE}/${URAY_PART}/part.yaml"
+export URAY_BITREAD="${URAY_TOOLS_DIR}/bitread -E --part_file ${URAY_PART_YAML} --architecture ${URAY_ARCH}"
+export URAY_DBFIXUP="python3 ${URAY_UTILS_DIR}/dbfixup.py"
+export URAY_MASKMERGE="bash ${URAY_UTILS_DIR}/maskmerge.sh"
+export URAY_SEGPRINT="python3 ${URAY_UTILS_DIR}/segprint.py"
+export URAY_BITTOOL="${URAY_TOOLS_DIR}/bittool"
+export URAY_BLOCKWIDTH="python3 ${URAY_UTILS_DIR}/blockwidth.py"
+export URAY_PARSEDB="python3 ${URAY_UTILS_DIR}/parsedb.py"
 export URAY_MERGEDB="${URAY_UTILS_DIR}/mergedb.sh"
 export URAY_GENHEADER="${URAY_UTILS_DIR}/genheader.sh"
 
