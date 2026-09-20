@@ -36,6 +36,7 @@ TABLE=(
   "prjuray-002-tilegrid-xck26.patch      : .                                                        : 0 : patch"
   "prjuray-002-hpio-tile-type.patch      : .                                                        : 0 : patch"
   "prjuray-fasm-assembler-diagnostics.patch : .                                                     : 0 : patch"
+  "prjuray-002-add-tdb-tolerate-unsolved.patch : .                                                  : 0 : patch"
   "nextpnr-xilinx-usp-backtrace-cycle.patch : nextpnr-xilinx                                        : 0 : patch"
   "nextpnr-xilinx-usp-carry8-chain-root.patch : nextpnr-xilinx                                      : 0 : patch"
   "nextpnr-xilinx-usp-fasm.patch         : .                                                        : 0 : patch"
