@@ -44,6 +44,12 @@ MK="$F/Makefile"
 BF="build_$URAY_PART"
 
 cd "$F" || exit 1
+# bitslice_tiles is expected to FAIL here and that is not a problem. It routes
+# each BITSLICE_RX_TX output to a package pad, and SFVC784 does not bond the
+# adjacent IOBs ("Site IOB_X1Y0 is not bonded"), so its terminals cannot be
+# placed on this part at all. It is retried rather than hardcoded as skipped
+# because re-measuring costs two minutes and trusting a note costs more; the
+# loop below simply leaves a failure out of the dependency list.
 ok=()
 for s in rclk_pss_alto cmt_right bitslice_tiles hpio_right; do
     if [ -f "$s/$BF/segbits_tilegrid.tdb" ]; then
