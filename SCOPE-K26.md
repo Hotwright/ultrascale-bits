@@ -16,10 +16,15 @@ without `tilegrid.json`. Run it in this order; each step says why it exists.
 | | command | what it settles |
 | --- | --- | --- |
 | 1 | `./env/run_uray_fuzzers.sh 002` | produces `tilegrid.json`. ~3.5 h at `URAY_JOBS=4`. Count **`design.bit`** for progress -- `design.bits` lags it by the whole bitread step. |
-| 2 | `./env/finish_tilegrid.sh` | fills the base addresses 002 structurally cannot produce, then smoke-tests the round trip by decoding a specimen the fuzzer built and checking the features land in the tiles its `params.csv` names |
+| 1b | `./env/add_missing_tilegrid_fuzzers.sh` | restores the four sub-fuzzers disabled on the wrong criterion. **`rclk_pss_alto` is the one that matters** -- it is the only thing that addresses `RCLK_INTF_LEFT_TERM_ALTO`, where `PL_CLK` enters the fabric |
+| 2 | `./env/finish_tilegrid.sh` | audits whether every tile type the designs use has an address, fills the ones 002 structurally cannot produce, then smoke-tests the round trip by decoding a specimen the fuzzer built and checking the features land in the tiles its `params.csv` names |
 | 3 | `./env/reference_build.sh` | the one Vivado run. Answers `required ⊆ emitted` by class diff, and says whether Vivado sets bits in the three clock-spine tiles |
 | 4 | `./designs/make_bitstream.sh` | FASM → `.bit` → `.bit.bin`, and round-trips our own bitstream back to FASM to check the assembler and disassembler agree |
 | 5 | `sudo fpgautil -b blink_ps.bit.bin -f Full` | on the board. Check `/sys/kernel/debug/clk/clk_summary` for `pl0` first -- `fpgautil` does not touch clocks |
+
+Step 1b can be skipped only if `rclk_pss_alto/build_*/segbits_tilegrid.tdb`
+already exists -- it is being built alongside step 1 in this session, and the
+script detects that and moves on.
 
 Only step 5 has never been exercised in any form.
 
