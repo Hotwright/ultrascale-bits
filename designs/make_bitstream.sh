@@ -152,14 +152,20 @@ for f, v in want.items():
 
 missing = {f: (m, got.get(f, 0)) for f, m in required.items()
            if (got.get(f, 0) & m) != m}
+# The other half, and the one a name-based check can never see: a feature we
+# asked for that came back with bits we did NOT ask for. Same spelling, wrong
+# value -- a LUT whose INIT decoded as 0xC000... when we wrote 0x8000... is a
+# different truth table, and "every bit I wanted is present" would pass it.
+overset = {f: (want[f], got[f]) for f in want_ix & set(got)
+           if got[f] & ~want[f]}
 want_tiles = {f.partition(".")[0] for f in want}
 extra = [f for f in got if f not in want and f.partition(".")[0] in want_tiles]
 
 print("  asked for %d feature(s) over %d tile(s)" % (len(want), len(want_tiles)))
 print("  %d observable, %d bit(s) clear-only and unobservable by construction"
       % (len(required), clear_only))
-print("  decode returned %d feature(s); %d missing, %d unexpected in our tiles"
-      % (len(got), len(missing), len(extra)))
+print("  decode returned %d feature(s); %d missing, %d over-set, %d unexpected"
+      % (len(got), len(missing), len(overset), len(extra)))
 if unknown:
     print("  (%d had no segbits key of their own and were required anyway)"
           % len(unknown))
@@ -167,10 +173,14 @@ for f in sorted(missing)[:10]:
     m, g = missing[f]
     print("    MISSING %s: wanted 0x%x, decoded 0x%x (short by 0x%x)"
           % (f, m, g, m & ~g))
+for f in sorted(overset)[:10]:
+    w, g = overset[f]
+    print("    OVERSET %s: wrote 0x%x, decoded 0x%x (extra 0x%x)"
+          % (f, w, g, g & ~w))
 for f in sorted(extra)[:5]:
     print("    EXTRA   %s = 0x%x" % (f, got[f]))
-if missing:
-    sys.exit("  FAIL: observable features we set did not survive the round trip")
+if missing or overset:
+    sys.exit("  FAIL: the bitstream does not say what the FASM asked for")
 print("  OK: every observable feature came back with the value we asked for")
 PY
 
