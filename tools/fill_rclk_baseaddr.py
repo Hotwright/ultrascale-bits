@@ -16,7 +16,7 @@ they are invisible, not merely uncharacterised. Two of the features our FASM
 emits live in those tiles, on the clock spine.
 
 The rule, derived from the data rather than assumed
---------------------------------------------------
+---------------------------------------------------
 prjuray's existing rule is `baseaddr + dx * 0x100`, and its own docstring
 hedges it ("in some cases"). It is wrong: on the ZU3EG only 43 of 71 steps
 along an RCLK row match, because grid_x counts tiles and not all tiles own a
@@ -25,48 +25,60 @@ frame column.
 What does hold is that base address advances by exactly 0x100 per
 COLUMN-OWNING tile as you walk a row left to right. Some types own one column,
 some own none (NULL, and the RCLK_CBRK_M12BUF_* break tiles), and at least one
-owns two (RCLK_INTF_RIGHT_TERM_IO).
+owns two.
 
-So this script does not hardcode that table. It derives it from whichever base
-addresses the tilegrid already has: each pair of consecutive known addresses in
-a row is a constraint on how many columns the tiles between them own, and the
-per-type counts are solved from all such constraints at once. Then the missing
-tiles are filled by walking the row and counting.
+So this script does not hardcode that table -- it cannot, since a type the
+reference die lacks could never be tabulated in advance. Each pair of
+consecutive known addresses in a row constrains how many columns the tiles
+between them own, and the whole system is reduced once by exact Gaussian
+elimination over rationals.
 
-That matters because RCLK_CLEM_CLKBUF_L's own column count is not knowable from
-the ZU3EG -- the die does not have the tile. Solving on the target die's own
-tilegrid determines it there.
+**It does not solve for individual widths, and trying to was a mistake.** The
+system does not determine them: on the ZU3EG only 13 of 23 are pinned, because
+types like RCLK_CLEL_R_L appear solely in pairs summing to 2 -- with
+RCLK_BRAM_INTF_TD_L, with RCLK_CLEL_L_L, with RCLK_BRAM_INTF_L -- so 1+1 and
+0+2 fit the data equally. An earlier version brute-forced one assignment that
+fitted all 212 constraints and reported it as the answer, which looked like a
+clean result and was really a coin flip.
+
+An individual width is not what filling needs. It needs the SUM of widths
+along a span from a known address to a target tile, and a sum is determined
+exactly when its span vector lies in the row space of the constraints -- which
+it often is while its parts are free. So the model answers spans, not widths.
+The walk therefore accumulates past a tile whose own width is unknown rather
+than stopping at it, and a second pass walks leftward from the anchor on the
+other side. Those two changes took the fill from 12 tiles to 57.
 
 Validation
 ----------
-On the ZU3EG, whose tilegrid is complete, the model fits 212/212 constraints.
-That is in-sample and so proves only consistency, not predictive power.
+The model fits 212/212 constraints in-sample, which proves consistency and
+nothing more.
 
 --cross-validate is the test that matters, because it reproduces the actual
-situation: it deletes every base address of one tile type, refits the model
-without them, predicts them back, and compares. On the ZU3EG, over all 15 RCLK
-types and 215 addresses:
+situation: it deletes every base address of one tile type, refits without
+them, predicts them back, and compares. Over all 15 RCLK types and 215
+addresses on the ZU3EG:
 
-    24 predicted correctly, 0 predicted wrongly, 191 not predicted at all
+    107 predicted correctly, 0 predicted wrongly, 108 not predicted
 
 **Zero wrong is the property to rely on**, and it is structural rather than
-lucky: a type whose width the constraints do not pin is left unknown, and
-fill() stops the walk and says so instead of guessing. A guessed width would
-shift every address downstream of it with nothing to show for it.
+lucky: an address is assigned only where the span is pinned, so an
+underdetermined stretch yields no prediction instead of a wrong one. A guessed
+width would shift every address after it with nothing to show for it.
 
-**24 of 215 is the limitation to respect.** Holding out a type that is itself
-the anchor everywhere -- RCLK_INT_L, RCLK_INT_R, the BRAM and HDIO tiles --
-removes every constraint that could pin its width, and it becomes
-unpredictable. What survives the holdout are the types that sit BETWEEN other
-anchors: RCLK_DSP_INTF_CLKBUF_L scored 3/3 and RCLK_DSP_INTF_L 6/6.
+**The 108 are worth understanding before trusting a fill.** They are almost
+all RCLK_INT_L (75) and RCLK_INT_R (24), which are the anchors nearly
+everywhere: holding them out removes the very constraints that would pin them.
+That is not the situation here.
 
-That is the good news for the case this was written for.
-RCLK_CLEM_CLKBUF_L sits at grid dx=1 from an RCLK_INT_L (32 sites, addressed
-directly by 002) and dx=2 from an RCLK_DSP_INTF_L, so it is sandwiched exactly
-like RCLK_DSP_INTF_CLKBUF_L. Whether it is actually pinned depends on those
-neighbours carrying addresses on this die, which is knowable only once
-002-tilegrid finishes. If it is not pinned, the script says so and fills
-nothing -- it does not invent an address.
+What *is* the situation here is a site-less type sandwiched between anchors,
+and those survive the holdout cleanly: RCLK_DSP_INTF_CLKBUF_L scores 3/3 and
+RCLK_DSP_INTF_L 6/6. RCLK_CLEM_CLKBUF_L sits at grid dx=1 from an RCLK_INT_L
+(32 sites, addressed directly by 002) and dx=2 from an RCLK_DSP_INTF_L, which
+is the same shape. Whether it is actually pinned depends on those neighbours
+carrying addresses on this die, which is knowable only once 002-tilegrid
+finishes. If it is not pinned, the script fills nothing and says so -- it does
+not invent an address.
 
 Usage:
   fill_rclk_baseaddr.py --self-test [TILEGRID]       # fit and report
@@ -75,13 +87,12 @@ Usage:
 """
 import argparse
 import collections
-import itertools
+from fractions import Fraction
 import json
 import sys
 
 STEP = 0x100
 MAX_COLUMNS = 3  # RCLK_XIPHY_OUTER_RIGHT owns 3; that is the observed maximum.
-RESIDUE_CAP = 8  # (MAX_COLUMNS+1)**8 = 65k combinations, about a second.
 
 
 def load_rows(grid):
@@ -120,55 +131,100 @@ def constraints(rows):
     return out, sorted(types)
 
 
-def solve(cons, types):
-    """Columns owned per type, by propagation then a small exhaustive residue.
+class ColumnModel:
+    """The constraint system, reduced once, answering spans rather than widths.
 
-    The constraints are linear with tiny non-negative integer unknowns, and
-    most of them are short: two anchors a few tiles apart, often adjacent. Any
-    constraint with exactly one unsolved type pins that type outright, and
-    substituting it shortens others. Iterating that settles nearly everything;
-    whatever is left over is brute-forced.
+    Each constraint says: over the tiles between two known addresses, the
+    widths sum to a known number of columns. That is a linear system in the
+    per-type widths, and the obvious thing is to solve it for each width.
+
+    It does not solve. On the ZU3EG only 13 of 23 widths are determined; the
+    other ten appear solely in combinations. An earlier version brute-forced
+    an assignment that fitted every constraint and reported it as the answer,
+    which was wrong in a quiet way -- several different assignments fit the
+    same data equally well, and picking one would have filled addresses on a
+    coin flip.
+
+    But an individual width is not what filling needs. It needs the SUM of
+    widths along a span from a known address to a target tile, and a sum can
+    be determined even when its parts are not: it is determined exactly when
+    the span vector lies in the row space of the constraints. So this class
+    reduces the system once and answers that question directly, which both
+    avoids the guess and fills strictly more than solving per-type would.
     """
-    known = {"NULL": 0}  # a NULL grid cell is the absence of a tile, not a guess
 
-    progress = True
-    while progress:
-        progress = False
-        for cnt, n in cons:
-            rest = n - sum(v * known[t] for t, v in cnt.items() if t in known)
-            unsolved = [(t, v) for t, v in cnt.items() if t not in known]
-            if len(unsolved) != 1:
+    def __init__(self, cons, types):
+        self.types = sorted(types)
+        idx = {t: k for k, t in enumerate(self.types)}
+        n = len(self.types)
+        rows = []
+        for cnt, rhs in cons:
+            row = [Fraction(0)] * (n + 1)
+            row[-1] = Fraction(rhs)
+            for t, v in cnt.items():
+                row[idx[t]] += v
+            if any(row[:n]):
+                rows.append(row)
+        # NULL is the absence of a tile, so pin it rather than leave it free.
+        if "NULL" in idx:
+            row = [Fraction(0)] * (n + 1)
+            row[idx["NULL"]] = Fraction(1)
+            rows.append(row)
+
+        self.pivots = []          # (row index, column index)
+        r = 0
+        for c in range(n):
+            piv = next((k for k in range(r, len(rows)) if rows[k][c]), None)
+            if piv is None:
                 continue
-            t, v = unsolved[0]
-            if v == 0 or rest < 0 or rest % v:
-                continue
-            known[t] = rest // v
-            progress = True
+            rows[r], rows[piv] = rows[piv], rows[r]
+            lead = rows[r][c]
+            rows[r] = [x / lead for x in rows[r]]
+            for k in range(len(rows)):
+                if k != r and rows[k][c]:
+                    f = rows[k][c]
+                    rows[k] = [a - f * b for a, b in zip(rows[k], rows[r])]
+            self.pivots.append((r, c))
+            r += 1
+            if r == len(rows):
+                break
+        self.rows = rows
+        self.idx = idx
+        self.n = n
 
-    residue = [t for t in types if t not in known]
-    # Propagation resolves almost everything. What it cannot resolve is a type
-    # that never appears alone, and brute-forcing those costs
-    # (MAX_COLUMNS+1)^n, so the cap is low on purpose: leaving a width unknown
-    # makes fill() stop and say so, which is the safe failure. Guessing it
-    # would shift every address downstream of it with nothing to show for it.
-    if len(residue) > RESIDUE_CAP:
-        return (sum(1 for cnt, n in cons
-                    if sum(v * known.get(t, 0) for t, v in cnt.items()) == n),
-                known)
-    if residue:
-        best = None
-        for combo in itertools.product(range(MAX_COLUMNS + 1),
-                                       repeat=len(residue)):
-            c = dict(known, **dict(zip(residue, combo)))
-            ok = sum(1 for cnt, n in cons
-                     if sum(v * c[t] for t, v in cnt.items()) == n)
-            if best is None or (ok, -sum(combo)) > (best[0], -sum(best[2])):
-                best = (ok, c, combo)
-        known = best[1]
+    def span_columns(self, span):
+        """Columns spanned by this multiset of tile types, or None if free."""
+        vec = [Fraction(0)] * self.n
+        for t, v in span.items():
+            if t not in self.idx:
+                return None          # a type the constraints never mention
+            vec[self.idx[t]] += v
+        acc = Fraction(0)
+        for r, c in self.pivots:
+            if vec[c]:
+                f = vec[c]
+                vec = [a - f * b for a, b in zip(vec, self.rows[r][:self.n])]
+                acc += f * self.rows[r][-1]
+        if any(vec):
+            return None              # not in the row space: undetermined
+        return acc if acc.denominator == 1 else None
 
-    ok = sum(1 for cnt, n in cons
-             if sum(v * known.get(t, 0) for t, v in cnt.items()) == n)
-    return ok, known
+    def width(self, tile_type):
+        return self.span_columns(collections.Counter({tile_type: 1}))
+
+    def fits(self, cons):
+        ok = 0
+        for cnt, rhs in cons:
+            v = self.span_columns(cnt)
+            if v is not None and v == rhs:
+                ok += 1
+        return ok
+
+
+def solve(cons, types):
+    """Back-compatible wrapper: the model plus how much of the data it fits."""
+    m = ColumnModel(cons, types)
+    return m.fits(cons), m
 
 
 def rclk_rows(rows):
@@ -183,37 +239,68 @@ def rclk_rows(rows):
                    for _, _, ty, ba in r)}
 
 
-def fill(rows, cols, report):
-    """Walk each row, carrying the address forward across column-owning tiles."""
+def fill(rows, model, report, contradictions=None):
+    """Walk each row from every known address, assigning what the model pins.
+
+    The walk accumulates the multiset of tile types crossed and asks the model
+    how many columns that span is worth. A span whose value the constraints do
+    not determine ends the walk: filling past it would place every later tile
+    on a guess. `contradictions` collects the one thing that must block a
+    write -- a derived address disagreeing with one already measured.
+    """
     filled = 0
-    unknown = collections.Counter()
+    if contradictions is None:
+        contradictions = []
+    undetermined = collections.Counter()
     for y, r in sorted(rclk_rows(rows).items()):
-        # Anchor on each known address and walk right until the next known one,
-        # rather than from the row start: that keeps a local error local.
         for i, (x, name, ty, ba) in enumerate(r):
             if ba is None:
                 continue
-            addr = ba
+            span = collections.Counter()
             for j in range(i + 1, len(r)):
                 xj, namej, tyj, baj = r[j]
-                if tyj not in cols and tyj != "NULL":
-                    # A type never seen between two known addresses. Guessing
-                    # its width would silently shift everything downstream, so
-                    # stop this walk and say so.
-                    unknown[tyj] += 1
-                    break
-                addr += cols.get(tyj, 0) * STEP
+                span[tyj] += 1
+                d = model.span_columns(span)
                 if baj is not None:
-                    if baj != addr:
-                        report.append(
-                            f"  row y={y}: walked from {name} to {namej} and got"
-                            f" 0x{addr:08x}, tilegrid says 0x{baj:08x}")
+                    if d is not None and ba + int(d) * STEP != baj:
+                        contradictions.append(
+                            f"  row y={y}: {name} -> {namej} spans {int(d)}"
+                            f" column(s), giving 0x{ba + int(d) * STEP:08x},"
+                            f" but the tilegrid says 0x{baj:08x}")
                     break
-                if tyj.startswith("RCLK_") and cols.get(tyj, 0):
-                    r[j] = (xj, namej, tyj, addr)
+                if d is None:
+                    # NOT a reason to stop. An individual width is often free
+                    # while a longer span containing it is pinned: on the
+                    # ZU3EG RCLK_CLEL_R_L only ever appears in pairs summing
+                    # to 2, so {CLEL_R_L} is undetermined but
+                    # {CLEL_R_L, CLEM_L} is 2. Stopping here cost 60 walks and
+                    # most of the fill.
+                    undetermined[tyj] += 1
+                    continue
+                if tyj.startswith("RCLK_"):
+                    r[j] = (xj, namej, tyj, ba + int(d) * STEP)
                     filled += 1
-    for t, n in unknown.most_common():
-        report.append(f"  column width unknown for {t} ({n} walks stopped)")
+    # A second pass leftwards: a tile the forward walk could not pin may be
+    # pinned by the span back to the anchor on its other side.
+    for y, r in sorted(rclk_rows(rows).items()):
+        for i in range(len(r) - 1, -1, -1):
+            x, name, ty, ba = r[i]
+            if ba is None:
+                continue
+            span = collections.Counter()
+            for j in range(i - 1, -1, -1):
+                xj, namej, tyj, baj = r[j]
+                span[r[j + 1][2]] += 1
+                d = model.span_columns(span)
+                if baj is not None:
+                    break
+                if d is None:
+                    continue
+                if tyj.startswith("RCLK_"):
+                    r[j] = (xj, namej, tyj, ba - int(d) * STEP)
+                    filled += 1
+    for t, n in undetermined.most_common():
+        report.append(f"  span undetermined at {t} ({n} tiles left unfilled)")
     return filled
 
 
@@ -232,8 +319,8 @@ def cross_validate(rows):
         cons, types = constraints(blinded)
         if not cons:
             continue
-        _, cols = solve(cons, types)
-        fill(blinded, cols, [])
+        _, m = solve(cons, types)
+        fill(blinded, m, [], [])
         right = wrong = none = 0
         truth = {n: ba for r in rows.values() for _, n, ty, ba in r
                  if ty == held and ba is not None}
@@ -281,23 +368,35 @@ def main():
     if not cons:
         sys.exit("no RCLK rows with two or more known base addresses --"
                  " 002-tilegrid has not produced addresses yet")
-    ok, cols = solve(cons, types)
+    ok, model = solve(cons, types)
     print(f"column model fits {ok}/{len(cons)} constraints")
+    unres = []
     for t in types:
-        print(f"  {cols[t]}  {t}")
+        w = model.width(t)
+        print(f"  {'?' if w is None else int(w)}  {t}")
+        if w is None:
+            unres.append(t)
+    if unres:
+        print(f"  ({len(unres)} individual width(s) undetermined by the data."
+              " Spans containing them may still be.)")
     if ok < len(cons):
         print(f"  ({len(cons) - ok} constraint(s) unexplained -- see below)")
 
-    report = []
+    report, contradictions = [], []
     rr = rclk_rows(rows)
     print(f"RCLK rows: {sorted(rr)}")
     before = sum(1 for r in rr.values() for _, _, _, ba in r if ba is not None)
-    filled = fill(rows, cols, report)
+    filled = fill(rows, model, report, contradictions)
     print(f"\nknown addresses: {before}; would fill {filled} more")
     for line in report[:10]:
         print(line)
     if len(report) > 10:
-        print(f"  ... {len(report) - 10} more disagreements")
+        print(f"  ... {len(report) - 10} more notes")
+    if contradictions:
+        print(f"\nCONTRADICTIONS ({len(contradictions)}) -- the model"
+              " disagrees with addresses the tilegrid already holds:")
+        for line in contradictions[:10]:
+            print(line)
 
     # Name what this was built for, so a run on the target die says plainly
     # whether the two tile types came out with an address.
@@ -310,7 +409,12 @@ def main():
     if args.self_test or not args.out:
         if not args.self_test:
             print("\n(no output file given -- nothing written)")
-        return 0 if report == [] else 1
+        return 1 if contradictions else 0
+
+    if contradictions:
+        print("\nrefusing to write: a derived address contradicts a measured"
+              " one, so the column model is wrong for this die.")
+        return 1
 
     for r in rows.values():
         for _, name, ty, ba in r:
