@@ -1,4 +1,4 @@
---- /tmp/claude-1000/-mnt-i-Hotwright-0-xilinx-bits/e8653efd-f53f-4c26-9851-65632759a9cd/scratchpad/hpio_top.py.orig	2026-09-19 21:01:49.230259991 -0700
+--- prjuray/fuzzers/002-tilegrid/hpio_right/top.py.orig	2026-09-19 21:01:49.230259991 -0700
 +++ prjuray/fuzzers/002-tilegrid/hpio_right/top.py	2026-09-19 21:02:43.756081300 -0700
 @@ -23,4 +23,34 @@
  from utils.spec import io_base_address

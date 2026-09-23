@@ -15,11 +15,10 @@
 #
 # The patches are not uniform in style, so neither tool alone is enough and the
 # table names the one to use:
-#   patch(1) - for `diff -u` patches whose --- line is an absolute path into a
-#              scratch directory. GNU patch prefers whichever of the two names
-#              exists (it prints "Ignoring potentially dangerous file name" and
-#              uses the +++ side, which is the behaviour we want); git apply just
-#              fails on them.
+#   patch(1) - for plain `diff -u` patches (no a/ b/ prefixes, --- side a
+#              .orig name that does not exist). GNU patch uses whichever of the
+#              two names exists - the +++ side, which is the behaviour we want;
+#              git apply wants a git-style diff and fails on them.
 #   git      - for prjuray-tools-cstdint.patch, which carries a SUBMODULE pointer
 #              hunk for third_party/abseil-cpp. patch(1) refuses that with
 #              "not a regular file" and then reports the whole patch as failed,

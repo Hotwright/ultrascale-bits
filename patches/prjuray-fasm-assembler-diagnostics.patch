@@ -1,4 +1,4 @@
---- /tmp/claude-1000/-mnt-i-Hotwright-0-xilinx-bits/e8653efd-f53f-4c26-9851-65632759a9cd/scratchpad/fasm_assembler.py.orig	2026-09-19 20:40:15.384262470 -0700
+--- prjuray/utils/fasm_assembler.py.orig	2026-09-19 20:40:15.384262470 -0700
 +++ prjuray/utils/fasm_assembler.py	2026-09-19 20:40:15.365545000 -0700
 @@ -147,6 +147,33 @@
                  any_bits.add(block_type)
