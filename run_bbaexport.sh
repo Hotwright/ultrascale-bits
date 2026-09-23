@@ -13,6 +13,14 @@ cd "$(dirname "$0")"
 DEV="${1:?usage: run_bbaexport.sh <device> <out.bba> [heap]}"
 OUT="${2:?}"
 HEAP="${3:-24g}"
-export RAPIDWRIGHT_PATH="/mnt/i/Hotwright/0-xilinx-bits/RapidWright"
+# RapidWright lives in the sibling 7-series checkout (xilinx-bits, or
+# 0-xilinx-bits). RAPIDWRIGHT_PATH overrides the search.
+if [ -z "${RAPIDWRIGHT_PATH:-}" ]; then
+    for d in ../xilinx-bits ../0-xilinx-bits; do
+        [ -d "$d/RapidWright" ] && { RAPIDWRIGHT_PATH="$(cd "$d/RapidWright" && pwd -P)"; break; }
+    done
+fi
+: "${RAPIDWRIGHT_PATH:?no RapidWright - set RAPIDWRIGHT_PATH, or check out xilinx-bits next to this repo}"
+export RAPIDWRIGHT_PATH
 exec java -Xmx"$HEAP" -cp "$(cat build-jar/classpath.txt)" \
     dev.fpga.rapidwright.bbaexport "$DEV" xilinx/constids.inc "$OUT"

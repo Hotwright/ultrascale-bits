@@ -74,8 +74,26 @@ export URAY_MERGEDB="${URAY_UTILS_DIR}/mergedb.sh"
 export URAY_GENHEADER="${URAY_UTILS_DIR}/genheader.sh"
 
 # Reuse the 7-series tree's Vivado launcher: same install, and it already
-# handles the Windows-drive-but-Linux-build detail.
-export URAY_VIVADO="${URAY_VIVADO:-/mnt/i/Hotwright/0-xilinx-bits/rw-fuzzers/env/vivado.sh}"
+# handles the Windows-drive-but-Linux-build detail. That tree is a sibling
+# checkout, found by name next to this one (xilinx-bits, or 0-xilinx-bits);
+# XILINX_BITS_DIR overrides the search, URAY_VIVADO overrides the launcher.
+if [ -z "${XILINX_BITS_DIR:-}" ]; then
+    for d in "$( dirname "$URAY_ROOT" )"/xilinx-bits "$( dirname "$URAY_ROOT" )"/0-xilinx-bits; do
+        [ -d "$d" ] && { XILINX_BITS_DIR="$d"; break; }
+    done
+fi
+if [ -z "${URAY_VIVADO:-}" ]; then
+    if [ -n "${XILINX_BITS_DIR:-}" ] && [ -x "${XILINX_BITS_DIR}/rw-fuzzers/env/vivado.sh" ]; then
+        URAY_VIVADO="${XILINX_BITS_DIR}/rw-fuzzers/env/vivado.sh"
+    else
+        URAY_VIVADO="$( command -v vivado || true )"
+    fi
+fi
+if [ -z "$URAY_VIVADO" ]; then
+    echo "uray_env.sh: no Vivado - set URAY_VIVADO, or check out xilinx-bits next to this repo" >&2
+    return 1 2>/dev/null || exit 1
+fi
+export URAY_VIVADO
 export URAY_VIVADO_SETTINGS="${URAY_VIVADO_SETTINGS:-}"
 
 if [ -e "${URAY_DIR}/env/bin/activate" ]; then
