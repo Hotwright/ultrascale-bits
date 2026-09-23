@@ -1,0 +1,38 @@
+--- prjuray/fuzzers/002-tilegrid/hpio_right/top.py.orig	2026-09-19 21:01:49.230259991 -0700
++++ prjuray/fuzzers/002-tilegrid/hpio_right/top.py	2026-09-19 21:02:43.756081300 -0700
+@@ -23,4 +23,34 @@
+ from utils.spec import io_base_address
+ 
+ if __name__ == '__main__':
+-    io_base_address.run('HPIO_RIGHT')
++    # NOT hardcoded 'HPIO_RIGHT'. That is the ZU3EG's name for this tile
++    # type; the XCK26 calls it HPIO_L. gen_sites() then matched nothing, so
++    # this fuzzer ran five clean Vivado specimens, wrote a params.csv
++    # containing only its header, exited 0, and produced an EMPTY .tdb. A
++    # silent no-op is the worst of the outcomes -- a failure would at least
++    # have said so, and an empty .tdb still satisfies make.
++    #
++    # Ask gen_sites itself which HPIO tile type this die uses, rather than
++    # reimplementing its criterion: it wants site types HPIOB_M/HPIOB_S that
++    # also appear in general_purpose_io_sites.txt, and duplicating that here
++    # would be one more thing to drift.
++    from prjuray.db import Database
++    from utils import util as _util
++    db = Database(_util.get_db_root(), _util.get_part())
++    grid = db.grid()
++    hpio = sorted({
++        grid.gridinfo_at_loc(grid.loc_of_tilename(t)).tile_type
++        for t in grid.tiles()
++        if grid.gridinfo_at_loc(grid.loc_of_tilename(t)).tile_type.startswith(
++            'HPIO')
++    })
++    usable = [t for t in hpio if io_base_address.gen_sites(t)]
++    if not usable:
++        raise SystemExit(
++            "no HPIO tile type on this part yields any fuzzable site "
++            "(candidates: %s). Drop this fuzzer from 002's Makefile rather "
++            "than letting it write an empty .tdb." % (", ".join(hpio) or "none"))
++    if len(usable) > 1:
++        raise SystemExit("several usable HPIO tile types (%s); pick one"
++                         % ", ".join(usable))
++    io_base_address.run(usable[0])

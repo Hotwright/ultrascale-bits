@@ -54,13 +54,46 @@ export URAY_FAMILY_DIR="${URAY_DATABASE_DIR}/${URAY_DATABASE}"
 export URAY_TCL_REFORMAT="${URAY_UTILS_DIR}/tcl-reformat.sh"
 export URAY_CORRELATE="${URAY_TOOLS_DIR}/correlate_segdata"
 export URAY_SEGMATCH="${URAY_TOOLS_DIR}/segmatch"
-export URAY_BITREAD="${URAY_TOOLS_DIR}/bitread"
+# Everything below is copied verbatim from prjuray/utils/environment.sh, which
+# this file exists to bypass (it hard-gates on Vivado v2019.2 and otherwise
+# silently sets URAY_DIR=/bad/vivado/version). Copying means it can drift, and
+# it did: URAY_BITREAD was defined bare here, so 002-tilegrid ran
+#   bitread -F ... -o design.bits -z -y design.bit
+# with no part file and died on "Part file not found or invalid" after a full
+# Vivado run. Upstream passes the part file and the architecture. Keep this list
+# in step -- `comm -23` of the two files' `^export` names shows any drift.
+export URAY_PART_YAML="${URAY_DATABASE_DIR}/${URAY_DATABASE}/${URAY_PART}/part.yaml"
+export URAY_BITREAD="${URAY_TOOLS_DIR}/bitread -E --part_file ${URAY_PART_YAML} --architecture ${URAY_ARCH}"
+export URAY_DBFIXUP="python3 ${URAY_UTILS_DIR}/dbfixup.py"
+export URAY_MASKMERGE="bash ${URAY_UTILS_DIR}/maskmerge.sh"
+export URAY_SEGPRINT="python3 ${URAY_UTILS_DIR}/segprint.py"
+export URAY_BITTOOL="${URAY_TOOLS_DIR}/bittool"
+export URAY_BLOCKWIDTH="python3 ${URAY_UTILS_DIR}/blockwidth.py"
+export URAY_PARSEDB="python3 ${URAY_UTILS_DIR}/parsedb.py"
 export URAY_MERGEDB="${URAY_UTILS_DIR}/mergedb.sh"
 export URAY_GENHEADER="${URAY_UTILS_DIR}/genheader.sh"
 
 # Reuse the 7-series tree's Vivado launcher: same install, and it already
-# handles the Windows-drive-but-Linux-build detail.
-export URAY_VIVADO="${URAY_VIVADO:-/mnt/i/Hotwright/0-xilinx-bits/rw-fuzzers/env/vivado.sh}"
+# handles the Windows-drive-but-Linux-build detail. That tree is a sibling
+# checkout, found by name next to this one (xilinx-bits, or 0-xilinx-bits);
+# XILINX_BITS_DIR overrides the search, URAY_VIVADO overrides the launcher.
+if [ -z "${XILINX_BITS_DIR:-}" ]; then
+    for d in "$( dirname "$URAY_ROOT" )"/xilinx-bits "$( dirname "$URAY_ROOT" )"/0-xilinx-bits; do
+        [ -d "$d" ] && { XILINX_BITS_DIR="$d"; break; }
+    done
+fi
+if [ -z "${URAY_VIVADO:-}" ]; then
+    if [ -n "${XILINX_BITS_DIR:-}" ] && [ -x "${XILINX_BITS_DIR}/rw-fuzzers/env/vivado.sh" ]; then
+        URAY_VIVADO="${XILINX_BITS_DIR}/rw-fuzzers/env/vivado.sh"
+    else
+        URAY_VIVADO="$( command -v vivado || true )"
+    fi
+fi
+if [ -z "$URAY_VIVADO" ]; then
+    echo "uray_env.sh: no Vivado - set URAY_VIVADO, or check out xilinx-bits next to this repo" >&2
+    return 1 2>/dev/null || exit 1
+fi
+export URAY_VIVADO
 export URAY_VIVADO_SETTINGS="${URAY_VIVADO_SETTINGS:-}"
 
 if [ -e "${URAY_DIR}/env/bin/activate" ]; then

@@ -1,0 +1,52 @@
+# KV260 J2 PMOD, bank 45, LVCMOS33. Pin assignments from the Kria-PYNQ base
+# design; every one lands on an HDIO_{BOT,TOP}_RIGHT tile, which prjuray has
+# segbits for.
+set_property LOC H12 [get_ports pmod[0]]
+set_property LOC E10 [get_ports pmod[1]]
+set_property LOC D10 [get_ports pmod[2]]
+set_property LOC C11 [get_ports pmod[3]]
+set_property LOC B10 [get_ports pmod[4]]
+set_property LOC E12 [get_ports pmod[5]]
+set_property LOC D11 [get_ports pmod[6]]
+set_property LOC B11 [get_ports pmod[7]]
+
+# Clock. F11 is one of the four clock-capable (HDGC) bank-45 pins that is NOT
+# already a PMOD signal - F10/G11/F11/F12 are free, D10/E10/D11/E12 are taken.
+# An unconstrained clock input makes nextpnr place the IBUF arbitrarily and
+# then hunt for a path to the global network across 9.1M nodes; that ran for
+# 16 minutes of CPU on a 45-cell design. Giving it a real clock-capable pin
+# bounds the search.
+#
+# Two independent constraints pick this pin, and the first version of this file
+# satisfied neither.
+#
+# 1. It must be the P side of a clock-capable pair. An N-side CCIO cannot drive
+#    the global clock network, and Vivado enforces it:
+#      ERROR: [DRC PLIO-9] Placement Constraints Check for IO constraints: The
+#      following clock source has been LOCed to a N-Type CCIO : clk
+#    nextpnr does not run that check. It placed the original F11 -- which is
+#    IO_L6N_HDGC_45, the N side -- happily, and produced a complete,
+#    self-consistent FASM that would not have worked on silicon.
+#
+# 2. It must actually be routed on the KV260 carrier. The board file
+#    (XilinxBoardStore/boards/Xilinx/kv260/1.1/part0_pins.xml) lists 39 pins;
+#    F12 is not among them. G11 is: IO_L5P_HDGC_45, brought out as som240_1_d16.
+#
+# READ THIS BEFORE BUILDING FOR THE BOARD: a PMOD LED module is output only and
+# supplies no clock, so nothing drives G11. The design that runs on hardware
+# needs PS8 pl_clk0 and no clock pin at all. This constraint exists to exercise
+# the chipdb and the FASM writers end to end.
+set_property LOC G11 [get_ports clk]
+
+# IOSTANDARD stated rather than left to fasm.cc's LVCMOS33 default; correct
+# for a 3.3V PMOD either way, but not a thing to leave implicit.
+
+set_property IOSTANDARD LVCMOS33 [get_ports pmod[0]]
+set_property IOSTANDARD LVCMOS33 [get_ports pmod[1]]
+set_property IOSTANDARD LVCMOS33 [get_ports pmod[2]]
+set_property IOSTANDARD LVCMOS33 [get_ports pmod[3]]
+set_property IOSTANDARD LVCMOS33 [get_ports pmod[4]]
+set_property IOSTANDARD LVCMOS33 [get_ports pmod[5]]
+set_property IOSTANDARD LVCMOS33 [get_ports pmod[6]]
+set_property IOSTANDARD LVCMOS33 [get_ports pmod[7]]
+set_property IOSTANDARD LVCMOS33 [get_ports clk]

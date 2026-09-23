@@ -1,0 +1,140 @@
+# 002-tilegrid/rclk_dsp_intf_clkbuf/top.py spins forever on the XCK26.
+#
+# gen_sites() picked its two BUFCE_ROW drivers in the wrong order, in unbounded
+# loops:
+#
+#     while left_bufce_out is None:      x -= 1   # nearest on the left, [0]
+#     while right_bufce_out is None:     x += 1   # one on the SAME hdistr
+#
+# Neither loop has a bound, so if no BUFCE_ROW to the right drives the HDISTR
+# that the nearest left one happens to use, x runs away and the process spins
+# at 100% CPU forever, having written nothing. It is not a slow fuzzer: top.v
+# stays 0 bytes indefinitely, and with make -j4 you get four of them.
+#
+# On the XCK26 this is every one of the four RCLK_DSP_INTF_CLKBUF_L tiles. The
+# nearest left driver is on HDISTR 23; only 0, 1, 6, 11, 17, 20 and 22 exist to
+# the right. A valid pair exists for all seven of those, so the search simply
+# committed to the left driver before checking the right could match it.
+#
+# Fixed by collecting what the right side can match FIRST, then taking the
+# nearest left driver whose HDISTR is among them, and by bounding every walk at
+# the grid edge with an assert that names the tile and both sets. The two
+# BUFCE_LEAF searches were unbounded in the same way and are bounded too.
+#
+# Verified: 2.1 s, and all four tiles get a pair.
+--- a/fuzzers/002-tilegrid/rclk_dsp_intf_clkbuf/top.py
++++ prjuray/fuzzers/002-tilegrid/rclk_dsp_intf_clkbuf/top.py
+@@ -88,6 +88,8 @@
+ 
+             loc_to_bufce_row[loc].append(bufce_row)
+ 
++    x_max = max(grid.loc_of_tilename(t)[0] for t in grid.tiles())
++
+     o = []
+     for tile_name in sorted(grid.tiles()):
+         loc = grid.loc_of_tilename(tile_name)
+@@ -96,55 +98,61 @@
+         if gridinfo.tile_type != "RCLK_DSP_INTF_CLKBUF_L":
+             continue
+ 
+-        # Find a BUFCE_ROW driver that is left of the current
+-        # RCLK_DSP_INTF_CLKBUF_L tile.
++        # Pick the left and right BUFCE_ROW drivers TOGETHER.
++        #
++        # This used to walk left for the nearest BUFCE_ROW, take its first
++        # entry, and only then walk right for one on the same HDISTR - in
++        # unbounded `while ... is None: x += 1` loops. If no BUFCE_ROW to the
++        # right happened to drive that HDISTR, x ran away and the fuzzer spun
++        # forever at 100% CPU, having written nothing. On the XCK26 that is
++        # every one of the four RCLK_DSP_INTF_CLKBUF_L tiles: the nearest left
++        # driver is on HDISTR 23, and only 0, 1, 6, 11, 17, 20 and 22 exist to
++        # the right. A valid pair does exist for all seven of those, so the
++        # choice was simply made in the wrong order.
++        #
++        # So: collect what the right side can match first, then take the
++        # nearest left driver whose HDISTR is among them.
+         x, y = loc
++        right_by_hdistr = {}
++        for xx in range(x + 1, x_max + 1):
++            for bufce_row in loc_to_bufce_row.get((xx, y), []):
++                right_by_hdistr.setdefault(bufce_row['hdistr_number'],
++                                           bufce_row['site'])
++
+         left_bufce_out = None
+         hdistr_number = None
+-        while left_bufce_out is None:
+-            x -= 1
+-            if (x, y) in loc_to_bufce_row:
+-                left_bufce_out = loc_to_bufce_row[(x, y)][0]['site']
+-                hdistr_number = loc_to_bufce_row[(x, y)][0]['hdistr_number']
+-                break
+-
+-        # Find a BUFCE_ROW driver that is right of the current
+-        # RCLK_DSP_INTF_CLKBUF_L tile, and is on the same HDISTR wire.
+-        x, y = loc
+         right_bufce_out = None
+-        while right_bufce_out is None:
+-            x += 1
+-            if (x, y) in loc_to_bufce_row:
+-                for bufce_row in loc_to_bufce_row[(x, y)]:
+-                    if hdistr_number == bufce_row['hdistr_number']:
+-                        right_bufce_out = bufce_row['site']
+-                        break
+-
+-        # Find a random BUFCE_LEAF driver that is to the left of the current
+-        # RCLK_DSP_INTF_CLKBUF_L.
+-        x, y = loc
+-        left_site = None
+-        while left_site is None:
+-            x -= 1
+-
+-            gridinfo = grid.gridinfo_at_loc((x, y))
+-            for site, site_type in gridinfo.sites.items():
+-                if site_type == 'BUFCE_LEAF':
+-                    left_site = get_random_leaf(gridinfo)
++        for xx in range(x - 1, -1, -1):
++            for bufce_row in loc_to_bufce_row.get((xx, y), []):
++                if bufce_row['hdistr_number'] in right_by_hdistr:
++                    hdistr_number = bufce_row['hdistr_number']
++                    left_bufce_out = bufce_row['site']
++                    right_bufce_out = right_by_hdistr[hdistr_number]
+                     break
++            if left_bufce_out is not None:
++                break
+ 
+-        # Find a random BUFCE_LEAF driver that is to the right of the current
+-        # RCLK_DSP_INTF_CLKBUF_L.
+-        x, y = loc
+-        right_site = None
+-        while right_site is None:
+-            x += 1
+-
+-            gridinfo = grid.gridinfo_at_loc((x, y))
+-            for site, site_type in gridinfo.sites.items():
+-                if site_type == 'BUFCE_LEAF':
+-                    right_site = get_random_leaf(gridinfo)
+-                    break
++        assert left_bufce_out is not None and right_bufce_out is not None, (
++            "%s: no BUFCE_ROW pair on a common HDISTR (left offers %s, right "
++            "offers %s)" % (
++                tile_name,
++                sorted({b['hdistr_number']
++                        for xx in range(x - 1, -1, -1)
++                        for b in loc_to_bufce_row.get((xx, y), [])}, key=int),
++                sorted(right_by_hdistr, key=int)))
++
++        # A random BUFCE_LEAF to the left, and one to the right. Bounded, for
++        # the same reason: gridinfo_at_loc() off the edge of the grid is not
++        # this loop's idea of a stopping condition.
++        def find_leaf(xs):
++            for xx in xs:
++                gi = grid.gridinfo_at_loc((xx, y))
++                if any(st == 'BUFCE_LEAF' for st in gi.sites.values()):
++                    return get_random_leaf(gi)
++            return None
++
++        left_site = find_leaf(range(x - 1, -1, -1))
++        right_site = find_leaf(range(x + 1, x_max + 1))
+ 
+         assert left_bufce_out is not None
+         assert right_bufce_out is not None

@@ -1,7 +1,7 @@
 # ultrascale-bits
 
 Scoping an open bitstream flow for the **Kria K26** (`XCK26-SFVC784-2LV-C`, Zynq
-UltraScale+ MPSoC). Companion to `0-xilinx-bits`, which does the same job for
+UltraScale+ MPSoC). Companion to [`xilinx-bits`](https://github.com/Hotwright/xilinx-bits), which does the same job for
 7-series parts — and which does **not** reach this device.
 
 **Status: scoping only.** `prjuray-tools` builds; no fuzzer has been run, no
@@ -58,9 +58,11 @@ tracked here — see `README-CLONES.md`.
 
 Three things will bite a fresh checkout:
 
-* **`URAY_VIVADO` points outside this repo** — it defaults to
-  `/mnt/i/Hotwright/0-xilinx-bits/rw-fuzzers/env/vivado.sh`. Override it
-  anywhere else.
+* **Vivado and RapidWright come from outside this repo** — from a
+  [`xilinx-bits`](https://github.com/Hotwright/xilinx-bits) checkout next to
+  this one (`rw-fuzzers/env/vivado.sh` and `RapidWright/`). Without it,
+  `env/uray_env.sh` falls back to `vivado` on `PATH`; set `XILINX_BITS_DIR`,
+  `URAY_VIVADO` or `RAPIDWRIGHT_PATH` to point elsewhere.
 * **The default config `zynq_usp_5ev` does not exist yet.** prjuray ships
   `zynq_usp_3eg` and `zynq_usp_7ev`; neither is this die. Pass one of those or
   write the 5EV settings file first.

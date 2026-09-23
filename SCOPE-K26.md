@@ -1,9 +1,59 @@
 # Scoping an open flow for the Kria K26 (XCK26-SFVC784-2LV-C)
 
-Scoping only — nothing here has been fuzzed or built. The question asked was
-"what would a real flow actually need", and the short answer is that **none of
-`0-xilinx-bits` reaches this part**, but the pieces for a different flow do
-exist and are in better shape than expected.
+> **This began as scoping and is no longer that.** Sections up to "Tooling
+> status" are the original survey, kept because their measurements still hold.
+> **For where the work actually stands, jump to
+> [STATUS 2026-09-19](#status-2026-09-19-the-fasm-path-now-exists-and-we-built-it).**
+> Short version: yosys → nextpnr-xilinx → FASM runs on the XCK26 with no vendor
+> tool, and 977 of the 978 features it emits are known to prjuray-db.
+> `part.yaml` is done; `tilegrid.json` is the remaining blocker.
+
+## Coverage boundaries this package imposes
+
+The SFVC784 package does not bond every IO site, and 002 addresses a tile by
+placing something in it and routing to a pad. Where there is no pad there is
+no address, however the fuzzers are configured. Measured:
+
+| tile | sites | bonded | addressed |
+| --- | ---: | ---: | --- |
+| `HDIO_BOT_RIGHT_X7Y{0,60,120}` | 31 | 12 | yes |
+| `HDIO_TOP_RIGHT_X7Y{30,90,150}` | 28-31 | 10-12 | yes |
+| `HDIO_BOT_RIGHT_X7Y180` | 13 | **0** | **no** |
+| `HDIO_TOP_RIGHT_X7Y210` | 13 | **0** | **no** |
+
+The two unaddressed ones are the truncated top bank, with no package pins at
+all. **Both designs here use only bonded tiles** -- `blink_ps.fasm` touches
+`HDIO_BOT_RIGHT_X7Y120` and `HDIO_TOP_RIGHT_X7Y150`, both addressed -- but a
+design placed in the top bank would hit this, and `fill_rclk_baseaddr.py` will
+not rescue it: that only walks RCLK rows.
+
+The same package limit is why `bitslice_tiles` cannot run at all (its
+BITSLICE-adjacent IOBs report "not bonded") while `hpio_right` can: 119 of the
+die's 189 bonded IO sites are in `HPIO_L`.
+
+## What to run, in order
+
+Everything below the first line is staged and tested as far as it can be
+without `tilegrid.json`. Run it in this order; each step says why it exists.
+
+| | command | what it settles |
+| --- | --- | --- |
+| 1 | `./env/run_uray_fuzzers.sh 002` | produces `tilegrid.json`. ~3.5 h at `URAY_JOBS=4`. Count **`design.bit`** for progress -- `design.bits` lags it by the whole bitread step. |
+| 1b | `./env/add_missing_tilegrid_fuzzers.sh` | restores the four sub-fuzzers disabled on the wrong criterion. **`rclk_pss_alto` is the one that matters** -- it is the only thing that addresses `RCLK_INTF_LEFT_TERM_ALTO`, where `PL_CLK` enters the fabric |
+| 2 | `./env/finish_tilegrid.sh` | audits whether every tile type the designs use has an address, fills the ones 002 structurally cannot produce, then smoke-tests the round trip by decoding a specimen the fuzzer built and checking the features land in the tiles its `params.csv` names |
+| 3 | `./env/reference_build.sh` | the one Vivado run. Answers `required ⊆ emitted` by class diff, and says whether Vivado sets bits in the three clock-spine tiles |
+| 4 | `./designs/make_bitstream.sh` | FASM → `.bit` → `.bit.bin`, and round-trips our own bitstream back to FASM to check the assembler and disassembler agree |
+| 5 | `sudo fpgautil -b blink_ps.bit.bin -f Full` | on the board. Check `/sys/kernel/debug/clk/clk_summary` for `pl0` first -- `fpgautil` does not touch clocks |
+
+Step 1b still has to run, but its expensive half is already done:
+`rclk_pss_alto`'s `.tdb` was built alongside step 1 in this session and the
+script detects that, so it only edits the Makefile and regenerates.
+
+Only step 5 has never been exercised in any form.
+
+The original question was "what would a real flow actually need", and the short
+answer was that **none of `0-xilinx-bits` reaches this part**, but the pieces
+for a different flow do exist and are in better shape than expected.
 
 ## The part
 
@@ -397,14 +447,615 @@ longer the blocking one.
    `projects/Kria/` already has the vendor boot artifacts, so this is a known
    quantity, but it is not part of an "open flow" in the way the 7-series work is.
 
-## Recommended next step if this is pursued
+## STATUS 2026-09-19: the FASM path now exists, and we built it
 
-Risk 1 is settled, so the next cheap-and-decisive test is **risk 2**: export the
-XCK26 (or `xczu5ev-sfvc784-1-e`) device with RapidWright's `rapidwright_bbaexport`
-and see how large the `.bba` is and whether `bbasm` completes inside 31 GB. That
-is one command and a wait, and it decides whether this flow is buildable on this
-machine at all. If it is, write `prjuray/settings/zynq_usp_5ev.sh` — the data for
-it is already derived (grid X 0–448 / Y 0–249; SLICE 14,640 `X0Y0:X60Y239`;
-DSP48E2 1,248 `X0Y0:X12Y95`; RAMB18 144; URAM288 64) — and run the per-part
-tilegrid fuzzer. If it is not, the honest answer is that the K26 needs a
-different chipdb strategy before any of the rest matters.
+Everything above stands as written, including the correction that *upstream*
+`nextpnr-xilinx` has no FASM path for UltraScale+. It does now, in this tree.
+
+`designs/kv260_pmod_blink/build.sh` runs the whole flow with **no vendor tool
+anywhere**:
+
+    blink.v -> yosys (synth_xilinx -family xcup -nocarry)
+            -> nextpnr-xilinx (chipdb xck26.bin, from RapidWright)
+            -> blink.fasm  (prjuray feature syntax)
+            -> tools/check_fasm_vs_uraydb.py
+
+and finishes in well under a minute.
+
+### Acceptance: 977 of 978 emitted features are known to prjuray-db
+
+`tools/check_fasm_vs_uraydb.py` checks every feature the FASM emits against
+prjuray-db's segbits, per tile type. It matters because prjuray's assembler does
+**not** ignore a feature it has never heard of: `utils/fasm_assembler.py`
+collects every one and then raises
+
+    FasmLookupError: Segment DB <tile type>, key <feature> not found ...
+
+so one stray name makes `fasm2bit.py` refuse the whole file, and there is no
+flag to relax it. (An earlier version of this section said such a feature
+"assembles to nothing, silently". That was wrong, and wrong in the optimistic
+direction -- it is a hard error, which is the better behaviour but a harder
+constraint.)
+
+`--filter` writes a copy with the unknown features removed and names each one.
+Both `build.sh` scripts run it. On the PS design it drops exactly 11:
+
+* 8 `INT_INTF_R_PCIE4.PIP.IMUXOUT16.IMUX16`. Safe: the fan-in analysis above
+  shows the pad-to-fabric direction of that tile is unconditional wiring, fan-in
+  1, with nothing to configure.
+* 3 `WIRE.CLK_HDISTR_*.USED.V1`, in `RCLK_RCLK_XIPHY_INNER_FT`,
+  `RCLK_INTF_LEFT_TERM_ALTO` and `RCLK_CLEM_CLKBUF_L`. All three sit on the
+  clock spine at Y149, between the PS clock buffer and the leaf buffer that
+  feeds the flip-flops. If the distribution track needs a per-tile enable in
+  each, dropping one means the clock never arrives and the LEDs never blink.
+
+  **This has now been measured.** `tools/explain_missing_feature.py` asks the
+  question that matters: is a feature missing because the fuzzer looked and
+  found nothing, or because it never looked? The two call for opposite
+  responses.
+
+  **The discriminating check is not "does the tile type have a segbits file".**
+  That was the first answer here and it was wrong. segmaker drops a tag that
+  never varies, so "fuzzed and found no bit" and "never drove this wire" leave
+  an identical, empty trace. The check that separates them is whether the tile
+  type has *any* feature at all -- a pip, anything -- naming a `CLK_HDISTR`
+  wire, and whether the tile type has those wires to begin with
+  (`prjuray-db/zynqusp/tile_types/tile_type_*.json`).
+
+  | tile type | HDISTR wires | any HDISTR feature | HDISTR `.USED.` | reading |
+  | --- | ---: | ---: | ---: | --- |
+  | `RCLK_INT_L` | 24 | **768** | **0** | exercised hard, no enable exists |
+  | `RCLK_HDIO` | 24 | 96 | 48 | enable per wire (24x2) |
+  | `RCLK_DSP_INTF_CLKBUF_L` | 48 | 144 | 96 | enable per wire |
+  | `RCLK_XIPHY_OUTER_RIGHT` | 48 | 48 | 48 | enable per wire |
+  | `CMT_RIGHT` | 24 | 48 | 48 | enable per wire |
+  | `RCLK_CLEM_L`, `_R`, `RCLK_CLEL_L_L`, `RCLK_DSP_INTF_L` | 24 | **0** | 0 | never exercised -- unknown |
+  | `RCLK_INTF_LEFT_TERM_ALTO` | 24 | **0** | 0 | never exercised -- unknown |
+  | `RCLK_CLEM_CLKBUF_L` | -- | no tile_type json | -- | absent from the ZU3EG |
+  | `RCLK_RCLK_XIPHY_INNER_FT` | -- | no tile_type json | -- | absent from the ZU3EG |
+
+  `RCLK_INT_L` is the positive control and the one clean negative: 768 HDISTR
+  features and not one enable bit, so a track crossing `RCLK_INT_L` needs no
+  per-tile enable. Every tile type that *taps or sources* a clock -- HDIO, the
+  CLKBUF tiles, XIPHY, CMT -- has an enable for every HDISTR wire it carries.
+
+  An earlier version of this section called `RCLK_INTF_LEFT_TERM_ALTO` a
+  solved negative and therefore **safe**. That was wrong, and wrong in the
+  expensive direction: it has the 24 HDISTR wires and the fuzzers produced
+  **zero** features on any of them. It is unknown, not safe. What its segbits
+  do contain is 360 `PIP.CLK_BUFG_PS_*_CLK_IN` features and 48 `CLK_HROUTE`
+  enables -- `071-ps8-bufg` fuzzed exactly the PS-to-fabric path through this
+  tile, and the path it found leaves `BUFG_PS` onto **HROUTE**.
+
+  **Our FASM agrees with that, which is the reassuring part.** The whole clock
+  path in `blink_ps.fasm` is characterised end to end:
+
+      RCLK_INTF_LEFT_TERM_ALTO  PS_TO_PL_CLK0 -> CLK_BUFG_PS_0_CLK_IN
+                                CLK_BUFG_PS_0_CLK_OUT -> CLK_HROUTE0   (+USED)
+      RCLK_DSP_INTF_L           CLK_HROUTE_CORE_OPT0 -> CLK_CMT_MUX_3TO1_0
+                                -> CLK_VDISTR_BOT0                     (+USED)
+      RCLK_HDIO                 CLK_HROUTE_L0, CLK_HDISTR_FT0_0        (+USED)
+      RCLK_INT_L                CLK_HDISTR_FT0_0 -> CLK_LEAF_SITES_3_CLK_IN
+                                BUFCE_LEAF_X0Y2.IN_USE
+
+  Every one of those is known to prjuray-db. The three dropped features are
+  `USED` marks on the HDISTR node where it crosses three *other* tiles in the
+  same row. `RCLK_HDIO` proves the mark is needed where a bit exists for it.
+
+  So the position is: two of the three (`RCLK_CLEM_CLKBUF_L`,
+  `RCLK_RCLK_XIPHY_INNER_FT`) are tile types the ZU3EG does not have at all,
+  their characterised siblings all carry the enable, and they are **probably
+  real bits we fail to set**. The third is on a different wire
+  (`CLK_HDISTR_FT1_0`) from the live path in a tile whose HDISTR was never
+  touched, and is simply **unknown**.
+
+  **A checkable prediction, made before `002` finished.** The three tiles are
+  not in the same situation, and the basicdb grid already says which:
+
+  | tile instance | grid | sites | needs |
+  | --- | --- | ---: | --- |
+  | `RCLK_INTF_LEFT_TERM_ALTO_X0Y149` | (159,93) | **24** | **`rclk_pss_alto`, which was wrongly disabled** -- see below |
+  | `RCLK_CLEM_CLKBUF_L_X15Y149` | (226,93) | 0 | a derived address; `RCLK_INT_L` (32 sites) sits at dx=1 right and `RCLK_DSP_INTF_L` at dx=2 left, so the span is short and should pin |
+  | `RCLK_RCLK_XIPHY_INNER_FT_X16Y149` | (278,93) | 0 | a derived address; nearest addressable anchor is dx=3 right across `RCLK_INTF_L_IBRK_IO_L`, so this one may stay free |
+
+  Two distinct failures hide behind one symptom. What `LEFT_TERM_ALTO` lacks
+  is a *segbit* for the HDISTR enable, which no amount of address derivation
+  supplies -- but it turns out to lack an address too, for a third reason
+  again.
+
+  **Four of 002's sub-fuzzers were disabled on the wrong criterion, and one of
+  them matters.** The justification recorded in
+  `patches/prjuray-002-tilegrid-xck26.patch` was that the tile types they are
+  *named after* have zero instances on this die. That reasoning does not apply
+  to them: each scans for a **site type** and configures whichever tile holds
+  it, and none mentions its namesake tile type anywhere. The XCK26 simply has
+  the left-hand variants where the ZU3EG had the right-hand ones.
+
+  | sub-fuzzer | site it looks for | where that site lives on the XCK26 | confirmed |
+  | --- | --- | --- | --- |
+  | `rclk_pss_alto` | `BUFG_PS` | 96 in `RCLK_INTF_LEFT_TERM_ALTO` (4 tiles) | **built, solved** |
+  | `cmt_right` | `BUFCE_ROW` | 96 in `CMT_L` (4) | **built, solved** |
+  | `bitslice_tiles` | `BITSLICE_RX_TX` | 208 in `XIPHY_BYTE_L` (16) | **fails, for a real reason** |
+  | `hpio_right` | `HPIOB_M`/`_S` | 164 in `HPIO_L` (8) | not tested |
+
+  **`bitslice_tiles` genuinely cannot run on this part**, and this is the one
+  case where leaving it disabled was the right call for the wrong reason. Its
+  design routes each `BITSLICE_RX_TX` output to a package pad, and on
+  SFVC784 the adjacent IOBs are not brought out:
+
+      CRITICAL WARNING: [Constraints 18-5] Cannot loc instance 'tx_0' at site
+      BITSLICE_RX_TX_X0Y0, Site IOB_X1Y0 is not bonded. Place terminal out[0]
+      and connected instances in a site with a PAD
+
+  The K26 SOM does not bond those HP-bank pins, so the sites exist and the
+  fuzzer still cannot place its terminals. Fixing it would mean rewriting the
+  fuzzer not to need a pad, which no design here calls for -- `XIPHY_BYTE_L`
+  is not a tile type either blinky touches. `add_missing_tilegrid_fuzzers.sh`
+  leaves a failing sub-fuzzer out of the dependency list, which is exactly
+  what should happen here.
+
+  "Confirmed" means its `top.py` was run against this die's basicdb and its
+  `params.csv` came out naming exactly those tiles -- for `rclk_pss_alto`, the
+  four `RCLK_INTF_LEFT_TERM_ALTO` instances including `X0Y149`, the one this
+  design's clock goes through. No inference involved.
+
+  `hpio_right` was not tested only because its `top.py` reads
+  `general_purpose_io_sites.txt`, which its own Makefile generates during the
+  build; running `top.py` standalone skips that step. `hdio_top_right` and
+  `hdio_bot_right` use the same mechanism and are enabled and working, so
+  there is no reason to expect it to fail.
+
+  **`rclk_pss_alto` is not optional.** `RCLK_INTF_LEFT_TERM_ALTO` is where
+  `PL_CLK` enters the fabric -- our FASM's
+  `PIP.CLK_BUFG_PS_0_CLK_IN.PS_TO_PL_CLK0` is in it -- and with no base
+  address `fasm2bit` cannot place a single bit there.
+
+  **This does not produce a silently dead bitstream** -- an earlier version of
+  this section said it would, and that was wrong in the alarming direction.
+  `tile_segbits.py` does `bits_map[block_type]`, which for a tile with
+  `bits: {}` raises `KeyError`, and `fasm_assembler.py` turns every `KeyError`
+  there into `FasmLookupError("Segment DB <type>, key <feature> not found")`.
+  `fasm2bit` therefore refuses the whole file and writes no bitstream at all.
+
+  The cost is the misdiagnosis, not the silence: it blames a missing **segbit**
+  for what is really a missing **base address**, and those need opposite fixes
+  -- a characterisation run versus a propagation rule. Chasing the first when
+  you need the second is what this would actually have cost.
+
+  The other three sub-fuzzers cost tile types this design does not use, but
+  they are wrong for the database all the same.
+
+  **`rclk_pss_alto` has now been run on this die and it works.** Five
+  specimens, eleven minutes at `-j2` alongside the main build, exit 0, and a
+  `.tdb` naming all four tiles:
+
+      RCLK_INTF_LEFT_TERM_ALTO_X0Y149  00080008_047_31
+      RCLK_INTF_LEFT_TERM_ALTO_X0Y209  000C0008_047_31
+      RCLK_INTF_LEFT_TERM_ALTO_X0Y29   00000008_047_31
+      RCLK_INTF_LEFT_TERM_ALTO_X0Y89   00040008_047_31
+
+  Two independent checks that those addresses are sane. The row fields
+  `0x00000`/`0x40000`/`0x80000`/`0xC0000` are this die's four clock regions,
+  matching `part.yaml`'s rows 0-3 against the ZU3EG's 0-2. And `X0Y29`'s
+  address agrees with the ZU3EG's `0x00000000` for the tile of the same name.
+
+  `env/add_missing_tilegrid_fuzzers.sh` repairs it after 002 finishes: it
+  builds each `.tdb` on its own first and adds it to the dependency list only
+  once it exists, because `tilegrid.json` depends on *every* listed `.tdb`, so
+  adding one that cannot succeed means make never reaches the final target
+  however it fails. That is the same trap the original removal was avoiding --
+  the removal was right to worry and wrong about which ones qualify.
+
+  **Settle it with one Vivado run, not 405.** The reference build
+  (`env/reference_build.sh`) produces a bitstream for the same design;
+  `bit2fasm.py --verbose` then reports unknown bits per tile. If Vivado sets
+  bits in `RCLK_CLEM_CLKBUF_L` and `RCLK_RCLK_XIPHY_INNER_FT` at Y149, that is
+  proof in a single run, and it shows which wire Vivado uses at
+  `LEFT_TERM_ALTO` as well. Only if that says the bits are real is
+  `060-rclk-seed` (~405 specimens, hours) needed to *solve* them -- and there
+  may be a cheaper fix, since if Vivado reaches the leaf over a fully
+  characterised path, nextpnr can be steered onto it by forbidding the
+  unfuzzed pips, with no new characterisation at all.
+
+| tile type | known | unknown | % |
+| --- | ---: | ---: | ---: |
+| CLEL_R | 86 | 0 | 100.0 |
+| CLEM | 197 | 0 | 100.0 |
+| HDIO_BOT_RIGHT | 5 | 0 | 100.0 |
+| HDIO_TOP_RIGHT | 22 | 0 | 100.0 |
+| INT | 648 | 0 | 100.0 |
+| RCLK_DSP_INTF_L | 8 | 0 | 100.0 |
+| RCLK_HDIO | 6 | 0 | 100.0 |
+| RCLK_INT_L | 4 | 0 | 100.0 |
+| RCLK_INTF_LEFT_TERM_ALTO | 1 | 1 | 50.0 |
+| **TOTAL** | **977** | **1** | **99.9** |
+
+plus 13 features in three tile types that have no segbits file at all
+(`INT_INTF_R_PCIE4`, `RCLK_RCLK_XIPHY_INNER_FT`, `RCLK_CLEM_CLKBUF_L`).
+
+**Read the direction of that test carefully.** It proves *emitted ⊆ known*. It
+cannot prove *required ⊆ emitted* — a feature we fail to write is invisible to
+it. It caught four real encoding faults today; it will not catch an omission.
+
+### prjuray/tools/dump_features.tcl is the specification
+
+That Tcl turns a Vivado-routed design into the feature list the fuzzers solve
+against, so it **is** prjuray's FASM model. The segbits only record which of
+those features were successfully solved. Three separate attempts to infer the
+model from the segbits alone each produced a rule that the next example
+falsified. Reading the Tcl settled every one of them in minutes.
+
+### Four bugs in nextpnr-xilinx, all in `patches/`
+
+1. **`findSourceSinkLocations` never terminated.** Its BFS parents each wire by
+   whichever wire discovered it, which is a forest only if the root can never be
+   re-parented — and nothing ever inserts the root into `backtrace`, so a
+   bidirectional pip leading back to it closes a 2-cycle. Same shape in
+   `routeVcc` and both `routeClock` BFS loops. UltraScale+ has such pips (this
+   is the same device property prjuray spells `.FWD`/`.REV`); 7-series
+   apparently does not, which is why this sat latent upstream.
+
+   **Five earlier diagnoses of this were wrong, and every one was inferred from
+   where the log stopped.** `Routing global clocks... routing clock '$iopadmap$clk'`
+   was simply the last line printed before a silent function; `routeClock` had
+   always completed. One `gdb` stack sample settled it. `ptrace_scope=1` forbids
+   attaching to a running process, so **gdb has to be the parent**: launch under
+   `gdb -batch -ex run --args ... &`, then `kill -INT` the gdb pid — commands
+   placed after `run` execute at the stop.
+
+2. **Chain-root CARRY8 sent its carry-in to CIN.** CIN is the dedicated input
+   from the CARRY8 below, so only a cell with a predecessor may use it. The
+   chain root sets `cluster = its own name`, which is not `ClusterId()`, so the
+   original test took the chained path and asked the router to reach SLICE/CIN
+   from the global GND node. A root's carry-in belongs on AX.
+
+3. **`fasm.cc` UltraScale+ writers** — CLE, IO, clocking, route-throughs and
+   the bidirectional-pip suffix. None of the 7-series writers could be reused,
+   because every difference changes the feature *name*.
+
+4. **`bbaexport.java` for RapidWright 2026** (six API fixes, four null guards).
+
+### Two traps worth remembering
+
+* **`getSiteLocInTile()` is not prjuray's site index.** `bbaexport` computes
+  `rel_x`/`rel_y` per site *type*, and an HDIO tile interleaves `HDIOB_M` and
+  `HDIOB_S`, so each type restarts at zero and the two collide: eight distinct
+  pads first came out as `IOB_X0Y{0,2,4,6}`, every name used twice. prjuray
+  counts over every site sharing a name *prefix*.
+* **A route-thru pip carries no site in the chipdb** — `pip.site`, the wire's
+  site and the bel-pin count are all -1/0 — and the wire number is not the site
+  number (`BUFCE_LEAF_X0Y2` is `CLK_LEAF_SITES_3`). Hence the generated table
+  `tools/gen_usp_bufce_leaf.py`.
+
+## 002-tilegrid does not solve every tile, and it fails quietly
+
+Running 002 to completion is not the same as having a base address for every
+tile. On this die it leaves three distinct kinds of hole, and none of them is
+announced.
+
+**segmatch writes placeholders, and add_tdb.py died on them.** When a tag
+cannot be solved, `segmatch` emits `<const0>`, `<const1>` or `<K candidates>`
+in place of an address; when it solves a tag to the *wrong* bit, the tag's own
+DFRAME/DWORD deltas land the base off a 0x100 boundary. `add_tdb.py` fed both
+straight into `int(x, 16)` and an alignment assert, so a single bad line out of
+13920 aborted the entire tilegrid with a message naming neither the file nor
+the tile:
+
+    ValueError: invalid literal for int() with base 16: '<const0>'
+    AssertionError: Unaligned frame at 0x00001FF8
+
+Both are *expected* at a low rate. `<const0>` means the tag was never 1 in any
+specimen, which for a random-value fuzzer happens with probability `2**-N` per
+tile: at `N=15` across cle's 13920 tiles you expect ~0.4 of them, and this die
+produced exactly one — `CLEL_L_X11Y0`, confirmed 0 in all 15 `params.csv`.
+Do **not** re-run with a larger N to chase it; one tile is what chance
+predicts, and everything else here is structural, not statistical.
+
+`patches/prjuray-002-add-tdb-tolerate-unsolved.patch` makes both non-fatal and
+reports them per tile. `tools/audit_tilegrid_tdb.py` runs the same checks up
+front and answers the question that matters — is the tile recoverable from its
+column? On this die: 535 broken tags, 57 recoverable locally, the rest needing
+a different source.
+
+**The INT gap is structural and shaped.** `clel_int` and `clem_int` between
+them solve 9713 of the die's 10320 INT tiles. The 88 they never emit at all sit
+at exactly four Y values: **Y31, Y91 and Y151 in the 15 DSP-adjacent columns,
+and Y239 — the top row — in all 43.** Two of them, `INT_X0Y239` and
+`INT_X7Y151`, are used by the reference designs. The ZU3EG reference database
+has all 5940 of its INT tiles solved, so this is a property of our run, not of
+prjuray.
+
+`tools/fill_int_tilegrid.py` closes it **from measurement, not inference**:
+
+* `RCLK_INT_L` / `RCLK_INT_R` sit in the *same frame column* as the INT tiles
+  beside them — which is exactly why `add_tdb.py` hands them INT's own
+  `frames`/`words`. `rclk_int` solved all 43 columns with zero broken tags, and
+  on the 41 columns where both are solved the two agree **41/41, 0 disagree**.
+  That also supplies X34 and X42, whose INT tiles are unsolved end to end.
+* the row field and `frames`/`words`/`offset` are functions of Y, and the tool
+  *verifies* that before relying on it rather than assuming it.
+* only a Y solved nowhere on this die (Y0 and Y239) falls back to the
+  read-only ZU3EG reference.
+
+Cross-validation predicts all 9713 already-solved tiles: **9713 right, 0
+wrong**. INT goes to 10320/10320.
+
+**The offset law, confirmed on two dies and two tile types:**
+
+    offset = 3*(Y % 60) + 6 if (Y % 60) >= 30 else 3*(Y % 60)
+
+The `+6` is the RCLK row, which sits at position 29 within each 60-row clock
+region. It holds on all 60 Y%60 values of INT and all 24 of
+`INT_INTF_R_PCIE4`, on both the XCK26 and the ZU3EG — 168 points, no
+exceptions. The last row of every region therefore has offset **183**, which is
+how Y239 is known without ever having been fuzzed.
+
+**`INT_INTF_R_PCIE4` is an upstream gap, not ours.** 95 of 480 solved here, and
+95 of 360 in the reference — with *identical* Y%60 coverage
+(`0,2,4,6,10,12,...` and never 30). That pattern is structural to the fuzzer,
+so more specimens will not close it. Its `PIP.IMUXOUT*.IMUX*` lines are what
+`check_fasm_vs_uraydb.py --filter` drops, and `make_bitstream.sh` consumes the
+filtered file, so it does not block a bitstream.
+
+**`RCLK_CLEM_CLKBUF_L` and `RCLK_RCLK_XIPHY_INNER_FT` do not exist on the
+ZU3EG at all** (0 tiles in the reference). `tools/fill_rclk_baseaddr.py` gives
+them base addresses; their `.USED.` segbits would need `060-rclk-seed`, which
+has not been run. Both are filtered out of the designs today.
+
+### `git apply --check` is not evidence that a patch belongs somewhere
+
+`env/apply_patches.sh` originally searched for each patch's root by trying
+candidates until `git apply --check` succeeded, and on its first run placed two
+patches into `prjuray/third_party/VexRiscv`, which shares no file with either
+project. `git apply --check` *succeeds* on a wrong root precisely when the
+patch's paths are absent there, because creating files is a legal patch. The
+script now uses an explicit `(patch, root, strip, tool)` table and requires
+every target to already exist; `--self-test` asserts VexRiscv is rejected and
+prints that `git apply --check` still accepts it.
+
+Note also that `prjuray/third_party/VexRiscv` is **not its own git repo** — a
+`git -C` there walks up to prjuray's root, so `git status` run inside it lists
+*prjuray's* modified files. That is alarming to read and easy to misdiagnose as
+the patches having been destroyed.
+
+## STATUS 2026-09-20: both designs assemble to a `.bit`, and it round-trips clean
+
+`tilegrid.json` is finished (25 147 408 bytes, 18/18 tdb from 002 plus
+`env/finish_tilegrid.sh`'s two derived fills), so `designs/make_bitstream.sh`
+now runs end to end with **no vendor tool**:
+
+| design | features asked for | observable | missing | frames | `.bit.bin` |
+| --- | --- | --- | --- | --- | --- |
+| `kv260_pmod_blink` | 919 over 41 tiles | 749 | **0** | 20812 | 7 798 008 B |
+| `kv260_ps_blink` | 9045 over 223 tiles | 8865 | **0** | 20812 | 7 798 008 B |
+
+"Observable" excludes the 170/180 bits whose segbits are entirely `!`-prefixed:
+those *clear* bits, so a bitstream containing the feature is identical to one
+without it and no decode can ever report it back. Requiring them would fail the
+build on features working exactly as intended.
+
+Load with `sudo fpgautil -b <name>.bit.bin -f Full`. **Nothing has been loaded
+on the board yet.**
+
+### Two defects in the round-trip check, found by running it
+
+It had never actually run: the comparison opened a `.roundtrip.fasm` that
+nothing in the script produced, so the step could only end in
+`FileNotFoundError`. With `bit2fasm` wired in, it then compared feature names
+as **strings**, and reported 20 missing features that were all present in the
+bitstream — verified by reading the frames directly. The assembler and the
+disassembler each spell an indexed feature any way that is FASM-equivalent: we
+write `CLEL_R_X6Y151.ALUT.INIT[63:0] = 64'h8000000000000000`, `bit2fasm` writes
+`CLEL_R_X6Y151.ALUT.INIT[63]`, and where the top bits are clear it narrows the
+range to `INIT[61:0]`. The dangerous direction is the other one: a string
+compare calls two identical spellings carrying **different values** a match,
+which is precisely the failure the check exists to catch. Both files are now
+folded to `{base feature -> integer mask}` and compared as numbers, with
+observability decided per bit from the per-bit segbits key.
+
+### prjuray tilegrid offsets are 16-bit words; the `.frames` file is 32-bit
+
+`prjuray-tools/prjuray/bitstream.py` sets `WORD_SIZE_BITS = 16` and
+`FRAME_WORD_COUNT = 93 * 2`. A US+ frame is 93 **32-bit** words and that is
+what a `.frames` line carries, but `tilegrid.json`'s `offset`/`words` and a
+segbits `FF_BB` offset are in **16-bit** units — which is why offsets run to
+186. `offset: 99` against a 93-word frame line looks like a corrupt database
+and is not. To read one segbit out of a `.frames` file:
+
+```python
+fo, bo = (int(x) for x in segbit.split("_"))   # e.g. "08_00"
+frame  = baseaddr + fo
+bitidx = offset * 16 + bo
+w16, b16 = bitidx // 16, bitidx % 16
+w32, b32 = w16 // 2, b16 + (w16 & 1) * 16      # fasm2bit.py:40,53
+bit = (frame_words[w32] >> b32) & 1
+```
+
+### prjuray-db has at least one physical bit claimed by two features
+
+```
+HDIO_TOP_RIGHT.IOB_X0Y3.PULLTYPE.NONE                       !00_397 !01_396 01_397
+HDIO_TOP_RIGHT.HDIOLOGIC_M_X0Y1.OPTFF...IS_CLK_INVERTED.V0   01_397
+```
+
+Two fuzzers, one of them `031-iob-spec`, solved the same bit. Harmless as we
+use it — `PULLTYPE.NONE` sets it and the decode gains a phantom
+`IS_CLK_INVERTED.V0` — but a FASM emitting `IS_CLK_INVERTED.V1` would clear it
+and silently turn that pin's `PULLTYPE.NONE` into `PULLDOWN`. Our FASM emits no
+HDIOLOGIC features, so it cannot happen today. Assume there are others; the way
+to find them is the round-trip decode, looking only at decoded features that
+*set* bits and were never asked for. Of the 4730 features the pmod decode
+reports in tiles we configured, 4709 are clear-only — the default encoding an
+all-clear region legitimately decodes to — and 16 are narrowed spellings of
+ours. Five set bits, four of those are ours, and the fifth is the collision
+above.
+
+## The Vivado reference found a real bug on the LED path (2026-09-20)
+
+`env/reference_build.sh` built `kv260_ps_blink` in Vivado and decoded the
+result. Both bitstreams LOC the same eight package pins, so the two HDIO tiles
+can be compared bit for bit. They differ in exactly nine bits, and eight of
+them are ours to fix.
+
+### 1. nextpnr never writes `OQ_MUX`, so the pad is left on the OPTFF
+
+Vivado sets `HDIOLOGIC_{M,S}_X0Y<k>.OQ_MUX.NOT_OPTFF` on every one of the eight
+sites driving a PMOD pin. We emit **no `OQ_MUX` feature at all** --
+`nextpnr-xilinx/xilinx/fasm.cc` has no notion of it -- so those bits stay clear,
+which matches neither `NOT_OPTFF` (`!00_826 01_825`) nor `OPTFF`
+(`00_826 !01_825`). The combinational route through the site is selected by the
+site's own output mux, not by the route-through pip: prjuray models it as two
+features, and we were writing only one.
+
+| | |
+| --- | --- |
+| we write | `PIP.HDIO_LOGICPAIR_35_OPFFM_Q.HDIO_LOGICPAIR_35_OPFFM_D1` = `00_830` |
+| we omit | `HDIOLOGIC_M_X0Y3.OQ_MUX.NOT_OPTFF` = `!00_826 01_825` |
+
+Verified by adding the eight features to the FASM by hand and re-assembling:
+both HDIO tiles then match Vivado's bitstream exactly, bar the one bit below.
+Site mapping confirmed against the segbits, not guessed -- the pip's bit is
+`00_N` and the site's mux bit is `01_(N-5)`:
+
+```
+HDIO_TOP_RIGHT_X7Y150  LOGICPAIR 14->M_X0Y0  15->S_X0Y0  21->M_X0Y1  22->S_X0Y1
+                                 28->M_X0Y2  29->S_X0Y2  35->M_X0Y3
+HDIO_BOT_RIGHT_X7Y120  LOGICPAIR 36->S_X0Y3
+```
+
+`PipInfoPOD` carries `site` (the site index in the tile), so fasm.cc can get the
+site from the chipdb and does not need a generated table like
+`usp_bufce_leaf.inc`.
+
+### 2. prjuray mis-solved one bit of `IOB_X0Y4.IOSTANDARD_OUT`
+
+The last differing bit is `01_605`: we set it, Vivado clears it. It is claimed
+by two features at once --
+
+```
+HDIO_TOP_RIGHT.IOB_X0Y4.IOSTANDARD_OUT.LVCMOS33_IDRIVE_I12_SLEW_SLEW_SLOW  ... 01_605 ...
+HDIO_TOP_RIGHT.HDIOLOGIC_M_X0Y2.OPTFF.OSERDESE3.OSERDES_T_BYPASS.TRUE      !01_605
+```
+
+-- and it is a solve artefact, not a real part of the IO standard. The
+canonical `IOSTANDARD_OUT` encoding is **26 bits**; four of the twelve IOBs
+carry a 27th at the same relative offset (+28 in frame 1), negated in three of
+them and positive only in `IOB_X0Y4`. Of that IOB's 40 `IOSTANDARD_OUT`
+variants, exactly **one** carries a positive `01_605` -- and it is the variant
+this design uses. Every other LED pin matches Vivado's bitstream bit for bit.
+
+Setting it means `OSERDES_T_BYPASS` false on `HDIOLOGIC_M_X0Y2`, i.e. the pad's
+output enable comes from an OSERDES nothing configures, so that one pin may not
+drive.
+
+`prjuray-db` is read only and the working `database/zynqusp/*.db` are symlinks
+into it, so the correction lives in `db-corrections/` as data plus its
+evidence, and `tools/apply_db_corrections.py` writes a corrected real copy into
+the overlay in place of that one symlink. `mk_uray_overlay.sh` runs it after
+linking, so it survives a re-link. The applier **fails** rather than warns when
+a correction no longer applies, so a db update that fixes this upstream is
+noticed instead of silently absorbed.
+
+### Result: the LED path is bit-identical to Vivado's
+
+After both fixes, `tools/diff_tile_bits.py` on the two LOC-matched IO tiles:
+
+```
+  HDIO_TOP_RIGHT_X7Y150   reference  91 bits, ours  91, common  91
+  HDIO_BOT_RIGHT_X7Y120   reference  13 bits, ours  13, common  13
+  OK: every named tile is bit-identical
+```
+
+### One frame column Vivado configures and 002 never mapped
+
+Both bitstreams carry **20940** configuration frames -- the earlier "20812" is
+the `.frames` file, i.e. the frames fasm2bit writes, and `xcframes2bit` pads the
+rest. Of the 128 frames Vivado's dump has that our `.frames` does not, 127 are
+all-zero. The exception is `0x00083202`, where Vivado sets 8 bits and **no tile
+in our tilegrid owns the frame at all**: the column list runs `0x83100 HPIO_L`,
+then nothing, then `0x83300 CMT_L`. Those are part of the 17 undecoded bits
+`locate_unknown_bits.py` could attribute to no tile.
+
+The column is the **XIPHY** one: every tile at X16/X17 without a base address
+includes `XIPHY_BYTE_L_X16Y*` and `RCLK_RCLK_XIPHY_INNER_FT_X16Y*`, because 002
+excludes `bitslice_tiles`. So this gap and the one unsettled clock-spine
+feature above are the same gap. Closing it means giving 002 a way to solve the
+XIPHY column on a part whose IOBs there are unbonded.
+
+
+
+### 3. What the reference settled about the clock spine — two of three
+
+Of the three `CLK_HDISTR_*.USED.V1` features `--filter` drops, **two are
+verified over-emission and one is not settled.** The class
+diff shows `RCLK_INTF_LEFT_TERM_ALTO:WIRE.CLK_HDISTR_*.USED.*` is a class **only
+we emit**: Vivado configures that tile type (25 PIP + 24 WIRE features) and
+writes `CLK_HROUTE*.USED.*` there, never an HDISTR one, in any instance. For its
+own equivalent route Vivado sets exactly one HDISTR enable,
+`RCLK_HDIO_X7Y149.WIRE.CLK_HDISTR_FT0_8.USED.V1`, in a tile we also emit. And
+`RCLK_CLEM_CLKBUF_L_X15Y149` -- which has a frame window from the fill and no
+segbits, so any set bit would show as undecoded -- has **0 undecoded bits**.
+So for those two, nextpnr is marking `.USED` on every tile a distribution node
+passes through when only the endpoints carry a bit.
+
+`RCLK_RCLK_XIPHY_INNER_FT_X16Y149` is the one that is NOT settled, and the
+frame-column gap below is why. That tile sits in the unmapped X16 column,
+together with `XIPHY_BYTE_L` -- 002 excludes `bitslice_tiles` (unbonded IOBs on
+SFVC784), which is exactly why nothing there has a base address. Of the eight
+bits Vivado sets in `0x00083202`, seven land at 16-bit words 90-92 and one at
+word **94** -- and every RCLK tile on this die is `offset=93, words=3`, so that
+bit falls inside an RCLK window in that column at row Y149. It may well be the
+enable we are dropping. It cannot be attributed without a base address, and
+Vivado's route is track 8 while ours is track 0, so hand-setting its bit would
+prove nothing either. **The board discriminates this, not the reference build.**
+
+Beware the class diff's "classes ONLY in the reference (114)" list: `ref.fasm`
+is a full-die **decode** of 1.2M features and ours is a 9k **emit**, so it is
+dominated by the default encodings of 100k untouched CLE tiles. Only the
+"only in ours" list and the per-tile bit diffs mean anything.
+
+## Open, in priority order
+
+1. **DONE.** `part.yaml` and `tilegrid.json` both exist for the XCK26 and
+   `fasm2bit.py` produces a `.bit` for both designs — see the 2026-09-20 status
+   above. What remains of this item: `RCLK_RCLK_XIPHY_INNER_FT` (4 tiles) still
+   has no base address, since its column span is undetermined by the data, and
+   `INT_INTF_R_PCIE4` is 95/480, an upstream gap the ZU3EG reference shares.
+   Both are filtered out of both designs, so neither blocks a bitstream.
+
+2. **`CARRY8.CI.CIN` is absent from prjuray-db.** `017-cle-precyinit` emits the
+   tag — its `tag_groups.txt` lists `PRECYINIT_BOT` as a four-way group
+   C0/C1/AX/CIN — but only `CI.{AX,V0,V1}` were solved. A chained CARRY8 would
+   therefore assemble with both carry-in bits clear, which *is* `CI.V0`,
+   constant zero: the chain is cut silently rather than failing. `build.sh`
+   defaults to `-nocarry` for that reason and nextpnr warns once per chained
+   CARRY8. Settling it needs one Vivado specimen on `xczu3eg-sfvc784-1-e`,
+   whose `part.yaml` prjuray-db already has.
+
+3. Genuine prjuray-db coverage gaps, listed above.
+
+4. BRAM, DSP and the PLL/MMCM are not ported in `fasm.cc`. They are deliberately
+   left unwritten rather than emitting 7-series features, so a design using them
+   loses its configuration instead of getting a wrong one.
+
+5. **The test that does not exist yet: required ⊆ emitted.** Build the same
+   design in Vivado once, run prjuray's own `bit2fasm.py` on the result, and
+   diff the *feature classes per tile type* against ours -- not bytes, since
+   placement differs and LUT INIT is pin-permuted at write time. This is
+   validation of the open flow, not Vivado in the design loop, and it is what
+   prjxray's own tests do. One run settles five things at once: whether our
+   INIT bit order is right (the checker only compares names), any feature kind
+   Vivado writes that we never do, what Vivado ties PS8's 4,613 fabric inputs
+   to, which distribution track the clock really takes through the three
+   unfuzzed RCLK tile types, and -- building the CARRY=1 variant -- the
+   encoding of `CARRY8.CI.CIN`, by reading bits 10_18 and 14_01 in a non-root
+   CLEM. Before any of it, smoke-test the chain: `bit2fasm.py` on
+   `001-part-yaml`'s own `design.bit`. If part.yaml + tilegrid + segbits cannot
+   round-trip a Vivado bitstream on this die, nothing downstream is
+   trustworthy.
+
+6. `.bit.bin` packaging is done and verified byte-for-byte against bootgen
+   (`tools/bit2binfile.py`), but **nothing has been loaded onto the board yet**.
+   When it is: `fpgautil` does not touch clocks, so check
+   `/sys/kernel/debug/clk/clk_summary` for `pl0` on the board first, or the
+   counter will not run and the wrong layer gets debugged.

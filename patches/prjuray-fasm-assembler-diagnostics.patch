@@ -1,0 +1,36 @@
+--- prjuray/utils/fasm_assembler.py.orig	2026-09-19 20:40:15.384262470 -0700
++++ prjuray/utils/fasm_assembler.py	2026-09-19 20:40:15.365545000 -0700
+@@ -147,6 +147,33 @@
+                 any_bits.add(block_type)
+                 update_segbit(bit)
+         except KeyError:
++            # Three quite different faults reach this one handler, and the
++            # original message named only the first. feature_to_bits indexes
++            # both the segbits dict and bits_map, so a tile with no base
++            # address raises here too, as does a tile type with no
++            # tile_type_*.json -- and those want opposite fixes: a
++            # characterisation run, a propagation rule, or a database file.
++            # Say which.
++            if not gridinfo.bits:
++                raise FasmLookupError(
++                    "%s has no base address in tilegrid.json, so no bit can be"
++                    " placed in it (feature %s, from line '%s').\n"
++                    "  This is NOT a missing segbit. Either no 002-tilegrid"
++                    " sub-fuzzer reaches this tile\n"
++                    "  type -- check which SITE types it holds, not its name"
++                    " -- or it has no sites at\n"
++                    "  all and needs a derived address." %
++                    (tile, db_k, line))
++            known = set(getattr(segbits, 'segbits', {}) or {})
++            if not known:
++                raise FasmLookupError(
++                    "no segbits loaded for tile type %s (feature %s, from line"
++                    " '%s').\n"
++                    "  The tile has a base address, so this is a database gap:"
++                    " either segbits_%s.db\n"
++                    "  or tile_types/tile_type_%s.json is missing." %
++                    (gridinfo.tile_type, db_k, line,
++                     gridinfo.tile_type.lower(), gridinfo.tile_type))
+             raise FasmLookupError(
+                 "Segment DB %s, key %s not found from line '%s'" %
+                 (gridinfo.tile_type, db_k, line))

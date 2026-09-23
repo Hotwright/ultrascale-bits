@@ -1,0 +1,15 @@
+--- utils/xyaml.py.orig	2026-09-19 18:53:41.728820427 -0700
++++ utils/xyaml.py	2026-09-19 18:53:41.708325400 -0700
+@@ -32,7 +32,11 @@
+         data = data.decode('utf-8')
+     # Strip out of !<tags>
+     data = re.sub("!<[^>]*>", "", data)
+-    return yaml.load(io.StringIO(data))
++    # PyYAML 6 made Loader mandatory: yaml.load() without it raises
++    #   TypeError: load() missing 1 required positional argument: 'Loader'
++    # The !<tags> are stripped just above, so the document is plain YAML and
++    # SafeLoader is both sufficient and the right default.
++    return yaml.load(io.StringIO(data), Loader=yaml.SafeLoader)
+ 
+ 
+ def tojson(f):

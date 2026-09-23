@@ -1,0 +1,39 @@
+# Corrections to prjuray-db's segbits_hdio_top_right.db.
+#
+# prjuray-db is the reference and is READ ONLY. These are applied by
+# tools/apply_db_corrections.py into the writable overlay at
+# prjuray/database/, replacing that one symlink with a corrected copy, and
+# mk_uray_overlay.sh runs it after linking. Nothing here ever touches
+# prjuray-db.
+#
+# Format: <feature key> <op> <bit>
+#   drop-bit   the bit is not part of this feature; remove it
+# The applier FAILS if the bit is not there to remove, so a db update that
+# fixes this upstream is caught rather than silently ignored.
+
+# 01_605 is claimed by two features at once:
+#
+#   HDIO_TOP_RIGHT.IOB_X0Y4.IOSTANDARD_OUT.LVCMOS33_IDRIVE_I12_SLEW_SLEW_SLOW  ... 01_605 ...
+#   HDIO_TOP_RIGHT.HDIOLOGIC_M_X0Y2.OPTFF.OSERDESE3.OSERDES_T_BYPASS.TRUE      !01_605
+#
+# and it belongs to the second. Evidence, all from the Vivado reference built
+# by env/reference_build.sh on kv260_ps_blink, which LOCs the same package pins
+# as ours so the two bitstreams are directly comparable:
+#
+#  * The canonical IOSTANDARD_OUT encoding is 26 bits. Four of the twelve IOBs
+#    carry a 27th at the same relative offset (+28 in frame 1) -- negated in
+#    three of them, positive only in IOB_X0Y4.
+#  * Of that IOB's 40 IOSTANDARD_OUT variants exactly ONE carries a positive
+#    01_605, and it is the variant this design uses.
+#  * Vivado, driving that pin at the same standard, drive and slew, leaves the
+#    bit CLEAR. Every other LED pin matches Vivado's bitstream bit for bit.
+#
+# Setting it means OSERDES_T_BYPASS false on HDIOLOGIC_M_X0Y2, so the pad's
+# output enable would come from an OSERDES nothing configures.
+HDIO_TOP_RIGHT.IOB_X0Y4.IOSTANDARD_OUT.LVCMOS33_IDRIVE_I12_SLEW_SLEW_SLOW drop-bit 01_605
+
+# NOT corrected, deliberately: IOB_X0Y3, IOB_X0Y6 and IOB_X0Y9 carry a 27th bit
+# at the same relative offset too, but NEGATED (!01_413, !01_797, !01_1181). A
+# negated bit only ever clears, and the assembler only sets, so they cannot
+# corrupt anything. Left alone rather than "tidied" so this file stays a record
+# of bits that actually mattered.

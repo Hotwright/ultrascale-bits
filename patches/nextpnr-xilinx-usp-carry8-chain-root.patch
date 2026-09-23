@@ -1,0 +1,21 @@
+--- xilinx/pack_carry_xcup.cc.orig	2026-09-19 18:04:27.608962300 -0700
++++ xilinx/pack_carry_xcup.cc	2026-09-19 18:04:27.647472000 -0700
+@@ -372,7 +372,17 @@
+         CellInfo *ci = cell.second.get();
+         if (ci->type != id_CARRY8)
+             continue;
+-        if (ci->cluster == ClusterId())
++        // CIN is the dedicated carry input from the CARRY8 in the tile below, so
++        // only a CARRY8 that actually has a predecessor in its chain may use it.
++        // The chain ROOT sets cluster = its own name (see above), which is not
++        // ClusterId(), so the original test sent the root down the chained path
++        // and asked the router to reach SLICE/CIN from the global GND node --
++        // which cannot be routed, and is the error this produced on XCK26:
++        //   Failed to route arc of net '$PACKER_GND_NET' ... to SITEWIRE/SLICE_X10Y150/CIN
++        // A root's carry-in belongs on AX, which PRECYINIT can select, exactly as
++        // the 7-series packer puts it on CYINIT.
++        bool is_chain_root = (ci->cluster == ClusterId()) || (ci->cluster == ClusterId(ci->name));
++        if (is_chain_root)
+             xform_cell(c8_init_rules, ci);
+         else
+             xform_cell(c8_chained_rules, ci);

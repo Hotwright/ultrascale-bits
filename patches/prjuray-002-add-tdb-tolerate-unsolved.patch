@@ -1,0 +1,84 @@
+# add_tdb.py aborts the entire tilegrid build over a single unsolvable tag.
+#
+# Two things segmatch legitimately produces make it die, each with a message
+# that names neither the file nor the tile:
+#
+#   <const0>/<const1>/<K candidates>  -> ValueError: invalid literal for
+#       int() with base 16: '<const0>'.  segmatch could not solve the tag.
+#       <const0> means it was never 1 in any specimen (segmatch.cc: if
+#       (!count1)), which for a random-value fuzzer happens with probability
+#       2**-N per tile: at N=15 over 13920 CLE tiles you EXPECT ~0.4 of them,
+#       and the XCK26 duly produced exactly one (CLEL_L_X11Y0, confirmed 0 in
+#       all 15 specimens).
+#
+#   unaligned base -> AssertionError: Unaligned frame at 0x00001FF8. segmatch
+#       solved the tag to the wrong bit. 30 of clem_int's 7080 tags on this
+#       die, every one at Y0, each off by exactly 8 frames.
+#
+# Losing one tile's base address is recoverable; losing all 13920 because of it
+# is not. Both cases are now skipped and reported by tile. tools/audit_tilegrid_tdb.py
+# runs the same checks up front and reports that all 57 column-local failures
+# are recoverable from their columns (~235 tiles agreeing), leaving only INT
+# columns X34 and X42 for the column-owning model.
+--- a/fuzzers/002-tilegrid/add_tdb.py
++++ prjuray/fuzzers/002-tilegrid/add_tdb.py
+@@ -50,6 +50,7 @@
+ 
+ 
+ def load_db(fn):
++    unsolved = []
+     for l in open(fn, "r"):
+         l = l.strip()
+         # FIXME: add offset to name
+@@ -57,6 +58,22 @@
+         parts = l.split(' ')
+         tagstr = parts[0]
+         addrlist = parts[1:]
++        # segmatch writes a placeholder instead of an address when it could not
++        # solve the tag: "<const0>" when the tag was never 1 in any specimen
++        # (segmatch.cc: `if (!count1)`), "<const1>" for the converse, and
++        # "<N candidates>" when several bits fit. These are not addresses, and
++        # feeding one to int(x, 16) used to abort the whole tilegrid build with
++        # a bare ValueError that named neither the file nor the tile.
++        #
++        # For a random-value fuzzer this is expected at the tail: with N=15
++        # specimens a given tile is never 1 with probability 2**-15, so over
++        # 13920 CLE tiles you expect ~0.4 of them. Losing one tile's base
++        # address is recoverable downstream; losing all 13920 is not. So skip
++        # it, and report it loudly enough that it gets filled in rather than
++        # discovered later as a FasmLookupError.
++        if any(a.startswith("<") for a in addrlist):
++            unsolved.append((tagstr.split(".")[0], " ".join(addrlist)))
++            continue
+         check_frames(tagstr, addrlist)
+         # Take the first address in the list
+         frame, wordidx, bitidx = parse_addr(addrlist[0])
+@@ -87,9 +104,27 @@
+         if not bitidx_up:
+             bitidx = 0
+         assert bitidx == 0, l
+-        assert frame % 0x100 == 0, "Unaligned frame at 0x%08X" % frame
++        # A base address must be 0x100-aligned. When it is not, segmatch solved
++        # the tag to the WRONG bit: the tag's own deltas then land it off a
++        # column boundary, which is the only way we ever detect a mis-solve.
++        # On the XCK26 this hits 30 of clem_int's 7080 tags, all at Y0, each
++        # off by 8 frames. Aborting the build over them throws away the other
++        # 7050, so skip and report - tools/audit_tilegrid_tdb.py shows that
++        # every one of them is recoverable from its column, where ~235 tiles
++        # agree unanimously on the base.
++        if frame % 0x100:
++            unsolved.append((tile, "mis-solved, base 0x%05X unaligned" % frame))
++            continue
+         yield (tile, frame, wordidx)
+ 
++    if unsolved:
++        print("WARNING: {}: {} tag(s) unsolved by segmatch, no base address:".
++              format(fn, len(unsolved)))
++        for tile, why in unsolved[:10]:
++            print("    {:<34} {}".format(tile, why))
++        if len(unsolved) > 10:
++            print("    ... and {} more".format(len(unsolved) - 10))
++
+ 
+ def run(fn_in, fn_out, verbose=False):
+     database = json.load(open(fn_in, "r"))
