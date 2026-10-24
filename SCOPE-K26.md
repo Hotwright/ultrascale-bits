@@ -1106,3 +1106,23 @@ HDIO tiles are bit-identical to Vivado's (`tools/diff_tile_bits.py`).
   only) is the next suspect.
 - The `INT_INTF_R_PCIE4_*.IMUXOUT16.IMUX16` features the filter drops are
   harmless: Vivado sets no bits in those tiles on the same paths.
+
+## STATUS 2026-10-24 (later): himbaechel UltraScale+ port works on the board
+
+nextpnr-himbaechel now does UltraScale+ (branch `usp-himbaechel` in
+eda-tools/nextpnr, commits 3c965c90..44c280b2). The chipdb comes from a
+RapidWright dump (`gen/rapidwright/run_usp_dump.sh`): 35.8 MB raw / 4.2 MB gz,
+against 391 / 110 MB for the legacy one.
+
+| design | P&R | FASM vs prjuray-db | round trip | board |
+|---|---|---|---|---|
+| kv260_ps_blink | 5.2 s, 1.3 GB | same drops as legacy only | OK | **counts and blinks** (legacy never did) |
+| kv260_ff_test  | 4.7 s, 1.3 GB | same drops as legacy only | OK | **all LEDs off as designed** (legacy left the two constant pads lit) |
+
+Load with `env/kv260_jtag_load.sh`. The bitstreams come from
+`designs/make_bitstream.sh` run on the filtered FASM.
+
+Not ported yet, and rejected by the packer rather than mis-packed: CARRY8,
+BRAM/URAM, DSP, MMCM/PLL, differential IO, IOLOGIC. Series-7 output is
+unchanged: the xc7z010 bba is byte-identical, and a counter design gives
+byte-identical FASM.
