@@ -1122,7 +1122,29 @@ against 391 / 110 MB for the legacy one.
 Load with `env/kv260_jtag_load.sh`. The bitstreams come from
 `designs/make_bitstream.sh` run on the filtered FASM.
 
-Not ported yet, and rejected by the packer rather than mis-packed: CARRY8,
+Not ported yet, and rejected by the packer rather than mis-packed:
 BRAM/URAM, DSP, MMCM/PLL, differential IO, IOLOGIC. Series-7 output is
 unchanged: the xc7z010 bba is byte-identical, and a counter design gives
 byte-identical FASM.
+
+### CARRY8 (nextpnr c7128d77): works on the board
+
+A 32-bit counter (`ctr <= ctr + 1`, LEDs = `ctr[31:24]`) synthesised **without
+`-nocarry`** packs into four chained CARRY8s. All eight LEDs blink at
+successive halvings. This design and the 27-bit blink route in ~5 s; the
+bitstream round trip is clean and the filter drops only the usual PCIe/XIPHY
+features.
+
+- The supposed prjuray gap was not one. Vivado's own chain in
+  `designs/kv260_ps_blink/reference/ref.fasm` (CLEL_R_X8Y155..158) decodes as
+  `CARRY8.CI.V0` plus the CLE pip `CLE_CLE_*_SITE_0_CIN_PIN.CLE_CLE_*_SITE_0_CIN`.
+  Every CLE flavour has that pip in prjuray-db, and the router writes it. The
+  legacy warning that a chained CARRY8 "assembles as constant 0" was wrong.
+- Every 30 CLE rows a column is split by an RCLK/RBRK row, and the carry chain
+  runs straight past it. `XilinxImpl::getClusterPlacement` maps the k-th
+  CARRY8 to the k-th CLE row up; the test chain crossed the RCLK row between
+  CLEM_X7Y149 and Y150 and works.
+- A constant carry-in is not routed. The FASM writer sets `CI.V0`/`V1` and
+  leaves AX free.
+- Yosys 0.33 still emits CARRY4 for `-family xcup`; the packer splits both
+  CARRY4 and CARRY8.
