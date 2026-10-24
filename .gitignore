@@ -33,3 +33,7 @@ designs/*/reference/
 # Vivado drops these in whatever directory it was launched from.
 /.Xil/
 /clockInfo.txt
+
+# Vivado diagnostic builds of designs/kv260_diag/*.v (env/reference_build.tcl
+# output: project, .dcp, .bit). Reproducible; only the sources are kept.
+designs/kv260_diag/out*/

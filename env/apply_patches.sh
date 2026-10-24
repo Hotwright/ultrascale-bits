@@ -41,6 +41,7 @@ TABLE=(
   "nextpnr-xilinx-usp-carry8-chain-root.patch : nextpnr-xilinx                                      : 0 : patch"
   "nextpnr-xilinx-usp-fasm.patch         : .                                                        : 0 : patch"
   "bbaexport-rapidwright-2026.patch      : .                                                        : 0 : patch"
+  "nextpnr-xilinx-usp-router2-pip-avail.patch : nextpnr-xilinx                                    : 0 : patch"
 )
 
 DRY=0; [ "${1:-}" = "--dry-run" ] && DRY=1

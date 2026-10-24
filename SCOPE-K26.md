@@ -1059,3 +1059,50 @@ dominated by the default encodings of 100k untouched CLE tiles. Only the
    When it is: `fpgautil` does not touch clocks, so check
    `/sys/kernel/debug/clk/clk_summary` for `pl0` on the board first, or the
    counter will not run and the wrong layer gets debugged.
+
+## STATUS 2026-10-24: on the board — isolation, router2, and what still fails
+
+First loads on a real KV260 (JTAG, `env/kv260_jtag_load.sh`).
+
+**Our bitstreams configure the part.** DONE high, no CRC / IDCODE / bad-packet
+error, for every bitstream this flow produced. Silicon acceptance is settled.
+
+**PL_CLK0 never reached the fabric until the PMU was asked.** A board that
+stops in U-Boot (A53 #1–3 left in reset) never runs the step that lifts PS→PL
+isolation, and a JTAG load re-masks it, so every PS→PL signal — PL_CLK0
+included — reads as a constant. Vivado's bitstreams failed identically, which
+is what ruled our flow out. The fix is the request xilfpga makes after a PCAP
+load: `REQ_PWRUP_INT_EN`/`REQ_PWRUP_TRIG` bit 23 (0xFFD80118 / 0xFFD80120),
+then poll 0xFFD80110. `REQ_ISO` (0xFFD80318/320) looks right and is not — its
+mask write does not land. `env/kv260_jtag_load.sh` does this after every load.
+With it, Vivado's PS-clocked designs run.
+
+**The Pmod LEDs are active-low**, so "all on" means pins driven 0 or a counter
+stuck at 0. Physical LED order is not pin order; decoded with three Vivado
+identification bitstreams (`designs/kv260_diag/ident{A,B,C}.v`, binary code),
+LED 0..7 = pmod `[3,7,2,6,1,5,0,4]`.
+
+**router2 ignored every UltraScale+ routing restriction.** nextpnr-xilinx's
+router2 asks `checkPipAvailForNet`, which `Arch` did not override, so the
+BaseArch version (binding only) decided and `usp_pip_hard_unavail` — ground
+drivers, site variants, LUT permutations around LUTRAM/SRL, and the pip
+blacklist — never applied. `setup_pip_blacklist()` was also only run for xc7.
+With both fixed, a new HDIO rule keeps single-ended outputs off the
+differential `OUTB_B → partner OUTB_B_IN` leg, which the router had been using
+to drive a pad from its neighbour's OP. All three are
+`patches/nextpnr-xilinx-usp-router2-pip-avail.patch`. After it, both designs'
+HDIO tiles are bit-identical to Vivado's (`tools/diff_tile_bits.py`).
+
+**Still open: our designs do not yet behave on the board.**
+- `designs/kv260_ff_test` (no LUTs: four FDRE D=1 INIT=0 on PL_CLK0, four
+  constant-1 pads): two LEDs stay lit. By the map above they are **pmod[7]
+  and pmod[4] — both constant-1 pads; all four FFs work**, so the clock tree
+  and FF config are fine. One LED reading earlier in the session did not fit
+  the map, so re-check this reading before relying on it. Lead: pmod[7]
+  (IOB_X0Y136) is the only pad whose constant enters through the IOB site wire
+  `OP` (sitepip OP→O_B) rather than the tile wire `HDIO_IOBPAIR_39_O_B`.
+- `blink_ps` still does not count. Its pads now match Vivado; the counter
+  logic (LUT INIT bit order is unverified — the FASM checker compares names
+  only) is the next suspect.
+- The `INT_INTF_R_PCIE4_*.IMUXOUT16.IMUX16` features the filter drops are
+  harmless: Vivado sets no bits in those tiles on the same paths.
