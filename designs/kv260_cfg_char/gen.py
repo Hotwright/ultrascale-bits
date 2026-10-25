@@ -37,7 +37,7 @@ STARTUP = {"CFGCLK": "", "CFGMCLK": "x[0]", "EOS": "x[1]", "PREQ": "x[2]", "GSR"
 BSCAN = {"CAPTURE": "x[0]", "DRCK": "x[1]", "RESET": "x[2]", "RUNTEST": "x[3]", "SEL": "x[4]", "SHIFT": "x[5]",
          "TCK": "x[6]", "TDI": "x[7]", "TMS": "x[8]", "UPDATE": "x[9]", "TDO": "ctr[5]"}
 DNA = {"CLK": "clk", "DIN": "ctr[6]", "READ": "ctr[7]", "SHIFT": "ctr[8]", "DOUT": "x[0]"}
-USR = {"CFGCLK": "x[0]", "DATA": "x", "DATAVALID": ""}
+USR = {"DATA": "x"}
 FECC = {"CRCERROR": "x[0]", "ECCERRORSINGLE": "x[1]", "ECCERRORNOTSINGLE": "x[2]", "ENDOFFRAME": "x[3]",
         "ENDOFSCAN": "x[4]", "FAR": "x[31:5]", "FARSEL": "ctr[10:9]", "ICAPBOTCLK": "1'b0", "ICAPTOPCLK": "1'b0"}
 EFUSE = {"EFUSEUSR": "x"}

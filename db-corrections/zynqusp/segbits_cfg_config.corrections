@@ -8,3 +8,25 @@
 # Board-verified: kv260_icap_idcode reads the IDCODE with them and all-zero
 # with only the other config-column bit Vivado sets (row 3, word 47).
 CFG_CONFIG.ICAP_TOP.IN_USE add-feature 00_1892 01_1891 01_1892
+# The same for an ICAPE3 placed (BEL property) on ICAP_BOT. ICAP_AUTO_SWITCH
+# changes nothing in the frames.
+CFG_CONFIG.ICAP_BOT.IN_USE add-feature 00_1893 00_1894 01_1893
+
+# DNA_PORTE2 and BSCANE2 (JTAG_CHAIN 1-4, one bel each): one specimen each,
+# the only CFG_CONFIG bits set against the baseline.
+CFG_CONFIG.DNA_PORT.IN_USE add-feature 00_1890 00_1891 01_1890
+CFG_CONFIG.BSCAN1.IN_USE add-feature 01_1909
+CFG_CONFIG.BSCAN2.IN_USE add-feature 00_1910
+CFG_CONFIG.BSCAN3.IN_USE add-feature 01_1910
+CFG_CONFIG.BSCAN4.IN_USE add-feature 00_1911
+
+# STARTUPE3: IN_USE with every pin tied to its inactive level; PROG_USR="TRUE"
+# adds three more. (Driving USRCCLKO or USRDONEO from logic adds
+# 00_1901 01_1900 01_1901 in both specimens alike, so what those bits mean is
+# not separated yet, and nextpnr does not write them.)
+CFG_CONFIG.STARTUP.IN_USE add-feature 00_1908 00_1909 01_1908
+CFG_CONFIG.STARTUP.PROG_USR add-feature 00_1902 00_1903 01_1902
+
+# FRAME_ECCE4, EFUSE_USR and USR_ACCESSE2 set no CFG_CONFIG bits (their
+# specimens match the baseline); only their routing is configured. The
+# USR_ACCESS value lives in the bitstream's AXSS register, not in frames.

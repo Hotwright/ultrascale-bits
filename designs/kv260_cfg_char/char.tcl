@@ -12,6 +12,14 @@ foreach {p pin} {0 H12 1 E10 2 D10 3 C11 4 B10 5 E12 6 D11 7 B11} {
 }
 set_property SEVERITY {Warning} [get_drc_checks NSTD-1]
 set_property SEVERITY {Warning} [get_drc_checks UCIO-1]
+# bel.txt (optional): "<BEL>" for the one config primitive, e.g.
+# CONFIG_SITE.ICAP_BOT -- a (* BEL *) attribute in the Verilog is ignored.
+if {[file exists [file join $dir bel.txt]]} {
+    set bel [string trim [read [open [file join $dir bel.txt]]]]
+    set c [get_cells -hierarchical -filter {PRIMITIVE_GROUP == CONFIGURATION}]
+    set_property BEL $bel $c
+    set_property LOC CONFIG_SITE_X0Y0 $c
+}
 place_design
 route_design
 write_bitstream -force [file join $dir design.bit]
