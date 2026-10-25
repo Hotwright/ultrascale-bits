@@ -3,7 +3,8 @@
 
 Two ops: `drop-bit` removes a mis-solved bit from a feature, and `add-feature`
 appends a feature the reference never solved (characterised against Vivado,
-with the evidence in the .corrections file).
+with the evidence in the .corrections file). A file made only of add-feature
+lines may name a segbits file the reference does not have at all.
 
 prjuray-db is the reference we validate against and is READ ONLY. When a
 fuzzer has demonstrably mis-solved a bit, the correction lives here as data --
@@ -41,6 +42,28 @@ def read_rules(path):
     return rules, adds
 
 
+def ensure_tile_type(overlay_fam, reference_fam, tile_type):
+    """prjuray registers a tile type only through tile_types/tile_type_<T>.json.
+
+    In the overlay tile_types/ is a symlink to the reference. To add a type the
+    reference lacks, it becomes a real directory of per-file links first, so
+    the reference is still never written. The stub carries no pips or wires:
+    fasm2bit and bit2fasm need only the segbits.
+    """
+    tdir = os.path.join(overlay_fam, "tile_types")
+    if os.path.islink(tdir):
+        os.unlink(tdir)
+        os.mkdir(tdir)
+        src = os.path.join(reference_fam, "tile_types")
+        for f in os.listdir(src):
+            os.symlink(os.path.join(src, f), os.path.join(tdir, f))
+    path = os.path.join(tdir, "tile_type_%s.json" % tile_type)
+    if not os.path.exists(path):
+        with open(path, "w") as f:
+            f.write('{"tile_type": "%s", "pips": {}, "sites": [], "wires": {}}\n' % tile_type)
+        print("  tile_types: added stub %s" % os.path.basename(path))
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -61,9 +84,17 @@ def main():
         dbname = os.path.basename(cf)[: -len(".corrections")] + ".db"
         src = os.path.join(args.reference, family, dbname)
         dst = os.path.join(args.overlay, family, dbname)
-        if not os.path.exists(src):
-            sys.exit("apply_db_corrections: no reference %s" % src)
         rules, adds = read_rules(cf)
+        if not os.path.exists(src):
+            # A tile type the reference never fuzzed (CMT_L, absent from the
+            # ZU3EG) starts from nothing, so there is nothing to drop from.
+            if rules:
+                sys.exit("apply_db_corrections: no reference %s to drop bits from" % src)
+            src = os.devnull
+            if not args.check:
+                ensure_tile_type(os.path.join(args.overlay, family),
+                                 os.path.join(args.reference, family),
+                                 dbname[len("segbits_"):-len(".db")].upper())
 
         out, applied = [], {k: 0 for k in rules}
         new_features = {f for f, _ in adds}

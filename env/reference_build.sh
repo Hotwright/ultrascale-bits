@@ -50,7 +50,8 @@ for f in "$SRC" "$XDC" "$OURS"; do
 done
 
 mkdir -p "$OUT"
-export REF_SRC="$SRC" REF_XDC="$XDC" REF_OUT="$OUT"
+HOOKS="${REF_HOOKS:-$( ls "$D"/ref_hooks.tcl 2>/dev/null | head -1 )}"
+export REF_SRC="$SRC" REF_XDC="$XDC" REF_OUT="$OUT" REF_HOOKS="$HOOKS"
 echo "reference: $(basename "$SRC") + $(basename "$XDC") -> $OUT/ref.bit"
 "$URAY_VIVADO" -mode batch -nojournal -log "$OUT/vivado.log" \
     -source "$R/env/reference_build.tcl" || exit 1

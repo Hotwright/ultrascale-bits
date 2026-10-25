@@ -1185,4 +1185,55 @@ compared via the decoded FASM.) A width-0 (unused) port on a RAMB36 is written
 as W36. That is assumed, not characterised, and is harmless for an unused port.
 
 `designs/kv260_bram_rom` is the board test: a yosys-inferred 4096 x 8 ROM in
-one RAMB36E2 at read width 9.
+one RAMB36E2 at read width 9. **It plays on the board (2026-10-25)**: the
+bouncing LED pattern from chase.hex, built with no vendor tool. Getting there
+took three more fixes, none of them in the BRAM tile:
+
+- **RAMB36 cascade-output enables.** CASDOMUXEN_A/B and CASOREGIMUXEN_A/B
+  were tied to VCC only on a RAMB18. Vivado ties them on a RAMB36 too; left
+  floating, the output latch never loads. The spec comparison above did not
+  catch it because it covers the BRAM tile, and these ties live in the INT
+  tile next to it.
+- **prjuray INT mis-solve.** Bit 21_35 is filed under every CTRL_W5 mux
+  input, but it belongs to `INT_NODE_SDQ_80_INT_OUT1.LOGIC_OUTS_W22`: Vivado
+  sets it in exactly the 6 tiles using that pip and in none of 228 others.
+  Fixed in `db-corrections/zynqusp/segbits_int.corrections`.
+- **The clock never reached the BRAM.** See the next section.
+
+### Clock crossing of the CMT column (X16): characterised, works on the board
+
+Every K26 BRAM column, and two thirds of the fabric, lie east of the
+CMT/XIPHY column at X16. PS clocks enter at the west edge (BUFG_PS), so they
+must cross it, and prjuray has nothing for the tiles involved: CMT_L (the
+ZU3EG has CMT_RIGHT) and RCLK_CLEM_CLKBUF_L (absent from the ZU3EG). ps_blink
+only worked because all of its logic sat west of X16.
+
+- **Route.** Vivado crosses on HROUTE, through a real mux in CMT_L
+  (`HROUTE_0_k -> CMT_MUX_2TO1_<8k+2> -> HROUTE_1_k`), and roots the clock on
+  a spine east of the column. It never uses the HDISTR feed-through in
+  `RCLK_RCLK_XIPHY_INNER_FT`, a tile with no frames in the tilegrid. The
+  himbaechel chipdb generator now drops that tile's pips, so nextpnr takes
+  Vivado's route.
+- **Bits.** `designs/kv260_clk_char` is a small fuzzer: 56 Vivado specimens,
+  each with 6-12 PS clocks on LOC'd BUFG_PS_<k> (which drives HROUTE<k> and
+  nothing else) into pblocked counters, solved by `solve.py`. Every set bit in
+  all 224 CMT_L and 448 CLKBUF instances is explained:
+  - CMT_L crossing: 3 bits per track (`WIRE.CLK_HROUTE_1_k.USED` plus two mux
+    bits on the pip). HDISTR used: 1 bit per track. Both sit where CMT_RIGHT
+    has the same features.
+  - RCLK_CLEM_CLKBUF_L: `PIP.CLK_HROUTE_Rk.CLK_HROUTE_Lk.FWD` =
+    13_(46-2k) 13_(47-2k); `WIRE.CLK_HROUTE_Lk.USED` = 12_(46-2k).
+  - Both go into the overlay as `add-feature` corrections.
+    `apply_db_corrections.py` can now create a segbits file the reference
+    lacks, and registers a stub `tile_types/` entry for it without writing
+    into prjuray-db.
+- **The trap: frame ECC.** UltraScale+ keeps each frame's ECC in halfwords
+  90-92, which is CMT_L relative bits 96-143. Those bits change with
+  everything else in the frame, so they look like configuration that depends
+  on context: "deskew taps" that follow the clock root. They are not
+  configuration. xcframes2bit recomputes them and bitread masks them.
+  `solve.config_bits` drops them. Any future fuzz of a tile whose window
+  covers the frame centre must do the same.
+- **Scope.** HROUTE crossings are characterised for the PS row (Y209,
+  CMT_L_X16Y180), the only row a PS clock enters. HDISTR is characterised in
+  all four rows. Crossings are FWD (west to east) only.

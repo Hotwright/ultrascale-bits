@@ -25,6 +25,17 @@ file mkdir $out
 create_project -force -part $part ref_$top $out/proj
 add_files -norecurse $src
 add_files -fileset constrs_1 -norecurse $xdc
+
+# A design may ship ref_hooks.tcl defining any of ref_pre_synth, ref_pre_place
+# and ref_post_route: extra source files ($readmemh data), placement that has
+# to name post-synthesis cells, and route dumps for diagnosis.
+if {[info exists ::env(REF_HOOKS)] && $::env(REF_HOOKS) ne ""} {
+    source $::env(REF_HOOKS)
+}
+proc ref_hook {name} {
+    if {[llength [info procs $name]]} { $name }
+}
+ref_hook ref_pre_synth
 set_property top $top [current_fileset]
 
 # -flatten_hierarchy none keeps cell names close to the source, which makes the
@@ -32,8 +43,10 @@ set_property top $top [current_fileset]
 synth_design -top $top -flatten_hierarchy none
 write_checkpoint -force $out/post_synth.dcp
 
+ref_hook ref_pre_place
 place_design
 route_design
+ref_hook ref_post_route
 report_utilization -file $out/utilization.rpt
 report_route_status -file $out/route_status.rpt
 write_checkpoint -force $out/ref.dcp
