@@ -1237,3 +1237,40 @@ only worked because all of its logic sat west of X16.
 - **Scope.** HROUTE crossings are characterised for the PS row (Y209,
   CMT_L_X16Y180), the only row a PS clock enters. HDISTR is characterised in
   all four rows. Crossings are FWD (west to east) only.
+
+### ICAPE3: reads the IDCODE on the board (nextpnr 45749564)
+
+`designs/kv260_icap_idcode` reads the IDCODE back through the ICAP about 12
+times a second and blinks all eight LEDs together when it matches. With
+nothing but nextpnr in the loop it now does. It needed three things, each
+found by diffing against a Vivado build of the same `icap.v` that passed on
+the board:
+
+* **`INT_INTF_R_PCIE4.OUTPUTS_ENABLED`** (01_21 02_27 03_24, the same bits as
+  prjuray's `INT_INTF_LEFT_TERM_PSS.OUTPUTS_ENABLED.1`). This answers the open
+  item above about the input direction: the bit exists, and while it is clear
+  nothing enters the fabric through the tile. The ICAP read all-zero.
+  Vivado sets it only on tiles whose LOGIC_OUTS are used (X34Y175/176, not the
+  inputs-only X34Y174), and nextpnr now does the same. Anything coming *in*
+  through these tiles, such as HD-bank inputs, needed it too.
+  002 had windows for only 95 of the 480 tiles. `tools/fill_int_intf_tilegrid.py`
+  fills the rest from INT's window shifted one column (base + 0x100, 4
+  frames). The rule predicts all 95 solved tiles.
+* **`CFG_CONFIG.ICAP_TOP.IN_USE`** (00_1892 01_1891 01_1892). Frame column
+  0x6C, 10 frames per row, had no tile window. It is now in
+  `db-corrections/zynqusp/tilegrid.windows` (`tools/fill_tilegrid_windows.py`).
+  A knock-out on the board settled it: these three bits alone pass, and the
+  one other config-column bit Vivado sets (row 3, word 47) alone fails.
+* **The CSU must hand the configuration port to the ICAP.** `pcap_ctrl.PCAP_PR`
+  resets to 1 (PCAP), so load with `KV260_ICAP=1 env/kv260_jtag_load.sh`.
+
+Also: the router had sent the ICAP's data outputs through the clock spine
+(`INT_NODE_IMUX -> INT_RCLK_TO_CLK_* -> BUFCE_ROW_FSR -> HDISTR`), whose pips
+prjuray only partly knows. The chipdb no longer offers that entry.
+
+`designs/kv260_cfg_char` builds one Vivado specimen per CONFIG_SITE primitive
+or attribute, and `analyze.py` lists each one's CFG_CONFIG bits against the
+baseline. BSCAN1 is 01_1909. The rest (STARTUP, DNA_PORT, USR_ACCESS,
+FRAME_ECC, EFUSE_USR, BSCAN2-4, ICAP_BOT, ICAP_AUTO_SWITCH) were still
+building when this was written. `env/kv260_webcam.sh` photographs the Pmod
+LEDs, so a board test can be read without anyone watching the board.

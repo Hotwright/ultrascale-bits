@@ -1,0 +1,10 @@
+# CFG_CONFIG: the CONFIG_SITE (ICAP, STARTUP, BSCAN, DNA_PORT, ...). A tile
+# type the reference never fuzzed; its window is in tilegrid.windows.
+# Solved from designs/kv260_cfg_char: one primitive per specimen against a
+# baseline with none, bits relative to the whole-frame window (frame-ECC
+# halfwords masked).
+#
+# ICAP_TOP.IN_USE: Vivado's ICAPE3 (placed on ICAP_TOP) sets exactly these.
+# Board-verified: kv260_icap_idcode reads the IDCODE with them and all-zero
+# with only the other config-column bit Vivado sets (row 3, word 47).
+CFG_CONFIG.ICAP_TOP.IN_USE add-feature 00_1892 01_1891 01_1892

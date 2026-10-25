@@ -132,6 +132,24 @@ else
     echo "  INT fill REFUSED -- tilegrid left untouched (see the message above)" >&2
     exit 1
 fi
+echo "=== 1b. INT_INTF_R_PCIE4 tiles 002 left unaddressed ==="
+# 385 of 480 have no window, and they are not bitless: OUTPUTS_ENABLED lives
+# there, and without it nothing enters the fabric through the tile (an ICAPE3
+# read all-zero). INT's window shifted one column; refused unless it predicts
+# every solved tile.
+if python3 "$R/tools/fill_int_intf_tilegrid.py" "$TG" -o "$TG.intf"; then
+    [ -s "$TG.intf" ] && mv "$TG.intf" "$TG" && echo "  INT_INTF fill applied to $TG"
+else
+    rm -f "$TG.intf"
+    echo "  INT_INTF fill REFUSED -- tilegrid left untouched" >&2
+    exit 1
+fi
+echo "=== 1c. hand-derived windows (db-corrections/$URAY_DATABASE/tilegrid.windows) ==="
+WIN="$R/db-corrections/$URAY_DATABASE/tilegrid.windows"
+if [ -f "$WIN" ]; then
+    python3 "$R/tools/fill_tilegrid_windows.py" "$TG" "$WIN" -o "$TG.win" && mv "$TG.win" "$TG" || {
+        rm -f "$TG.win"; echo "  window fill REFUSED" >&2; exit 1; }
+fi
 # Record what we produced, so the next run can tell our output from a fresh
 # push. Only on the path where both fills succeeded: stamping a partial result
 # would stop the next run refreshing .orig from a genuinely new push.

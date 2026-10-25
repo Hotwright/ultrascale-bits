@@ -1,0 +1,12 @@
+# Frame windows 002-tilegrid cannot produce, one tile per line:
+#   <tile> <baseaddr> <frames> <offset> <words>   (offset/words in halfwords)
+# Applied by tools/fill_tilegrid_windows.py from env/finish_tilegrid.sh.
+#
+# CFG_CONFIG_X35Y120 (CONFIG_SITE: ICAP, STARTUP, BSCAN...). Frame column
+# 0x6C sits between INT_INTF_R_PCIE4_X34 (0x6B) and INT_X35 (0x6E) and has 10
+# minors in every row (counted in Vivado's own bitstreams). The tile spans its
+# whole 60-row clock region (row field 2), so the window is the whole frame.
+# designs/kv260_cfg_char icap vs base: Vivado's ICAPE3 sets 00_1892 01_1891
+# 01_1892 here and nothing else in the column's row 2, and on the board an
+# ICAPE3 reads all-zero without exactly those bits (kv260_icap_idcode).
+CFG_CONFIG_X35Y120 0x00086C00 10 0 186

@@ -1,0 +1,13 @@
+# INT_INTF_R_PCIE4: the interface between the INT column and a PCIE4 /
+# CFG / HDIO column. prjuray-db has no segbits for it at all (002 never fuzzed
+# its pips, see SCOPE-K26.md).
+#
+# OUTPUTS_ENABLED gates the site -> fabric direction (LOGIC_OUTS_R -> _L).
+# With it clear nothing that enters the fabric through this tile gets there:
+# kv260_icap_idcode read the ICAPE3 as all-zero. Vivado sets exactly these
+# three bits on the two tiles whose LOGIC_OUTS its ICAP outputs use
+# (INT_INTF_R_PCIE4_X34Y175/176, designs/kv260_cfg_char icap vs base), and
+# not on X34Y174, which carries only ICAP inputs. They are the same bits as
+# prjuray's solved INT_INTF_LEFT_TERM_PSS.OUTPUTS_ENABLED.1 (named without the
+# .1 here: a FASM feature segment cannot start with a digit).
+INT_INTF_R_PCIE4.OUTPUTS_ENABLED add-feature 01_21 02_27 03_24

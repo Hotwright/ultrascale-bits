@@ -19,6 +19,9 @@
 # Usage: env/kv260_jtag_load.sh <file.bit>
 #   KV260_CABLE  cable serial glob   (default XFL11V5BMUH4*)
 #   XSDB_BAT     Windows xsdb        (default the 2024.2 install)
+#   KV260_ICAP=1 hand the configuration port to the PL's ICAP afterwards:
+#                CSU pcap_ctrl.PCAP_PR (0xFFCA3008 bit 0) resets to 1, the
+#                PCAP, and while it is set an ICAPE3 gets no answer.
 set -euo pipefail
 BIT="${1:?usage: env/kv260_jtag_load.sh <file.bit>}"
 [ -f "$BIT" ] || { echo "no such file: $BIT" >&2; exit 1; }
@@ -46,5 +49,11 @@ for {set i 0} {\$i < 100} {incr i} { if {([mrd -force -value 0xFFD80110] & 0x008
 if {\$i == 100} { error "PMU did not service the PL power-up request" }
 puts "PL power-up request serviced (polls=\$i)"
 EOF
+if [ "${KV260_ICAP:-0}" = 1 ]; then cat >> "$TCL" <<EOF
+puts [format "pcap_ctrl was 0x%08x" [mrd -force -value 0xFFCA3008]]
+mwr -force 0xFFCA3008 0
+puts [format "pcap_ctrl now 0x%08x (ICAP selected)" [mrd -force -value 0xFFCA3008]]
+EOF
+fi
 cd /mnt/c && cmd.exe /c "$XSDB $(wslpath -w "$TCL")" 2>&1 | tr -d '\r' \
     | grep -vE '^\s*$|hw_server|Copyright|Build date|Ctrl-C|url: TCP|cygwin'
