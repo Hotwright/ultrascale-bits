@@ -1,0 +1,33 @@
+# Corrections to prjuray-db's segbits_int.db. prjuray-db is READ ONLY; these
+# are applied into the overlay by tools/apply_db_corrections.py.
+#
+# Format: <feature key> drop-bit <bit>   (the bit as spelled in the db, "!" included)
+#
+# 21_35 is not part of the CTRL_W5 mux. prjuray puts it in all nine CTRL_W5
+# choices (positive in VCC_WIRE, negated in the eight INT_NODE_GLOBAL ones),
+# and also, positive, in INT_NODE_SDQ_80_INT_OUT1.LOGIC_OUTS_W22. It belongs
+# to the latter. Evidence:
+#
+#  * Vivado (designs/kv260_bram_char/reference, 234 INT tiles that use CTRL_W5
+#    or SDQ_80): 21_35 is set in exactly the 6 tiles where SDQ_80 is driven
+#    from LOGIC_OUTS_W22, and clear in all 228 others.
+#  * Vivado ties unused CTRL_W* to VCC, and its decode shows CTRL_W<n>.VCC_WIRE
+#    in every INT tile for every n except 5. With 21_35 in the encoding,
+#    VCC on CTRL_W5 can never decode.
+#  * The sibling muxes CTRL_W4 and CTRL_W6 are eight bits, with VCC_WIRE all
+#    clear. Dropping 21_35 gives CTRL_W5 the same shape.
+#
+# Found when nextpnr routed CTRL_W5 from GLOBAL_0 and SDQ_80 from LOGIC_OUTS_W22
+# in one tile (INT_X7Y149, designs/kv260_bram_rom): fasm2bit refused the pair as
+# inconsistent. Worse, with the uncorrected db, tying CTRL_W5 to VCC would also
+# switch SDQ_80 onto LOGIC_OUTS_W22.
+
+INT.PIP.CTRL_W5.VCC_WIRE drop-bit 21_35
+INT.PIP.CTRL_W5.INT_NODE_GLOBAL_0_INT_OUT1 drop-bit !21_35
+INT.PIP.CTRL_W5.INT_NODE_GLOBAL_1_INT_OUT0 drop-bit !21_35
+INT.PIP.CTRL_W5.INT_NODE_GLOBAL_3_INT_OUT1 drop-bit !21_35
+INT.PIP.CTRL_W5.INT_NODE_GLOBAL_5_INT_OUT1 drop-bit !21_35
+INT.PIP.CTRL_W5.INT_NODE_GLOBAL_6_INT_OUT0 drop-bit !21_35
+INT.PIP.CTRL_W5.INT_NODE_GLOBAL_8_INT_OUT0 drop-bit !21_35
+INT.PIP.CTRL_W5.INT_NODE_GLOBAL_10_INT_OUT1 drop-bit !21_35
+INT.PIP.CTRL_W5.INT_NODE_GLOBAL_14_INT_OUT0 drop-bit !21_35
