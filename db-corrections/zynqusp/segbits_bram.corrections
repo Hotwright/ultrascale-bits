@@ -1,0 +1,114 @@
+# Additions to prjuray-db's segbits_bram.db (the BRAM tile's CLB_IO_CLK
+# frames). prjuray-db is the reference and is READ ONLY; these are applied by
+# tools/apply_db_corrections.py into the writable overlay at prjuray/database/.
+#
+# Format: <feature key> add-feature <bit>...
+# The applier FAILS if the reference already has the feature, so an upstream
+# fix is caught rather than shadowed.
+#
+# prjuray never solved BRAM port widths, the RSTREGB inverter or the bits a
+# BRAM sets just by being used, so a bitstream built from the reference alone
+# leaves every BRAM at its power-on width with its clock/control columns off.
+#
+# Evidence: designs/kv260_bram_char (Vivado 2024.2.2, xck26-sfvc784-2LV-c).
+# 84 BRAMs, one per tile in BRAM_X19/X33, each LOC'd and differing from a
+# baseline in exactly one parameter; analyze_char.py diffs every tile against
+# its baseline (L/U/36 baselines are each built twice and are bit-stable).
+# Cross-checked on designs/kv260_bram_spec (four mixed-width BRAMs): every
+# unknown bit in those tiles is explained by the features below.
+#
+#  * IN_USE: four bits in frame 5 per half (05_103/05_125 shared). 05_128 is
+#    set only by a RAMB36 (not by two RAMB18s in one tile). Identical in every
+#    variant of a given kind, whatever the parameters.
+#  * ROW<k>.OUTPUTS_ENABLED: three bits per INT row (1_21+48k, 2_27+48k,
+#    3_24+48k), set iff some BRAM output pin leaves through that row. In
+#    kv260_bram_spec the rows Vivado sets are exactly the rows our routing
+#    takes outputs through (the INT_INTF_L_X19Y<row> LOGIC_OUTS crossings):
+#    {0-4}, {0-4} and {0-3}; one output in a row is enough. The RAMB36 at
+#    Y160 drives no output from row 4 but has nine of its inputs in that row,
+#    and the bits stay clear, so inputs do not set them. (In the char design
+#    every output is used, which is why a lone lower/upper RAMB18 there sets
+#    rows 0-2 / 2-4.)
+#  * Port width: a 3-bit code per half and port, 1=000 2=b0 4=b1 9=b0+b1
+#    18=b2 (18 is also the default). A RAMB36 port of width W puts the code
+#    for W/2 in both halves; W=1 and W=9 additionally set a per-port flag
+#    (READ_A 04_136, WRITE_A 04_127, READ_B 04_135, WRITE_B 04_134).
+#  * RSTREGBINV: the IS_RSTREGB_INVERTED variants set exactly 04_84 (L) /
+#    04_149 (U); the SDP variants set the same bits.
+
+# --- in-use bits: set whenever the half (or the RAMB36) is placed ---
+BRAM.RAMB18E2_L.IN_USE add-feature 05_82 05_85 05_103 05_125
+BRAM.RAMB18E2_U.IN_USE add-feature 05_103 05_125 05_169 05_172
+BRAM.RAMB36E2.IN_USE add-feature 05_82 05_85 05_103 05_125 05_128 05_169 05_172
+
+# --- output enables, one per INT row of the tile (row k = the INT/INT_INTF
+# tile k rows above the BRAM tile's own Y) ---
+BRAM.ROW0.OUTPUTS_ENABLED add-feature 01_21 02_27 03_24
+BRAM.ROW1.OUTPUTS_ENABLED add-feature 01_69 02_75 03_72
+BRAM.ROW2.OUTPUTS_ENABLED add-feature 01_117 02_123 03_120
+BRAM.ROW3.OUTPUTS_ENABLED add-feature 01_165 02_171 03_168
+BRAM.ROW4.OUTPUTS_ENABLED add-feature 01_213 02_219 03_216
+
+# --- RSTREGB inverter (Vivado also sets it in SDP mode) ---
+BRAM.RAMB18E2_L.RSTREGBINV.V1 add-feature 04_84
+BRAM.RAMB18E2_U.RSTREGBINV.V1 add-feature 04_149
+BRAM.RAMB36E2.RSTREGBINV.V1 add-feature 04_84 04_149
+
+# --- RAMB18E2 port widths. Width 1 has no bits; 36 (SDP) is W18 plus the
+# reference READ_WIDTH_A.36 / WRITE_WIDTH_B.36 ---
+BRAM.RAMB18E2_L.READ_WIDTH_A.W2 add-feature 05_34
+BRAM.RAMB18E2_L.READ_WIDTH_A.W4 add-feature 05_37
+BRAM.RAMB18E2_L.READ_WIDTH_A.W9 add-feature 05_34 05_37
+BRAM.RAMB18E2_L.READ_WIDTH_A.W18 add-feature 05_40
+BRAM.RAMB18E2_L.WRITE_WIDTH_A.W2 add-feature 04_42
+BRAM.RAMB18E2_L.WRITE_WIDTH_A.W4 add-feature 04_43
+BRAM.RAMB18E2_L.WRITE_WIDTH_A.W9 add-feature 04_42 04_43
+BRAM.RAMB18E2_L.WRITE_WIDTH_A.W18 add-feature 04_44
+BRAM.RAMB18E2_L.READ_WIDTH_B.W2 add-feature 05_31
+BRAM.RAMB18E2_L.READ_WIDTH_B.W4 add-feature 05_28
+BRAM.RAMB18E2_L.READ_WIDTH_B.W9 add-feature 05_31 05_28
+BRAM.RAMB18E2_L.READ_WIDTH_B.W18 add-feature 05_25
+BRAM.RAMB18E2_L.WRITE_WIDTH_B.W2 add-feature 04_45
+BRAM.RAMB18E2_L.WRITE_WIDTH_B.W4 add-feature 04_46
+BRAM.RAMB18E2_L.WRITE_WIDTH_B.W9 add-feature 04_45 04_46
+BRAM.RAMB18E2_L.WRITE_WIDTH_B.W18 add-feature 04_47
+BRAM.RAMB18E2_U.READ_WIDTH_A.W2 add-feature 04_221
+BRAM.RAMB18E2_U.READ_WIDTH_A.W4 add-feature 04_220
+BRAM.RAMB18E2_U.READ_WIDTH_A.W9 add-feature 04_221 04_220
+BRAM.RAMB18E2_U.READ_WIDTH_A.W18 add-feature 04_219
+BRAM.RAMB18E2_U.WRITE_WIDTH_A.W2 add-feature 04_205
+BRAM.RAMB18E2_U.WRITE_WIDTH_A.W4 add-feature 04_204
+BRAM.RAMB18E2_U.WRITE_WIDTH_A.W9 add-feature 04_205 04_204
+BRAM.RAMB18E2_U.WRITE_WIDTH_A.W18 add-feature 04_202
+BRAM.RAMB18E2_U.READ_WIDTH_B.W2 add-feature 04_218
+BRAM.RAMB18E2_U.READ_WIDTH_B.W4 add-feature 04_214
+BRAM.RAMB18E2_U.READ_WIDTH_B.W9 add-feature 04_218 04_214
+BRAM.RAMB18E2_U.READ_WIDTH_B.W18 add-feature 04_211
+BRAM.RAMB18E2_U.WRITE_WIDTH_B.W2 add-feature 04_197
+BRAM.RAMB18E2_U.WRITE_WIDTH_B.W4 add-feature 04_196
+BRAM.RAMB18E2_U.WRITE_WIDTH_B.W9 add-feature 04_197 04_196
+BRAM.RAMB18E2_U.WRITE_WIDTH_B.W18 add-feature 04_194
+
+# --- RAMB36E2 port widths: each half carries the 18K code for W/2, and
+# widths 1 and 9 add a per-port flag; W2 has no bits. 72 (SDP) is W36 plus both halves'
+# READ_WIDTH_A.36 / WRITE_WIDTH_B.36 ---
+BRAM.RAMB36E2.READ_WIDTH_A.W1 add-feature 04_136
+BRAM.RAMB36E2.READ_WIDTH_A.W4 add-feature 04_221 05_34
+BRAM.RAMB36E2.READ_WIDTH_A.W9 add-feature 04_136 04_220 05_37
+BRAM.RAMB36E2.READ_WIDTH_A.W18 add-feature 04_220 04_221 05_34 05_37
+BRAM.RAMB36E2.READ_WIDTH_A.W36 add-feature 04_219 05_40
+BRAM.RAMB36E2.WRITE_WIDTH_A.W1 add-feature 04_127
+BRAM.RAMB36E2.WRITE_WIDTH_A.W4 add-feature 04_42 04_205
+BRAM.RAMB36E2.WRITE_WIDTH_A.W9 add-feature 04_43 04_127 04_204
+BRAM.RAMB36E2.WRITE_WIDTH_A.W18 add-feature 04_42 04_43 04_204 04_205
+BRAM.RAMB36E2.WRITE_WIDTH_A.W36 add-feature 04_44 04_202
+BRAM.RAMB36E2.READ_WIDTH_B.W1 add-feature 04_135
+BRAM.RAMB36E2.READ_WIDTH_B.W4 add-feature 04_218 05_31
+BRAM.RAMB36E2.READ_WIDTH_B.W9 add-feature 04_135 04_214 05_28
+BRAM.RAMB36E2.READ_WIDTH_B.W18 add-feature 04_214 04_218 05_28 05_31
+BRAM.RAMB36E2.READ_WIDTH_B.W36 add-feature 04_211 05_25
+BRAM.RAMB36E2.WRITE_WIDTH_B.W1 add-feature 04_134
+BRAM.RAMB36E2.WRITE_WIDTH_B.W4 add-feature 04_45 04_197
+BRAM.RAMB36E2.WRITE_WIDTH_B.W9 add-feature 04_46 04_134 04_196
+BRAM.RAMB36E2.WRITE_WIDTH_B.W18 add-feature 04_45 04_46 04_196 04_197
+BRAM.RAMB36E2.WRITE_WIDTH_B.W36 add-feature 04_47 04_194

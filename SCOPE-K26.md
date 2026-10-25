@@ -1123,7 +1123,7 @@ Load with `env/kv260_jtag_load.sh`. The bitstreams come from
 `designs/make_bitstream.sh` run on the filtered FASM.
 
 Not ported yet, and rejected by the packer rather than mis-packed:
-BRAM/URAM, DSP, MMCM/PLL, differential IO, IOLOGIC. Series-7 output is
+URAM, the BRAM FIFOs and cascades, DSP, MMCM/PLL, differential IO, IOLOGIC. Series-7 output is
 unchanged: the xc7z010 bba is byte-identical, and a counter design gives
 byte-identical FASM.
 
@@ -1148,3 +1148,41 @@ features.
   leaves AX free.
 - Yosys 0.33 still emits CARRY4 for `-family xcup`; the packer splits both
   CARRY4 and CARRY8.
+
+### Block RAM (RAMB18E2 / RAMB36E2): matches Vivado bit for bit
+
+prjuray never solved most of the BRAM tile: no port widths, no RSTREGB
+inverter, and none of the bits a BRAM sets just by being used. Those were
+characterised against Vivado in `designs/kv260_bram_char` (84 BRAMs, one
+parameter changed per tile, `analyze_char.py`) and are added to the overlay by
+`db-corrections/zynqusp/segbits_bram.corrections`, using a new `add-feature`
+op in `tools/apply_db_corrections.py`. prjuray-db is untouched.
+`tools/check_fasm_vs_uraydb.py` now checks against the overlay, so the added
+features count as known.
+
+- **Port width**: a 3-bit code per half and port. A RAMB36 puts the code for
+  W/2 in both halves, plus a per-port flag at widths 1 and 9. SDP (36 on a
+  RAMB18, 72 on a RAMB36) adds prjuray's own `.36`/`.72` features.
+- **IN_USE**: four frame-5 bits per half; 05_128 only for a RAMB36.
+- **ROW<k>.OUTPUTS_ENABLED**: three bits per INT row, set iff a BRAM output
+  leaves through that row (the `INT_INTF_L_X<x>Y<y+k>` LOGIC_OUTS crossing,
+  which itself has no frames). Inputs in a row do not set it.
+- **INIT_A/B, SRVAL_A/B**: identity on a RAMB18 except at width 9
+  ({P1,D15..8,P0,D7..0}). On a RAMB36, normalise to {P3..P0,D31..D0}, then data
+  bit d goes to half d%2 and parity bit k to half k%2. RAMB36 at widths
+  1/2/4 is not characterised, so the writer refuses a nonzero value there.
+- **INIT/INITP contents**: a RAMB36 interleaves its halves bit by bit, as on
+  Series 7.
+- Every tied-0 invertible control pin, RSTREGB included, becomes VCC plus the
+  inverter, as Vivado does. CLOCK_DOMAINS is COMMON only when both clocks are
+  on one net (a RAMB36 splits each clock into L/U bel pins).
+
+`designs/kv260_bram_spec` has four LOC'd BRAMs of mixed widths. Against
+Vivado's bitstream, the CLB_IO_CLK window of all three tiles is bit-identical,
+and all 432 INIT/INITP vectors decode identically. (The `.frames` file that
+`reference_build.sh` writes has empty BLOCK_RAM frames, so contents are
+compared via the decoded FASM.) A width-0 (unused) port on a RAMB36 is written
+as W36. That is assumed, not characterised, and is harmless for an unused port.
+
+`designs/kv260_bram_rom` is the board test: a yosys-inferred 4096 x 8 ROM in
+one RAMB36E2 at read width 9.

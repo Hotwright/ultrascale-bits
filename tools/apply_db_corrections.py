@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 """Apply db-corrections/ to the writable prjuray database overlay.
 
+Two ops: `drop-bit` removes a mis-solved bit from a feature, and `add-feature`
+appends a feature the reference never solved (characterised against Vivado,
+with the evidence in the .corrections file).
+
 prjuray-db is the reference we validate against and is READ ONLY. When a
 fuzzer has demonstrably mis-solved a bit, the correction lives here as data --
 with its evidence in the .corrections file -- and is applied into
@@ -21,16 +25,20 @@ ROOT = os.path.dirname(HERE)
 
 
 def read_rules(path):
-    rules = []
+    rules, adds = [], []
     for n, line in enumerate(open(path), 1):
         line = line.split("#")[0].strip()
         if not line:
             continue
         parts = line.split()
-        if len(parts) != 3 or parts[1] != "drop-bit":
-            sys.exit("%s:%d: expected '<feature> drop-bit <bit>', got %r" % (path, n, line))
-        rules.append((parts[0], parts[2]))
-    return rules
+        if len(parts) == 3 and parts[1] == "drop-bit":
+            rules.append((parts[0], parts[2]))
+        elif len(parts) >= 3 and parts[1] == "add-feature":
+            adds.append((parts[0], parts[2:]))
+        else:
+            sys.exit("%s:%d: expected '<feature> drop-bit <bit>' or "
+                     "'<feature> add-feature <bit>...', got %r" % (path, n, line))
+    return rules, adds
 
 
 def main():
@@ -55,11 +63,16 @@ def main():
         dst = os.path.join(args.overlay, family, dbname)
         if not os.path.exists(src):
             sys.exit("apply_db_corrections: no reference %s" % src)
-        rules = read_rules(cf)
+        rules, adds = read_rules(cf)
 
         out, applied = [], {k: 0 for k in rules}
+        new_features = {f for f, _ in adds}
         for line in open(src):
             p = line.split()
+            if p and p[0] in new_features:
+                sys.exit("apply_db_corrections: %s already has %s -- the reference now solves it, "
+                         "re-check the correction against the reference before removing it"
+                         % (dbname, p[0]))
             if p:
                 for feature, bit in rules:
                     if p[0] == feature and bit in p[1:]:
@@ -74,9 +87,13 @@ def main():
                          "stale, re-check it against the reference before removing it"
                          % (dbname, bit, feature))
             total += n
+        for feature, bits in adds:
+            out.append(" ".join([feature] + bits) + "\n")
+        total += len(adds)
+        n_applied = sum(applied.values()) + len(adds)
 
         if args.check:
-            print("  %s: %d correction(s) would apply" % (dbname, sum(applied.values())))
+            print("  %s: %d correction(s) would apply" % (dbname, n_applied))
             continue
         # Never write through the symlink: that is the read-only reference.
         if os.path.islink(dst) or os.path.exists(dst):
@@ -86,7 +103,7 @@ def main():
         real = os.path.realpath(dst)
         if real.startswith(os.path.realpath(args.reference) + os.sep):
             sys.exit("apply_db_corrections: REFUSING -- %s resolves into the reference" % dst)
-        print("  %s: %d correction(s) applied" % (dbname, sum(applied.values())))
+        print("  %s: %d correction(s) applied" % (dbname, n_applied))
     print("  %d bit correction(s) total" % total)
 
 

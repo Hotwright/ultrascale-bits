@@ -18,9 +18,13 @@
 # NOTE what this proves: emitted features are a SUBSET of what prjuray knows. It
 # cannot see a feature we FAIL to write.
 #
+# The db is the overlay prjuray/database/ (the reference plus db-corrections/),
+# the same one fasm2bit.py assembles from, so a feature added by a correction
+# counts as known.
+#
 # Usage: python3 tools/check_fasm_vs_uraydb.py <file.fasm> [--filter out.fasm]
 import re, sys, os, json, collections
-DB=os.environ.get('URAY_DB', os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'prjuray-db', 'zynqusp'))
+DB=os.environ.get('URAY_DB', os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'prjuray', 'database', 'zynqusp'))
 # Build: tile_type -> set of known feature names (with [i] normalised)
 known=collections.defaultdict(set)
 for fn in os.listdir(DB):

@@ -11,7 +11,10 @@ set -u
 R="$( cd -P "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd )"
 D="${1:-$R/designs/kv260_ps_blink}"
 D="$( cd "$D" && pwd )"
-source "$R/env/uray_env.sh" zynq_usp_5ev || exit 1
+# Assembly needs no Vivado. uray_env.sh only runs it for a version banner,
+# and with an unlicensed install that opens a license-manager window and
+# blocks forever, so hand it a no-op launcher.
+URAY_VIVADO="${URAY_VIVADO:-true}" source "$R/env/uray_env.sh" zynq_usp_5ev || exit 1
 . "$R/prjuray/env/bin/activate"
 export PYTHONPATH="$R/prjuray:${PYTHONPATH:-}"
 

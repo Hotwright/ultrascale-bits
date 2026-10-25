@@ -87,6 +87,8 @@ def main():
     ap.add_argument("--tile", action="append", default=[], required=True,
                     help="tile instance to compare; repeatable")
     ap.add_argument("--segbits", help="a segbits_<type>.db to name the differing bits")
+    ap.add_argument("--window", default="CLB_IO_CLK",
+                    help="which of the tile's frame windows to compare (BLOCK_RAM for BRAM contents)")
     args = ap.parse_args()
 
     tg = json.load(open(args.tilegrid))
@@ -110,7 +112,7 @@ def main():
             print("  %s: not in the tilegrid" % name)
             bad += 1
             continue
-        bits = entry.get("bits", {}).get("CLB_IO_CLK")
+        bits = entry.get("bits", {}).get(args.window)
         if not bits or "baseaddr" not in bits:
             print("  %s: no frame window -- cannot compare" % name)
             bad += 1
