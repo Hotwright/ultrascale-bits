@@ -1276,7 +1276,7 @@ baseline (base and base2 agree: none):
 | --- | --- | --- |
 | ICAP_TOP | 00_1892 01_1891 01_1892 | IDCODE read (kv260_icap_idcode) |
 | ICAP_BOT (BEL property; `(* BEL *)` is ignored) | 00_1893 00_1894 01_1893 | |
-| STARTUP | 00_1908 00_1909 01_1908 | CFGMCLK counted (kv260_startup) |
+| STARTUP | 00_1908 00_1909 01_1908 | CFGMCLK counted, EOS high (kv260_startup, board) |
 | STARTUP PROG_USR=TRUE | + 00_1902 00_1903 01_1902 | |
 | BSCAN1 / 2 / 3 / 4 | 01_1909 / 00_1910 / 01_1910 / 00_1911 | |
 | DNA_PORT | 00_1890 00_1891 01_1890 | same LEDs as Vivado's build (kv260_dna) |
