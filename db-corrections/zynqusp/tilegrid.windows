@@ -10,3 +10,21 @@
 # 01_1892 here and nothing else in the column's row 2, and on the board an
 # ICAPE3 reads all-zero without exactly those bits (kv260_icap_idcode).
 CFG_CONFIG_X35Y120 0x00086C00 10 0 186
+
+# CMT_L (MMCM, PLLs, BUFGCE/BUFGCTRL/BUFGCE_DIV). 002 found only the clock
+# row (offset 84, 10 halfwords); the tile spans its 60-row region, and the
+# column 0x33 has 12 minors in every row. designs/kv260_cmt_char: Vivado's
+# MMCME4 at MMCM_X0Y0 sets halfwords 84-171 of the column's row 0, its PLLE4 at
+# PLL_X0Y5 halfwords 42-83 of row 2, a BUFGCE 92-99. So the window is the whole
+# frame; segbits_cmt_l.corrections counts from halfword 0 (2026-10-26).
+CMT_L_X16Y0   0x00003300 12 0 186 widens
+CMT_L_X16Y60  0x00043300 12 0 186 widens
+CMT_L_X16Y120 0x00083300 12 0 186 widens
+CMT_L_X16Y180 0x000C3300 12 0 186 widens
+# RCLK_RCLK_XIPHY_INNER_FT: frame column 0x32 (4 minors), the clock row like
+# every RCLK tile. MMCM, PLL and BUFGCE specimens all change 1518/1519/1532
+# there (minors 2-3), and Vivado's PS-clock baseline sets 1518.
+RCLK_RCLK_XIPHY_INNER_FT_X16Y29  0x00003200 4 93 3
+RCLK_RCLK_XIPHY_INNER_FT_X16Y89  0x00043200 4 93 3
+RCLK_RCLK_XIPHY_INNER_FT_X16Y149 0x00083200 4 93 3
+RCLK_RCLK_XIPHY_INNER_FT_X16Y209 0x000C3200 4 93 3

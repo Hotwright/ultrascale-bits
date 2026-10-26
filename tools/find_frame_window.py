@@ -63,11 +63,11 @@ def windows(grid):
     return out
 
 
-def owner(win, addr, word):
+def owner(win, addr, half):
     col = addr & ~0xFF
     minor = addr & 0xFF
     for frames, off, words, t in win.get(col, ()):
-        if minor < frames and off <= word < off + words:
+        if minor < frames and off <= half < off + words:
             return t
     return None
 
@@ -93,13 +93,22 @@ def main():
             x = ecc_mask(w, va ^ vb)
             if not x:
                 continue
-            t = owner(win, addr, w)
-            if t:
-                claimed[t] += bin(x).count("1")
-                if args.all:
-                    print("  %08x %s  w%-3d %08x  %s" % (addr, far(addr), w, x, t))
-            else:
-                unclaimed[addr & ~0xFF].append((addr & 0xFF, w, x, va, vb))
+            # Tilegrid offsets and sizes count 16-bit halfwords (186 per
+            # frame); attribute each half of the 32-bit word separately.
+            rest = 0
+            for h in (0, 1):
+                hx = x & (0xFFFF << (16 * h))
+                if not hx:
+                    continue
+                t = owner(win, addr, 2 * w + h)
+                if t:
+                    claimed[t] += bin(hx).count("1")
+                    if args.all:
+                        print("  %08x %s  w%-3d %08x  %s" % (addr, far(addr), w, hx, t))
+                else:
+                    rest |= hx
+            if rest:
+                unclaimed[addr & ~0xFF].append((addr & 0xFF, w, rest, va, vb))
     for t, n in sorted(claimed.items()):
         print("claimed  %-28s %d bit(s)" % (t, n))
     for col, rows in sorted(unclaimed.items()):

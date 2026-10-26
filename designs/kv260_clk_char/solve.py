@@ -62,6 +62,8 @@ def main():
     ap.add_argument("build", nargs="?", default=os.path.join(HERE, "build"))
     ap.add_argument("--types", default="CMT_L,RCLK_CLEM_CLKBUF_L")
     ap.add_argument("--json", help="write the solution here")
+    ap.add_argument("--features", default="design.features",
+                    help="per-specimen feature file name (kv260_cmt_char writes design.nfeatures)")
     args = ap.parse_args()
     types = args.types.split(",")
     grid = json.load(open(os.path.join(PART_DIR, "tilegrid.json")))
@@ -71,11 +73,11 @@ def main():
     # instances[type] = [(specimen, tile, {features}, {bits})]
     instances = collections.defaultdict(list)
     specs = sorted(s for s in glob.glob(os.path.join(args.build, "specimen_*"))
-                   if os.path.getsize(os.path.join(s, "design.features")
-                                      if os.path.exists(os.path.join(s, "design.features")) else os.devnull))
+                   if os.path.getsize(os.path.join(s, args.features)
+                                      if os.path.exists(os.path.join(s, args.features)) else os.devnull))
     for spec in specs:
         feats = collections.defaultdict(set)
-        for line in open(os.path.join(spec, "design.features")):
+        for line in open(os.path.join(spec, args.features)):
             tile, _, feat = line.strip().partition(".")
             feats[tile].add(feat)
         frames = frames_of(spec)
