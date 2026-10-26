@@ -1,0 +1,3304 @@
+{
+ "MMCM": {
+  "CLKFBOUT.DELAY_TIME[0]": [
+   "bit",
+   "02_1928",
+   160
+  ],
+  "CLKFBOUT.DELAY_TIME[1]": [
+   "bit",
+   "03_1928",
+   160
+  ],
+  "CLKFBOUT.DELAY_TIME[2]": [
+   "bit",
+   "02_1929",
+   160
+  ],
+  "CLKFBOUT.DELAY_TIME[3]": [
+   "bit",
+   "03_1929",
+   160
+  ],
+  "CLKFBOUT.DELAY_TIME[4]": [
+   "bit",
+   "02_1930",
+   160
+  ],
+  "CLKFBOUT.DELAY_TIME[5]": [
+   "bit",
+   "03_1930",
+   160
+  ],
+  "CLKFBOUT.EDGE[0]": [
+   "bit",
+   "03_1931",
+   160
+  ],
+  "CLKFBOUT.FRAC[0]": [
+   "bit",
+   "02_1934",
+   160
+  ],
+  "CLKFBOUT.FRAC[1]": [
+   "bit",
+   "03_1934",
+   160
+  ],
+  "CLKFBOUT.FRAC[2]": [
+   "bit",
+   "02_1935",
+   160
+  ],
+  "CLKFBOUT.FRAC_EN[0]": [
+   "bit",
+   "03_1933",
+   160
+  ],
+  "CLKFBOUT.FRAC_WF_R[0]": [
+   "bit",
+   "02_1933",
+   160
+  ],
+  "CLKFBOUT.HIGH_TIME[0]": [
+   "bit",
+   "02_1923",
+   160
+  ],
+  "CLKFBOUT.HIGH_TIME[1]": [
+   "bit",
+   "03_1923",
+   160
+  ],
+  "CLKFBOUT.HIGH_TIME[2]": [
+   "bit",
+   "02_1924",
+   160
+  ],
+  "CLKFBOUT.HIGH_TIME[3]": [
+   "bit",
+   "03_1924",
+   160
+  ],
+  "CLKFBOUT.HIGH_TIME[4]": [
+   "bit",
+   "02_1925",
+   160
+  ],
+  "CLKFBOUT.HIGH_TIME[5]": [
+   "bit",
+   "03_1925",
+   160
+  ],
+  "CLKFBOUT.LOW_TIME[0]": [
+   "bit",
+   "02_1920",
+   160
+  ],
+  "CLKFBOUT.LOW_TIME[1]": [
+   "bit",
+   "03_1920",
+   160
+  ],
+  "CLKFBOUT.LOW_TIME[2]": [
+   "bit",
+   "02_1921",
+   160
+  ],
+  "CLKFBOUT.LOW_TIME[3]": [
+   "bit",
+   "03_1921",
+   160
+  ],
+  "CLKFBOUT.LOW_TIME[4]": [
+   "bit",
+   "02_1922",
+   160
+  ],
+  "CLKFBOUT.LOW_TIME[5]": [
+   "bit",
+   "03_1922",
+   160
+  ],
+  "CLKFBOUT.MX[0]": [
+   "const",
+   0,
+   160
+  ],
+  "CLKFBOUT.MX[1]": [
+   "const",
+   0,
+   160
+  ],
+  "CLKFBOUT.NO_COUNT[0]": [
+   "const",
+   0,
+   160
+  ],
+  "CLKFBOUT.PHASE_MUX[0]": [
+   "bit",
+   "03_1926",
+   160
+  ],
+  "CLKFBOUT.PHASE_MUX[1]": [
+   "bit",
+   "02_1927",
+   160
+  ],
+  "CLKFBOUT.PHASE_MUX[2]": [
+   "bit",
+   "03_1927",
+   160
+  ],
+  "CLKFBOUT.REG1_RESERVED[0]": [
+   "const",
+   0,
+   160
+  ],
+  "CLKFBOUT.REG2_RESERVED[0]": [
+   "const",
+   0,
+   160
+  ],
+  "CLKOUT0.DELAY_TIME[0]": [
+   "bit",
+   "00_1896",
+   136
+  ],
+  "CLKOUT0.DELAY_TIME[1]": [
+   "bit",
+   "01_1896",
+   136
+  ],
+  "CLKOUT0.DELAY_TIME[2]": [
+   "bit",
+   "00_1897",
+   136
+  ],
+  "CLKOUT0.DELAY_TIME[3]": [
+   "bit",
+   "01_1897",
+   136
+  ],
+  "CLKOUT0.DELAY_TIME[4]": [
+   "bit",
+   "00_1898",
+   136
+  ],
+  "CLKOUT0.DELAY_TIME[5]": [
+   "bit",
+   "01_1898",
+   136
+  ],
+  "CLKOUT0.EDGE[0]": [
+   "bit",
+   "01_1899",
+   136
+  ],
+  "CLKOUT0.FRAC[0]": [
+   "bit",
+   "00_1902",
+   136
+  ],
+  "CLKOUT0.FRAC[1]": [
+   "bit",
+   "01_1902",
+   136
+  ],
+  "CLKOUT0.FRAC[2]": [
+   "bit",
+   "00_1903",
+   136
+  ],
+  "CLKOUT0.FRAC_EN[0]": [
+   "bit",
+   "01_1901",
+   136
+  ],
+  "CLKOUT0.FRAC_WF_R[0]": [
+   "bit",
+   "00_1901",
+   136
+  ],
+  "CLKOUT0.HIGH_TIME[0]": [
+   "bit",
+   "00_1891",
+   136
+  ],
+  "CLKOUT0.HIGH_TIME[1]": [
+   "bit",
+   "01_1891",
+   136
+  ],
+  "CLKOUT0.HIGH_TIME[2]": [
+   "bit",
+   "00_1892",
+   136
+  ],
+  "CLKOUT0.HIGH_TIME[3]": [
+   "bit",
+   "01_1892",
+   136
+  ],
+  "CLKOUT0.HIGH_TIME[4]": [
+   "bit",
+   "00_1893",
+   136
+  ],
+  "CLKOUT0.HIGH_TIME[5]": [
+   "bit",
+   "01_1893",
+   136
+  ],
+  "CLKOUT0.LOW_TIME[0]": [
+   "bit",
+   "00_1888",
+   136
+  ],
+  "CLKOUT0.LOW_TIME[1]": [
+   "bit",
+   "01_1888",
+   136
+  ],
+  "CLKOUT0.LOW_TIME[2]": [
+   "bit",
+   "00_1889",
+   136
+  ],
+  "CLKOUT0.LOW_TIME[3]": [
+   "bit",
+   "01_1889",
+   136
+  ],
+  "CLKOUT0.LOW_TIME[4]": [
+   "bit",
+   "00_1890",
+   136
+  ],
+  "CLKOUT0.LOW_TIME[5]": [
+   "bit",
+   "01_1890",
+   136
+  ],
+  "CLKOUT0.MX[0]": [
+   "const",
+   0,
+   136
+  ],
+  "CLKOUT0.MX[1]": [
+   "const",
+   0,
+   136
+  ],
+  "CLKOUT0.NO_COUNT[0]": [
+   "const",
+   0,
+   136
+  ],
+  "CLKOUT0.PHASE_MUX[0]": [
+   "bit",
+   "01_1894",
+   136
+  ],
+  "CLKOUT0.PHASE_MUX[1]": [
+   "bit",
+   "00_1895",
+   136
+  ],
+  "CLKOUT0.PHASE_MUX[2]": [
+   "bit",
+   "01_1895",
+   136
+  ],
+  "CLKOUT0.REG1_RESERVED[0]": [
+   "const",
+   0,
+   136
+  ],
+  "CLKOUT0.REG2_RESERVED[0]": [
+   "const",
+   0,
+   136
+  ],
+  "CLKOUT1.DELAY_TIME[0]": [
+   "bit",
+   "00_1912",
+   124
+  ],
+  "CLKOUT1.DELAY_TIME[1]": [
+   "bit",
+   "01_1912",
+   124
+  ],
+  "CLKOUT1.DELAY_TIME[2]": [
+   "bit",
+   "00_1913",
+   124
+  ],
+  "CLKOUT1.DELAY_TIME[3]": [
+   "bit",
+   "01_1913",
+   124
+  ],
+  "CLKOUT1.DELAY_TIME[4]": [
+   "bit",
+   "00_1914",
+   124
+  ],
+  "CLKOUT1.DELAY_TIME[5]": [
+   "bit",
+   "01_1914",
+   124
+  ],
+  "CLKOUT1.EDGE[0]": [
+   "bit",
+   "01_1915",
+   124
+  ],
+  "CLKOUT1.FRAC[0]": [
+   "const",
+   0,
+   124
+  ],
+  "CLKOUT1.FRAC[1]": [
+   "const",
+   0,
+   124
+  ],
+  "CLKOUT1.FRAC[2]": [
+   "const",
+   0,
+   124
+  ],
+  "CLKOUT1.FRAC_EN[0]": [
+   "const",
+   0,
+   124
+  ],
+  "CLKOUT1.FRAC_WF_R[0]": [
+   "const",
+   0,
+   124
+  ],
+  "CLKOUT1.HIGH_TIME[0]": [
+   "bit",
+   "00_1907",
+   124
+  ],
+  "CLKOUT1.HIGH_TIME[1]": [
+   "bit",
+   "01_1907",
+   124
+  ],
+  "CLKOUT1.HIGH_TIME[2]": [
+   "bit",
+   "00_1908",
+   124
+  ],
+  "CLKOUT1.HIGH_TIME[3]": [
+   "bit",
+   "01_1908",
+   124
+  ],
+  "CLKOUT1.HIGH_TIME[4]": [
+   "bit",
+   "00_1909",
+   124
+  ],
+  "CLKOUT1.HIGH_TIME[5]": [
+   "bit",
+   "01_1909",
+   124
+  ],
+  "CLKOUT1.LOW_TIME[0]": [
+   "bit",
+   "00_1904",
+   124
+  ],
+  "CLKOUT1.LOW_TIME[1]": [
+   "bit",
+   "01_1904",
+   124
+  ],
+  "CLKOUT1.LOW_TIME[2]": [
+   "bit",
+   "00_1905",
+   124
+  ],
+  "CLKOUT1.LOW_TIME[3]": [
+   "bit",
+   "01_1905",
+   124
+  ],
+  "CLKOUT1.LOW_TIME[4]": [
+   "bit",
+   "00_1906",
+   124
+  ],
+  "CLKOUT1.LOW_TIME[5]": [
+   "bit",
+   "01_1906",
+   124
+  ],
+  "CLKOUT1.MX[0]": [
+   "const",
+   0,
+   124
+  ],
+  "CLKOUT1.MX[1]": [
+   "const",
+   0,
+   124
+  ],
+  "CLKOUT1.NO_COUNT[0]": [
+   "const",
+   0,
+   124
+  ],
+  "CLKOUT1.PHASE_MUX[0]": [
+   "bit",
+   "01_1910",
+   124
+  ],
+  "CLKOUT1.PHASE_MUX[1]": [
+   "bit",
+   "00_1911",
+   124
+  ],
+  "CLKOUT1.PHASE_MUX[2]": [
+   "bit",
+   "01_1911",
+   124
+  ],
+  "CLKOUT1.REG1_RESERVED[0]": [
+   "const",
+   0,
+   124
+  ],
+  "CLKOUT1.REG2_RESERVED[0]": [
+   "const",
+   0,
+   124
+  ],
+  "CLKOUT2.DELAY_TIME[0]": [
+   "bit",
+   "02_1864",
+   132
+  ],
+  "CLKOUT2.DELAY_TIME[1]": [
+   "bit",
+   "03_1864",
+   132
+  ],
+  "CLKOUT2.DELAY_TIME[2]": [
+   "bit",
+   "02_1865",
+   132
+  ],
+  "CLKOUT2.DELAY_TIME[3]": [
+   "bit",
+   "03_1865",
+   132
+  ],
+  "CLKOUT2.DELAY_TIME[4]": [
+   "bit",
+   "02_1866",
+   132
+  ],
+  "CLKOUT2.DELAY_TIME[5]": [
+   "bit",
+   "03_1866",
+   132
+  ],
+  "CLKOUT2.EDGE[0]": [
+   "bit",
+   "03_1867",
+   132
+  ],
+  "CLKOUT2.FRAC[0]": [
+   "const",
+   0,
+   132
+  ],
+  "CLKOUT2.FRAC[1]": [
+   "const",
+   0,
+   132
+  ],
+  "CLKOUT2.FRAC[2]": [
+   "const",
+   0,
+   132
+  ],
+  "CLKOUT2.FRAC_EN[0]": [
+   "const",
+   0,
+   132
+  ],
+  "CLKOUT2.FRAC_WF_R[0]": [
+   "const",
+   0,
+   132
+  ],
+  "CLKOUT2.HIGH_TIME[0]": [
+   "bit",
+   "02_1859",
+   132
+  ],
+  "CLKOUT2.HIGH_TIME[1]": [
+   "bit",
+   "03_1859",
+   132
+  ],
+  "CLKOUT2.HIGH_TIME[2]": [
+   "bit",
+   "02_1860",
+   132
+  ],
+  "CLKOUT2.HIGH_TIME[3]": [
+   "bit",
+   "03_1860",
+   132
+  ],
+  "CLKOUT2.HIGH_TIME[4]": [
+   "bit",
+   "02_1861",
+   132
+  ],
+  "CLKOUT2.HIGH_TIME[5]": [
+   "bit",
+   "03_1861",
+   132
+  ],
+  "CLKOUT2.LOW_TIME[0]": [
+   "bit",
+   "02_1856",
+   132
+  ],
+  "CLKOUT2.LOW_TIME[1]": [
+   "bit",
+   "03_1856",
+   132
+  ],
+  "CLKOUT2.LOW_TIME[2]": [
+   "bit",
+   "02_1857",
+   132
+  ],
+  "CLKOUT2.LOW_TIME[3]": [
+   "bit",
+   "03_1857",
+   132
+  ],
+  "CLKOUT2.LOW_TIME[4]": [
+   "bit",
+   "02_1858",
+   132
+  ],
+  "CLKOUT2.LOW_TIME[5]": [
+   "bit",
+   "03_1858",
+   132
+  ],
+  "CLKOUT2.MX[0]": [
+   "const",
+   0,
+   132
+  ],
+  "CLKOUT2.MX[1]": [
+   "const",
+   0,
+   132
+  ],
+  "CLKOUT2.NO_COUNT[0]": [
+   "const",
+   0,
+   132
+  ],
+  "CLKOUT2.PHASE_MUX[0]": [
+   "bit",
+   "03_1862",
+   132
+  ],
+  "CLKOUT2.PHASE_MUX[1]": [
+   "bit",
+   "02_1863",
+   132
+  ],
+  "CLKOUT2.PHASE_MUX[2]": [
+   "bit",
+   "03_1863",
+   132
+  ],
+  "CLKOUT2.REG1_RESERVED[0]": [
+   "const",
+   0,
+   132
+  ],
+  "CLKOUT2.REG2_RESERVED[0]": [
+   "const",
+   0,
+   132
+  ],
+  "CLKOUT3.DELAY_TIME[0]": [
+   "bit",
+   "02_1880",
+   129
+  ],
+  "CLKOUT3.DELAY_TIME[1]": [
+   "bit",
+   "03_1880",
+   129
+  ],
+  "CLKOUT3.DELAY_TIME[2]": [
+   "bit",
+   "02_1881",
+   129
+  ],
+  "CLKOUT3.DELAY_TIME[3]": [
+   "bit",
+   "03_1881",
+   129
+  ],
+  "CLKOUT3.DELAY_TIME[4]": [
+   "bit",
+   "02_1882",
+   129
+  ],
+  "CLKOUT3.DELAY_TIME[5]": [
+   "bit",
+   "03_1882",
+   129
+  ],
+  "CLKOUT3.EDGE[0]": [
+   "bit",
+   "03_1883",
+   129
+  ],
+  "CLKOUT3.FRAC[0]": [
+   "const",
+   0,
+   129
+  ],
+  "CLKOUT3.FRAC[1]": [
+   "const",
+   0,
+   129
+  ],
+  "CLKOUT3.FRAC[2]": [
+   "const",
+   0,
+   129
+  ],
+  "CLKOUT3.FRAC_EN[0]": [
+   "const",
+   0,
+   129
+  ],
+  "CLKOUT3.FRAC_WF_R[0]": [
+   "const",
+   0,
+   129
+  ],
+  "CLKOUT3.HIGH_TIME[0]": [
+   "bit",
+   "02_1875",
+   129
+  ],
+  "CLKOUT3.HIGH_TIME[1]": [
+   "bit",
+   "03_1875",
+   129
+  ],
+  "CLKOUT3.HIGH_TIME[2]": [
+   "bit",
+   "02_1876",
+   129
+  ],
+  "CLKOUT3.HIGH_TIME[3]": [
+   "bit",
+   "03_1876",
+   129
+  ],
+  "CLKOUT3.HIGH_TIME[4]": [
+   "bit",
+   "02_1877",
+   129
+  ],
+  "CLKOUT3.HIGH_TIME[5]": [
+   "bit",
+   "03_1877",
+   129
+  ],
+  "CLKOUT3.LOW_TIME[0]": [
+   "bit",
+   "02_1872",
+   129
+  ],
+  "CLKOUT3.LOW_TIME[1]": [
+   "bit",
+   "03_1872",
+   129
+  ],
+  "CLKOUT3.LOW_TIME[2]": [
+   "bit",
+   "02_1873",
+   129
+  ],
+  "CLKOUT3.LOW_TIME[3]": [
+   "bit",
+   "03_1873",
+   129
+  ],
+  "CLKOUT3.LOW_TIME[4]": [
+   "bit",
+   "02_1874",
+   129
+  ],
+  "CLKOUT3.LOW_TIME[5]": [
+   "bit",
+   "03_1874",
+   129
+  ],
+  "CLKOUT3.MX[0]": [
+   "const",
+   0,
+   129
+  ],
+  "CLKOUT3.MX[1]": [
+   "const",
+   0,
+   129
+  ],
+  "CLKOUT3.NO_COUNT[0]": [
+   "const",
+   0,
+   129
+  ],
+  "CLKOUT3.PHASE_MUX[0]": [
+   "bit",
+   "03_1878",
+   129
+  ],
+  "CLKOUT3.PHASE_MUX[1]": [
+   "bit",
+   "02_1879",
+   129
+  ],
+  "CLKOUT3.PHASE_MUX[2]": [
+   "bit",
+   "03_1879",
+   129
+  ],
+  "CLKOUT3.REG1_RESERVED[0]": [
+   "const",
+   0,
+   129
+  ],
+  "CLKOUT3.REG2_RESERVED[0]": [
+   "const",
+   0,
+   129
+  ],
+  "CLKOUT4.DELAY_TIME[0]": [
+   "bit",
+   "02_1896",
+   125
+  ],
+  "CLKOUT4.DELAY_TIME[1]": [
+   "bit",
+   "03_1896",
+   125
+  ],
+  "CLKOUT4.DELAY_TIME[2]": [
+   "bit",
+   "02_1897",
+   125
+  ],
+  "CLKOUT4.DELAY_TIME[3]": [
+   "bit",
+   "03_1897",
+   125
+  ],
+  "CLKOUT4.DELAY_TIME[4]": [
+   "bit",
+   "02_1898",
+   125
+  ],
+  "CLKOUT4.DELAY_TIME[5]": [
+   "bit",
+   "03_1898",
+   125
+  ],
+  "CLKOUT4.EDGE[0]": [
+   "bit",
+   "03_1899",
+   125
+  ],
+  "CLKOUT4.FRAC[0]": [
+   "const",
+   0,
+   125
+  ],
+  "CLKOUT4.FRAC[1]": [
+   "const",
+   0,
+   125
+  ],
+  "CLKOUT4.FRAC[2]": [
+   "const",
+   0,
+   125
+  ],
+  "CLKOUT4.FRAC_EN[0]": [
+   "const",
+   0,
+   125
+  ],
+  "CLKOUT4.FRAC_WF_R[0]": [
+   "const",
+   0,
+   125
+  ],
+  "CLKOUT4.HIGH_TIME[0]": [
+   "bit",
+   "02_1891",
+   125
+  ],
+  "CLKOUT4.HIGH_TIME[1]": [
+   "bit",
+   "03_1891",
+   125
+  ],
+  "CLKOUT4.HIGH_TIME[2]": [
+   "bit",
+   "02_1892",
+   125
+  ],
+  "CLKOUT4.HIGH_TIME[3]": [
+   "bit",
+   "03_1892",
+   125
+  ],
+  "CLKOUT4.HIGH_TIME[4]": [
+   "bit",
+   "02_1893",
+   125
+  ],
+  "CLKOUT4.HIGH_TIME[5]": [
+   "bit",
+   "03_1893",
+   125
+  ],
+  "CLKOUT4.LOW_TIME[0]": [
+   "bit",
+   "02_1888",
+   125
+  ],
+  "CLKOUT4.LOW_TIME[1]": [
+   "bit",
+   "03_1888",
+   125
+  ],
+  "CLKOUT4.LOW_TIME[2]": [
+   "bit",
+   "02_1889",
+   125
+  ],
+  "CLKOUT4.LOW_TIME[3]": [
+   "bit",
+   "03_1889",
+   125
+  ],
+  "CLKOUT4.LOW_TIME[4]": [
+   "bit",
+   "02_1890",
+   125
+  ],
+  "CLKOUT4.LOW_TIME[5]": [
+   "bit",
+   "03_1890",
+   125
+  ],
+  "CLKOUT4.MX[0]": [
+   "const",
+   0,
+   125
+  ],
+  "CLKOUT4.MX[1]": [
+   "const",
+   0,
+   125
+  ],
+  "CLKOUT4.NO_COUNT[0]": [
+   "const",
+   0,
+   125
+  ],
+  "CLKOUT4.PHASE_MUX[0]": [
+   "bit",
+   "03_1894",
+   125
+  ],
+  "CLKOUT4.PHASE_MUX[1]": [
+   "bit",
+   "02_1895",
+   125
+  ],
+  "CLKOUT4.PHASE_MUX[2]": [
+   "bit",
+   "03_1895",
+   125
+  ],
+  "CLKOUT4.REG1_RESERVED[0]": [
+   "const",
+   0,
+   125
+  ],
+  "CLKOUT4.REG2_RESERVED[0]": [
+   "const",
+   0,
+   125
+  ],
+  "CLKOUT5.DELAY_TIME[0]": [
+   "bit",
+   "00_1928",
+   129
+  ],
+  "CLKOUT5.DELAY_TIME[1]": [
+   "bit",
+   "01_1928",
+   129
+  ],
+  "CLKOUT5.DELAY_TIME[2]": [
+   "bit",
+   "00_1929",
+   129
+  ],
+  "CLKOUT5.DELAY_TIME[3]": [
+   "bit",
+   "01_1929",
+   129
+  ],
+  "CLKOUT5.DELAY_TIME[4]": [
+   "bit",
+   "00_1930",
+   129
+  ],
+  "CLKOUT5.DELAY_TIME[5]": [
+   "bit",
+   "01_1930",
+   129
+  ],
+  "CLKOUT5.EDGE[0]": [
+   "bit",
+   "01_1931",
+   129
+  ],
+  "CLKOUT5.FRAC_WF_F[0]": [
+   "bit",
+   "00_1934",
+   129
+  ],
+  "CLKOUT5.HIGH_TIME[0]": [
+   "bit",
+   "00_1923",
+   129
+  ],
+  "CLKOUT5.HIGH_TIME[1]": [
+   "bit",
+   "01_1923",
+   129
+  ],
+  "CLKOUT5.HIGH_TIME[2]": [
+   "bit",
+   "00_1924",
+   129
+  ],
+  "CLKOUT5.HIGH_TIME[3]": [
+   "bit",
+   "01_1924",
+   129
+  ],
+  "CLKOUT5.HIGH_TIME[4]": [
+   "bit",
+   "00_1925",
+   129
+  ],
+  "CLKOUT5.HIGH_TIME[5]": [
+   "bit",
+   "01_1925",
+   129
+  ],
+  "CLKOUT5.LOW_TIME[0]": [
+   "bit",
+   "00_1920",
+   129
+  ],
+  "CLKOUT5.LOW_TIME[1]": [
+   "bit",
+   "01_1920",
+   129
+  ],
+  "CLKOUT5.LOW_TIME[2]": [
+   "bit",
+   "00_1921",
+   129
+  ],
+  "CLKOUT5.LOW_TIME[3]": [
+   "bit",
+   "01_1921",
+   129
+  ],
+  "CLKOUT5.LOW_TIME[4]": [
+   "bit",
+   "00_1922",
+   129
+  ],
+  "CLKOUT5.LOW_TIME[5]": [
+   "bit",
+   "01_1922",
+   129
+  ],
+  "CLKOUT5.MX[0]": [
+   "const",
+   0,
+   129
+  ],
+  "CLKOUT5.MX[1]": [
+   "const",
+   0,
+   129
+  ],
+  "CLKOUT5.NO_COUNT[0]": [
+   "const",
+   0,
+   129
+  ],
+  "CLKOUT5.PHASE_MUX[0]": [
+   "bit",
+   "01_1926",
+   129
+  ],
+  "CLKOUT5.PHASE_MUX[1]": [
+   "bit",
+   "00_1927",
+   129
+  ],
+  "CLKOUT5.PHASE_MUX[2]": [
+   "bit",
+   "01_1927",
+   129
+  ],
+  "CLKOUT5.PHASE_MUX_F[0]": [
+   "bit",
+   "01_1934",
+   129
+  ],
+  "CLKOUT5.PHASE_MUX_F[1]": [
+   "bit",
+   "00_1935",
+   129
+  ],
+  "CLKOUT5.PHASE_MUX_F[2]": [
+   "bit",
+   "01_1935",
+   129
+  ],
+  "CLKOUT5.REG1_RESERVED[0]": [
+   "const",
+   0,
+   129
+  ],
+  "CLKOUT5.REG2_RESERVED[0]": [
+   "const",
+   0,
+   129
+  ],
+  "CLKOUT5.REG2_RESERVED[1]": [
+   "const",
+   0,
+   129
+  ],
+  "CLKOUT6.DELAY_TIME[0]": [
+   "bit",
+   "02_1912",
+   126
+  ],
+  "CLKOUT6.DELAY_TIME[1]": [
+   "bit",
+   "03_1912",
+   126
+  ],
+  "CLKOUT6.DELAY_TIME[2]": [
+   "bit",
+   "02_1913",
+   126
+  ],
+  "CLKOUT6.DELAY_TIME[3]": [
+   "bit",
+   "03_1913",
+   126
+  ],
+  "CLKOUT6.DELAY_TIME[4]": [
+   "bit",
+   "02_1914",
+   126
+  ],
+  "CLKOUT6.DELAY_TIME[5]": [
+   "bit",
+   "03_1914",
+   126
+  ],
+  "CLKOUT6.EDGE[0]": [
+   "bit",
+   "03_1915",
+   126
+  ],
+  "CLKOUT6.FRAC_WF_F[0]": [
+   "bit",
+   "02_1918",
+   126
+  ],
+  "CLKOUT6.HIGH_TIME[0]": [
+   "bit",
+   "02_1907",
+   126
+  ],
+  "CLKOUT6.HIGH_TIME[1]": [
+   "bit",
+   "03_1907",
+   126
+  ],
+  "CLKOUT6.HIGH_TIME[2]": [
+   "bit",
+   "02_1908",
+   126
+  ],
+  "CLKOUT6.HIGH_TIME[3]": [
+   "bit",
+   "03_1908",
+   126
+  ],
+  "CLKOUT6.HIGH_TIME[4]": [
+   "bit",
+   "02_1909",
+   126
+  ],
+  "CLKOUT6.HIGH_TIME[5]": [
+   "bit",
+   "03_1909",
+   126
+  ],
+  "CLKOUT6.LOW_TIME[0]": [
+   "bit",
+   "02_1904",
+   126
+  ],
+  "CLKOUT6.LOW_TIME[1]": [
+   "bit",
+   "03_1904",
+   126
+  ],
+  "CLKOUT6.LOW_TIME[2]": [
+   "bit",
+   "02_1905",
+   126
+  ],
+  "CLKOUT6.LOW_TIME[3]": [
+   "bit",
+   "03_1905",
+   126
+  ],
+  "CLKOUT6.LOW_TIME[4]": [
+   "bit",
+   "02_1906",
+   126
+  ],
+  "CLKOUT6.LOW_TIME[5]": [
+   "bit",
+   "03_1906",
+   126
+  ],
+  "CLKOUT6.MX[0]": [
+   "const",
+   0,
+   126
+  ],
+  "CLKOUT6.MX[1]": [
+   "const",
+   0,
+   126
+  ],
+  "CLKOUT6.NO_COUNT[0]": [
+   "const",
+   0,
+   126
+  ],
+  "CLKOUT6.PHASE_MUX[0]": [
+   "bit",
+   "03_1910",
+   126
+  ],
+  "CLKOUT6.PHASE_MUX[1]": [
+   "bit",
+   "02_1911",
+   126
+  ],
+  "CLKOUT6.PHASE_MUX[2]": [
+   "bit",
+   "03_1911",
+   126
+  ],
+  "CLKOUT6.PHASE_MUX_F[0]": [
+   "bit",
+   "03_1918",
+   126
+  ],
+  "CLKOUT6.PHASE_MUX_F[1]": [
+   "bit",
+   "02_1919",
+   126
+  ],
+  "CLKOUT6.PHASE_MUX_F[2]": [
+   "bit",
+   "03_1919",
+   126
+  ],
+  "CLKOUT6.REG1_RESERVED[0]": [
+   "const",
+   0,
+   126
+  ],
+  "CLKOUT6.REG2_RESERVED[0]": [
+   "const",
+   0,
+   126
+  ],
+  "CLKOUT6.REG2_RESERVED[1]": [
+   "const",
+   0,
+   126
+  ],
+  "DIVCLK.EDGE[0]": [
+   "bit",
+   "01_1878",
+   160
+  ],
+  "DIVCLK.HIGH_TIME[0]": [
+   "bit",
+   "00_1875",
+   160
+  ],
+  "DIVCLK.HIGH_TIME[1]": [
+   "bit",
+   "01_1875",
+   160
+  ],
+  "DIVCLK.HIGH_TIME[2]": [
+   "bit",
+   "00_1876",
+   160
+  ],
+  "DIVCLK.HIGH_TIME[3]": [
+   "bit",
+   "01_1876",
+   160
+  ],
+  "DIVCLK.HIGH_TIME[4]": [
+   "bit",
+   "00_1877",
+   160
+  ],
+  "DIVCLK.HIGH_TIME[5]": [
+   "ambig",
+   [
+    "01_1874",
+    "01_1877"
+   ],
+   160
+  ],
+  "DIVCLK.LOW_TIME[0]": [
+   "bit",
+   "00_1872",
+   160
+  ],
+  "DIVCLK.LOW_TIME[1]": [
+   "bit",
+   "01_1872",
+   160
+  ],
+  "DIVCLK.LOW_TIME[2]": [
+   "bit",
+   "00_1873",
+   160
+  ],
+  "DIVCLK.LOW_TIME[3]": [
+   "bit",
+   "01_1873",
+   160
+  ],
+  "DIVCLK.LOW_TIME[4]": [
+   "bit",
+   "00_1874",
+   160
+  ],
+  "DIVCLK.LOW_TIME[5]": [
+   "ambig",
+   [
+    "01_1874",
+    "01_1877"
+   ],
+   160
+  ],
+  "DIVCLK.NO_COUNT[0]": [
+   "bit",
+   "00_1878",
+   160
+  ],
+  "FILTER.TABLE[0]": [
+   "const",
+   1,
+   160
+  ],
+  "FILTER.TABLE[1]": [
+   "const",
+   1,
+   160
+  ],
+  "FILTER.TABLE[2]": [
+   "bit",
+   "00_2444",
+   160
+  ],
+  "FILTER.TABLE[3]": [
+   "bit",
+   "01_2445",
+   160
+  ],
+  "FILTER.TABLE[4]": [
+   "bit",
+   "00_2446",
+   160
+  ],
+  "FILTER.TABLE[5]": [
+   "bit",
+   "01_2447",
+   160
+  ],
+  "FILTER.TABLE[6]": [
+   "bit",
+   "00_2436",
+   160
+  ],
+  "FILTER.TABLE[7]": [
+   "bit",
+   "01_2437",
+   160
+  ],
+  "FILTER.TABLE[8]": [
+   "bit",
+   "00_2438",
+   160
+  ],
+  "FILTER.TABLE[9]": [
+   "bit",
+   "01_2439",
+   160
+  ],
+  "LOCK.LKTABLE[0]": [
+   "const",
+   1,
+   160
+  ],
+  "LOCK.LKTABLE[10]": [
+   "const",
+   1,
+   160
+  ],
+  "LOCK.LKTABLE[11]": [
+   "const",
+   0,
+   160
+  ],
+  "LOCK.LKTABLE[12]": [
+   "const",
+   0,
+   160
+  ],
+  "LOCK.LKTABLE[13]": [
+   "const",
+   1,
+   160
+  ],
+  "LOCK.LKTABLE[14]": [
+   "const",
+   0,
+   160
+  ],
+  "LOCK.LKTABLE[15]": [
+   "const",
+   1,
+   160
+  ],
+  "LOCK.LKTABLE[16]": [
+   "const",
+   1,
+   160
+  ],
+  "LOCK.LKTABLE[17]": [
+   "const",
+   1,
+   160
+  ],
+  "LOCK.LKTABLE[18]": [
+   "const",
+   1,
+   160
+  ],
+  "LOCK.LKTABLE[19]": [
+   "const",
+   1,
+   160
+  ],
+  "LOCK.LKTABLE[1]": [
+   "const",
+   0,
+   160
+  ],
+  "LOCK.LKTABLE[20]": [
+   "bit",
+   "00_2064",
+   160
+  ],
+  "LOCK.LKTABLE[21]": [
+   "bit",
+   "01_2064",
+   160
+  ],
+  "LOCK.LKTABLE[22]": [
+   "bit",
+   "00_2065",
+   160
+  ],
+  "LOCK.LKTABLE[23]": [
+   "bit",
+   "01_2065",
+   160
+  ],
+  "LOCK.LKTABLE[24]": [
+   "bit",
+   "00_2066",
+   160
+  ],
+  "LOCK.LKTABLE[25]": [
+   "bit",
+   "01_2066",
+   160
+  ],
+  "LOCK.LKTABLE[26]": [
+   "bit",
+   "00_2067",
+   160
+  ],
+  "LOCK.LKTABLE[27]": [
+   "bit",
+   "01_2067",
+   160
+  ],
+  "LOCK.LKTABLE[28]": [
+   "bit",
+   "00_2068",
+   160
+  ],
+  "LOCK.LKTABLE[29]": [
+   "bit",
+   "01_2068",
+   160
+  ],
+  "LOCK.LKTABLE[2]": [
+   "const",
+   0,
+   160
+  ],
+  "LOCK.LKTABLE[30]": [
+   "ambig",
+   [
+    "00_2077",
+    "00_2085"
+   ],
+   160
+  ],
+  "LOCK.LKTABLE[31]": [
+   "ambig",
+   [
+    "01_2077",
+    "01_2085"
+   ],
+   160
+  ],
+  "LOCK.LKTABLE[32]": [
+   "ambig",
+   [
+    "00_2078",
+    "00_2086"
+   ],
+   160
+  ],
+  "LOCK.LKTABLE[33]": [
+   "ambig",
+   [
+    "01_2078",
+    "01_2086"
+   ],
+   160
+  ],
+  "LOCK.LKTABLE[34]": [
+   "ambig",
+   [
+    "00_2079",
+    "00_2087"
+   ],
+   160
+  ],
+  "LOCK.LKTABLE[35]": [
+   "ambig",
+   [
+    "00_2077",
+    "00_2085"
+   ],
+   160
+  ],
+  "LOCK.LKTABLE[36]": [
+   "ambig",
+   [
+    "01_2077",
+    "01_2085"
+   ],
+   160
+  ],
+  "LOCK.LKTABLE[37]": [
+   "ambig",
+   [
+    "00_2078",
+    "00_2086"
+   ],
+   160
+  ],
+  "LOCK.LKTABLE[38]": [
+   "ambig",
+   [
+    "01_2078",
+    "01_2086"
+   ],
+   160
+  ],
+  "LOCK.LKTABLE[39]": [
+   "ambig",
+   [
+    "00_2079",
+    "00_2087"
+   ],
+   160
+  ],
+  "LOCK.LKTABLE[3]": [
+   "const",
+   0,
+   160
+  ],
+  "LOCK.LKTABLE[4]": [
+   "const",
+   0,
+   160
+  ],
+  "LOCK.LKTABLE[5]": [
+   "const",
+   0,
+   160
+  ],
+  "LOCK.LKTABLE[6]": [
+   "const",
+   0,
+   160
+  ],
+  "LOCK.LKTABLE[7]": [
+   "const",
+   0,
+   160
+  ],
+  "LOCK.LKTABLE[8]": [
+   "const",
+   0,
+   160
+  ],
+  "LOCK.LKTABLE[9]": [
+   "const",
+   0,
+   160
+  ]
+ },
+ "PLL0": {
+  "CLKFBOUT.DELAY_TIME[0]": [
+   "bit",
+   "00_104",
+   160
+  ],
+  "CLKFBOUT.DELAY_TIME[1]": [
+   "bit",
+   "01_104",
+   160
+  ],
+  "CLKFBOUT.DELAY_TIME[2]": [
+   "bit",
+   "00_105",
+   160
+  ],
+  "CLKFBOUT.DELAY_TIME[3]": [
+   "bit",
+   "01_105",
+   160
+  ],
+  "CLKFBOUT.DELAY_TIME[4]": [
+   "bit",
+   "00_106",
+   160
+  ],
+  "CLKFBOUT.DELAY_TIME[5]": [
+   "const",
+   0,
+   160
+  ],
+  "CLKFBOUT.EDGE[0]": [
+   "bit",
+   "01_107",
+   160
+  ],
+  "CLKFBOUT.FRAC[0]": [
+   "const",
+   0,
+   160
+  ],
+  "CLKFBOUT.FRAC[1]": [
+   "const",
+   0,
+   160
+  ],
+  "CLKFBOUT.FRAC[2]": [
+   "const",
+   0,
+   160
+  ],
+  "CLKFBOUT.FRAC_EN[0]": [
+   "const",
+   0,
+   160
+  ],
+  "CLKFBOUT.FRAC_WF_R[0]": [
+   "const",
+   0,
+   160
+  ],
+  "CLKFBOUT.HIGH_TIME[0]": [
+   "bit",
+   "00_99",
+   160
+  ],
+  "CLKFBOUT.HIGH_TIME[1]": [
+   "bit",
+   "01_99",
+   160
+  ],
+  "CLKFBOUT.HIGH_TIME[2]": [
+   "bit",
+   "00_100",
+   160
+  ],
+  "CLKFBOUT.HIGH_TIME[3]": [
+   "bit",
+   "01_100",
+   160
+  ],
+  "CLKFBOUT.HIGH_TIME[4]": [
+   "const",
+   0,
+   160
+  ],
+  "CLKFBOUT.HIGH_TIME[5]": [
+   "const",
+   0,
+   160
+  ],
+  "CLKFBOUT.LOW_TIME[0]": [
+   "bit",
+   "00_96",
+   160
+  ],
+  "CLKFBOUT.LOW_TIME[1]": [
+   "bit",
+   "01_96",
+   160
+  ],
+  "CLKFBOUT.LOW_TIME[2]": [
+   "bit",
+   "00_97",
+   160
+  ],
+  "CLKFBOUT.LOW_TIME[3]": [
+   "bit",
+   "01_97",
+   160
+  ],
+  "CLKFBOUT.LOW_TIME[4]": [
+   "const",
+   0,
+   160
+  ],
+  "CLKFBOUT.LOW_TIME[5]": [
+   "const",
+   0,
+   160
+  ],
+  "CLKFBOUT.MX[0]": [
+   "const",
+   0,
+   160
+  ],
+  "CLKFBOUT.MX[1]": [
+   "const",
+   0,
+   160
+  ],
+  "CLKFBOUT.NO_COUNT[0]": [
+   "const",
+   0,
+   160
+  ],
+  "CLKFBOUT.PHASE_MUX[0]": [
+   "const",
+   0,
+   160
+  ],
+  "CLKFBOUT.PHASE_MUX[1]": [
+   "const",
+   0,
+   160
+  ],
+  "CLKFBOUT.PHASE_MUX[2]": [
+   "const",
+   0,
+   160
+  ],
+  "CLKFBOUT.REG1_RESERVED[0]": [
+   "const",
+   0,
+   160
+  ],
+  "CLKFBOUT.REG2_RESERVED[0]": [
+   "const",
+   0,
+   160
+  ],
+  "CLKOUT0.DELAY_TIME[0]": [
+   "bit",
+   "00_72",
+   127
+  ],
+  "CLKOUT0.DELAY_TIME[1]": [
+   "bit",
+   "01_72",
+   127
+  ],
+  "CLKOUT0.DELAY_TIME[2]": [
+   "bit",
+   "00_73",
+   127
+  ],
+  "CLKOUT0.DELAY_TIME[3]": [
+   "bit",
+   "01_73",
+   127
+  ],
+  "CLKOUT0.DELAY_TIME[4]": [
+   "bit",
+   "00_74",
+   127
+  ],
+  "CLKOUT0.DELAY_TIME[5]": [
+   "bit",
+   "01_74",
+   127
+  ],
+  "CLKOUT0.EDGE[0]": [
+   "bit",
+   "01_75",
+   127
+  ],
+  "CLKOUT0.FRAC[0]": [
+   "const",
+   0,
+   127
+  ],
+  "CLKOUT0.FRAC[1]": [
+   "const",
+   0,
+   127
+  ],
+  "CLKOUT0.FRAC[2]": [
+   "const",
+   0,
+   127
+  ],
+  "CLKOUT0.FRAC_EN[0]": [
+   "const",
+   0,
+   127
+  ],
+  "CLKOUT0.FRAC_WF_R[0]": [
+   "const",
+   0,
+   127
+  ],
+  "CLKOUT0.HIGH_TIME[0]": [
+   "bit",
+   "00_67",
+   127
+  ],
+  "CLKOUT0.HIGH_TIME[1]": [
+   "bit",
+   "01_67",
+   127
+  ],
+  "CLKOUT0.HIGH_TIME[2]": [
+   "bit",
+   "00_68",
+   127
+  ],
+  "CLKOUT0.HIGH_TIME[3]": [
+   "bit",
+   "01_68",
+   127
+  ],
+  "CLKOUT0.HIGH_TIME[4]": [
+   "bit",
+   "00_69",
+   127
+  ],
+  "CLKOUT0.HIGH_TIME[5]": [
+   "bit",
+   "01_69",
+   127
+  ],
+  "CLKOUT0.LOW_TIME[0]": [
+   "bit",
+   "00_64",
+   127
+  ],
+  "CLKOUT0.LOW_TIME[1]": [
+   "bit",
+   "01_64",
+   127
+  ],
+  "CLKOUT0.LOW_TIME[2]": [
+   "bit",
+   "00_65",
+   127
+  ],
+  "CLKOUT0.LOW_TIME[3]": [
+   "bit",
+   "01_65",
+   127
+  ],
+  "CLKOUT0.LOW_TIME[4]": [
+   "bit",
+   "00_66",
+   127
+  ],
+  "CLKOUT0.LOW_TIME[5]": [
+   "bit",
+   "01_66",
+   127
+  ],
+  "CLKOUT0.MX[0]": [
+   "const",
+   0,
+   127
+  ],
+  "CLKOUT0.MX[1]": [
+   "const",
+   0,
+   127
+  ],
+  "CLKOUT0.NO_COUNT[0]": [
+   "const",
+   0,
+   127
+  ],
+  "CLKOUT0.PHASE_MUX[0]": [
+   "const",
+   0,
+   127
+  ],
+  "CLKOUT0.PHASE_MUX[1]": [
+   "const",
+   0,
+   127
+  ],
+  "CLKOUT0.PHASE_MUX[2]": [
+   "const",
+   0,
+   127
+  ],
+  "CLKOUT0.REG1_RESERVED[0]": [
+   "const",
+   0,
+   127
+  ],
+  "CLKOUT0.REG2_RESERVED[0]": [
+   "const",
+   0,
+   127
+  ],
+  "CLKOUT1.DELAY_TIME[0]": [
+   "bit",
+   "00_88",
+   137
+  ],
+  "CLKOUT1.DELAY_TIME[1]": [
+   "bit",
+   "01_88",
+   137
+  ],
+  "CLKOUT1.DELAY_TIME[2]": [
+   "bit",
+   "00_89",
+   137
+  ],
+  "CLKOUT1.DELAY_TIME[3]": [
+   "bit",
+   "01_89",
+   137
+  ],
+  "CLKOUT1.DELAY_TIME[4]": [
+   "bit",
+   "00_90",
+   137
+  ],
+  "CLKOUT1.DELAY_TIME[5]": [
+   "bit",
+   "01_90",
+   137
+  ],
+  "CLKOUT1.EDGE[0]": [
+   "bit",
+   "01_91",
+   137
+  ],
+  "CLKOUT1.FRAC[0]": [
+   "const",
+   0,
+   137
+  ],
+  "CLKOUT1.FRAC[1]": [
+   "const",
+   0,
+   137
+  ],
+  "CLKOUT1.FRAC[2]": [
+   "const",
+   0,
+   137
+  ],
+  "CLKOUT1.FRAC_EN[0]": [
+   "const",
+   0,
+   137
+  ],
+  "CLKOUT1.FRAC_WF_R[0]": [
+   "const",
+   0,
+   137
+  ],
+  "CLKOUT1.HIGH_TIME[0]": [
+   "bit",
+   "00_83",
+   137
+  ],
+  "CLKOUT1.HIGH_TIME[1]": [
+   "bit",
+   "01_83",
+   137
+  ],
+  "CLKOUT1.HIGH_TIME[2]": [
+   "bit",
+   "00_84",
+   137
+  ],
+  "CLKOUT1.HIGH_TIME[3]": [
+   "bit",
+   "01_84",
+   137
+  ],
+  "CLKOUT1.HIGH_TIME[4]": [
+   "bit",
+   "00_85",
+   137
+  ],
+  "CLKOUT1.HIGH_TIME[5]": [
+   "bit",
+   "01_85",
+   137
+  ],
+  "CLKOUT1.LOW_TIME[0]": [
+   "bit",
+   "00_80",
+   137
+  ],
+  "CLKOUT1.LOW_TIME[1]": [
+   "bit",
+   "01_80",
+   137
+  ],
+  "CLKOUT1.LOW_TIME[2]": [
+   "bit",
+   "00_81",
+   137
+  ],
+  "CLKOUT1.LOW_TIME[3]": [
+   "bit",
+   "01_81",
+   137
+  ],
+  "CLKOUT1.LOW_TIME[4]": [
+   "bit",
+   "00_82",
+   137
+  ],
+  "CLKOUT1.LOW_TIME[5]": [
+   "bit",
+   "01_82",
+   137
+  ],
+  "CLKOUT1.MX[0]": [
+   "const",
+   0,
+   137
+  ],
+  "CLKOUT1.MX[1]": [
+   "const",
+   0,
+   137
+  ],
+  "CLKOUT1.NO_COUNT[0]": [
+   "const",
+   0,
+   137
+  ],
+  "CLKOUT1.PHASE_MUX[0]": [
+   "const",
+   0,
+   137
+  ],
+  "CLKOUT1.PHASE_MUX[1]": [
+   "const",
+   0,
+   137
+  ],
+  "CLKOUT1.PHASE_MUX[2]": [
+   "const",
+   0,
+   137
+  ],
+  "CLKOUT1.REG1_RESERVED[0]": [
+   "const",
+   0,
+   137
+  ],
+  "CLKOUT1.REG2_RESERVED[0]": [
+   "const",
+   0,
+   137
+  ],
+  "DIVCLK.EDGE[0]": [
+   "bit",
+   "01_54",
+   160
+  ],
+  "DIVCLK.HIGH_TIME[0]": [
+   "bit",
+   "00_51",
+   160
+  ],
+  "DIVCLK.HIGH_TIME[1]": [
+   "bit",
+   "01_51",
+   160
+  ],
+  "DIVCLK.HIGH_TIME[2]": [
+   "bit",
+   "00_52",
+   160
+  ],
+  "DIVCLK.HIGH_TIME[3]": [
+   "const",
+   0,
+   160
+  ],
+  "DIVCLK.HIGH_TIME[4]": [
+   "const",
+   0,
+   160
+  ],
+  "DIVCLK.HIGH_TIME[5]": [
+   "const",
+   0,
+   160
+  ],
+  "DIVCLK.LOW_TIME[0]": [
+   "bit",
+   "00_48",
+   160
+  ],
+  "DIVCLK.LOW_TIME[1]": [
+   "bit",
+   "01_48",
+   160
+  ],
+  "DIVCLK.LOW_TIME[2]": [
+   "bit",
+   "00_49",
+   160
+  ],
+  "DIVCLK.LOW_TIME[3]": [
+   "const",
+   0,
+   160
+  ],
+  "DIVCLK.LOW_TIME[4]": [
+   "const",
+   0,
+   160
+  ],
+  "DIVCLK.LOW_TIME[5]": [
+   "const",
+   0,
+   160
+  ],
+  "DIVCLK.NO_COUNT[0]": [
+   "bit",
+   "00_54",
+   160
+  ],
+  "FILTER.TABLE[0]": [
+   "const",
+   1,
+   160
+  ],
+  "FILTER.TABLE[1]": [
+   "const",
+   1,
+   160
+  ],
+  "FILTER.TABLE[2]": [
+   "bit",
+   "00_476",
+   160
+  ],
+  "FILTER.TABLE[3]": [
+   "bit",
+   "01_477",
+   160
+  ],
+  "FILTER.TABLE[4]": [
+   "bit",
+   "00_478",
+   160
+  ],
+  "FILTER.TABLE[5]": [
+   "bit",
+   "01_479",
+   160
+  ],
+  "FILTER.TABLE[6]": [
+   "bit",
+   "00_468",
+   160
+  ],
+  "FILTER.TABLE[7]": [
+   "bit",
+   "01_469",
+   160
+  ],
+  "FILTER.TABLE[8]": [
+   "bit",
+   "00_470",
+   160
+  ],
+  "FILTER.TABLE[9]": [
+   "bit",
+   "01_471",
+   160
+  ],
+  "LOCK.LKTABLE[0]": [
+   "const",
+   1,
+   160
+  ],
+  "LOCK.LKTABLE[10]": [
+   "const",
+   1,
+   160
+  ],
+  "LOCK.LKTABLE[11]": [
+   "const",
+   0,
+   160
+  ],
+  "LOCK.LKTABLE[12]": [
+   "const",
+   0,
+   160
+  ],
+  "LOCK.LKTABLE[13]": [
+   "const",
+   1,
+   160
+  ],
+  "LOCK.LKTABLE[14]": [
+   "const",
+   0,
+   160
+  ],
+  "LOCK.LKTABLE[15]": [
+   "const",
+   1,
+   160
+  ],
+  "LOCK.LKTABLE[16]": [
+   "const",
+   1,
+   160
+  ],
+  "LOCK.LKTABLE[17]": [
+   "const",
+   1,
+   160
+  ],
+  "LOCK.LKTABLE[18]": [
+   "const",
+   1,
+   160
+  ],
+  "LOCK.LKTABLE[19]": [
+   "const",
+   1,
+   160
+  ],
+  "LOCK.LKTABLE[1]": [
+   "const",
+   0,
+   160
+  ],
+  "LOCK.LKTABLE[20]": [
+   "bit",
+   "00_144",
+   160
+  ],
+  "LOCK.LKTABLE[21]": [
+   "bit",
+   "01_144",
+   160
+  ],
+  "LOCK.LKTABLE[22]": [
+   "bit",
+   "00_145",
+   160
+  ],
+  "LOCK.LKTABLE[23]": [
+   "bit",
+   "01_145",
+   160
+  ],
+  "LOCK.LKTABLE[24]": [
+   "bit",
+   "00_146",
+   160
+  ],
+  "LOCK.LKTABLE[25]": [
+   "bit",
+   "01_146",
+   160
+  ],
+  "LOCK.LKTABLE[26]": [
+   "bit",
+   "00_147",
+   160
+  ],
+  "LOCK.LKTABLE[27]": [
+   "bit",
+   "01_147",
+   160
+  ],
+  "LOCK.LKTABLE[28]": [
+   "bit",
+   "00_148",
+   160
+  ],
+  "LOCK.LKTABLE[29]": [
+   "const",
+   1,
+   160
+  ],
+  "LOCK.LKTABLE[2]": [
+   "const",
+   0,
+   160
+  ],
+  "LOCK.LKTABLE[30]": [
+   "ambig",
+   [
+    "00_157",
+    "00_165"
+   ],
+   160
+  ],
+  "LOCK.LKTABLE[31]": [
+   "ambig",
+   [
+    "01_157",
+    "01_165"
+   ],
+   160
+  ],
+  "LOCK.LKTABLE[32]": [
+   "ambig",
+   [
+    "00_158",
+    "00_166"
+   ],
+   160
+  ],
+  "LOCK.LKTABLE[33]": [
+   "ambig",
+   [
+    "01_158",
+    "01_166"
+   ],
+   160
+  ],
+  "LOCK.LKTABLE[34]": [
+   "ambig",
+   [
+    "00_159",
+    "00_167"
+   ],
+   160
+  ],
+  "LOCK.LKTABLE[35]": [
+   "ambig",
+   [
+    "00_157",
+    "00_165"
+   ],
+   160
+  ],
+  "LOCK.LKTABLE[36]": [
+   "ambig",
+   [
+    "01_157",
+    "01_165"
+   ],
+   160
+  ],
+  "LOCK.LKTABLE[37]": [
+   "ambig",
+   [
+    "00_158",
+    "00_166"
+   ],
+   160
+  ],
+  "LOCK.LKTABLE[38]": [
+   "ambig",
+   [
+    "01_158",
+    "01_166"
+   ],
+   160
+  ],
+  "LOCK.LKTABLE[39]": [
+   "ambig",
+   [
+    "00_159",
+    "00_167"
+   ],
+   160
+  ],
+  "LOCK.LKTABLE[3]": [
+   "const",
+   0,
+   160
+  ],
+  "LOCK.LKTABLE[4]": [
+   "const",
+   0,
+   160
+  ],
+  "LOCK.LKTABLE[5]": [
+   "const",
+   0,
+   160
+  ],
+  "LOCK.LKTABLE[6]": [
+   "const",
+   0,
+   160
+  ],
+  "LOCK.LKTABLE[7]": [
+   "const",
+   0,
+   160
+  ],
+  "LOCK.LKTABLE[8]": [
+   "const",
+   0,
+   160
+  ],
+  "LOCK.LKTABLE[9]": [
+   "const",
+   0,
+   160
+  ]
+ },
+ "PLL1": {
+  "CLKFBOUT.DELAY_TIME[0]": [
+   "bit",
+   "00_776",
+   160
+  ],
+  "CLKFBOUT.DELAY_TIME[1]": [
+   "bit",
+   "01_776",
+   160
+  ],
+  "CLKFBOUT.DELAY_TIME[2]": [
+   "bit",
+   "00_777",
+   160
+  ],
+  "CLKFBOUT.DELAY_TIME[3]": [
+   "bit",
+   "01_777",
+   160
+  ],
+  "CLKFBOUT.DELAY_TIME[4]": [
+   "bit",
+   "00_778",
+   160
+  ],
+  "CLKFBOUT.DELAY_TIME[5]": [
+   "const",
+   0,
+   160
+  ],
+  "CLKFBOUT.EDGE[0]": [
+   "bit",
+   "01_779",
+   160
+  ],
+  "CLKFBOUT.FRAC[0]": [
+   "const",
+   0,
+   160
+  ],
+  "CLKFBOUT.FRAC[1]": [
+   "const",
+   0,
+   160
+  ],
+  "CLKFBOUT.FRAC[2]": [
+   "const",
+   0,
+   160
+  ],
+  "CLKFBOUT.FRAC_EN[0]": [
+   "const",
+   0,
+   160
+  ],
+  "CLKFBOUT.FRAC_WF_R[0]": [
+   "const",
+   0,
+   160
+  ],
+  "CLKFBOUT.HIGH_TIME[0]": [
+   "bit",
+   "00_771",
+   160
+  ],
+  "CLKFBOUT.HIGH_TIME[1]": [
+   "bit",
+   "01_771",
+   160
+  ],
+  "CLKFBOUT.HIGH_TIME[2]": [
+   "bit",
+   "00_772",
+   160
+  ],
+  "CLKFBOUT.HIGH_TIME[3]": [
+   "bit",
+   "01_772",
+   160
+  ],
+  "CLKFBOUT.HIGH_TIME[4]": [
+   "const",
+   0,
+   160
+  ],
+  "CLKFBOUT.HIGH_TIME[5]": [
+   "const",
+   0,
+   160
+  ],
+  "CLKFBOUT.LOW_TIME[0]": [
+   "bit",
+   "00_768",
+   160
+  ],
+  "CLKFBOUT.LOW_TIME[1]": [
+   "bit",
+   "01_768",
+   160
+  ],
+  "CLKFBOUT.LOW_TIME[2]": [
+   "bit",
+   "00_769",
+   160
+  ],
+  "CLKFBOUT.LOW_TIME[3]": [
+   "bit",
+   "01_769",
+   160
+  ],
+  "CLKFBOUT.LOW_TIME[4]": [
+   "const",
+   0,
+   160
+  ],
+  "CLKFBOUT.LOW_TIME[5]": [
+   "const",
+   0,
+   160
+  ],
+  "CLKFBOUT.MX[0]": [
+   "const",
+   0,
+   160
+  ],
+  "CLKFBOUT.MX[1]": [
+   "const",
+   0,
+   160
+  ],
+  "CLKFBOUT.NO_COUNT[0]": [
+   "const",
+   0,
+   160
+  ],
+  "CLKFBOUT.PHASE_MUX[0]": [
+   "const",
+   0,
+   160
+  ],
+  "CLKFBOUT.PHASE_MUX[1]": [
+   "const",
+   0,
+   160
+  ],
+  "CLKFBOUT.PHASE_MUX[2]": [
+   "const",
+   0,
+   160
+  ],
+  "CLKFBOUT.REG1_RESERVED[0]": [
+   "const",
+   0,
+   160
+  ],
+  "CLKFBOUT.REG2_RESERVED[0]": [
+   "const",
+   0,
+   160
+  ],
+  "CLKOUT0.DELAY_TIME[0]": [
+   "bit",
+   "00_744",
+   133
+  ],
+  "CLKOUT0.DELAY_TIME[1]": [
+   "bit",
+   "01_744",
+   133
+  ],
+  "CLKOUT0.DELAY_TIME[2]": [
+   "bit",
+   "00_745",
+   133
+  ],
+  "CLKOUT0.DELAY_TIME[3]": [
+   "bit",
+   "01_745",
+   133
+  ],
+  "CLKOUT0.DELAY_TIME[4]": [
+   "bit",
+   "00_746",
+   133
+  ],
+  "CLKOUT0.DELAY_TIME[5]": [
+   "bit",
+   "01_746",
+   133
+  ],
+  "CLKOUT0.EDGE[0]": [
+   "bit",
+   "01_747",
+   133
+  ],
+  "CLKOUT0.FRAC[0]": [
+   "const",
+   0,
+   133
+  ],
+  "CLKOUT0.FRAC[1]": [
+   "const",
+   0,
+   133
+  ],
+  "CLKOUT0.FRAC[2]": [
+   "const",
+   0,
+   133
+  ],
+  "CLKOUT0.FRAC_EN[0]": [
+   "const",
+   0,
+   133
+  ],
+  "CLKOUT0.FRAC_WF_R[0]": [
+   "const",
+   0,
+   133
+  ],
+  "CLKOUT0.HIGH_TIME[0]": [
+   "bit",
+   "00_739",
+   133
+  ],
+  "CLKOUT0.HIGH_TIME[1]": [
+   "bit",
+   "01_739",
+   133
+  ],
+  "CLKOUT0.HIGH_TIME[2]": [
+   "bit",
+   "00_740",
+   133
+  ],
+  "CLKOUT0.HIGH_TIME[3]": [
+   "bit",
+   "01_740",
+   133
+  ],
+  "CLKOUT0.HIGH_TIME[4]": [
+   "bit",
+   "00_741",
+   133
+  ],
+  "CLKOUT0.HIGH_TIME[5]": [
+   "bit",
+   "01_741",
+   133
+  ],
+  "CLKOUT0.LOW_TIME[0]": [
+   "bit",
+   "00_736",
+   133
+  ],
+  "CLKOUT0.LOW_TIME[1]": [
+   "bit",
+   "01_736",
+   133
+  ],
+  "CLKOUT0.LOW_TIME[2]": [
+   "bit",
+   "00_737",
+   133
+  ],
+  "CLKOUT0.LOW_TIME[3]": [
+   "bit",
+   "01_737",
+   133
+  ],
+  "CLKOUT0.LOW_TIME[4]": [
+   "bit",
+   "00_738",
+   133
+  ],
+  "CLKOUT0.LOW_TIME[5]": [
+   "bit",
+   "01_738",
+   133
+  ],
+  "CLKOUT0.MX[0]": [
+   "const",
+   0,
+   133
+  ],
+  "CLKOUT0.MX[1]": [
+   "const",
+   0,
+   133
+  ],
+  "CLKOUT0.NO_COUNT[0]": [
+   "const",
+   0,
+   133
+  ],
+  "CLKOUT0.PHASE_MUX[0]": [
+   "const",
+   0,
+   133
+  ],
+  "CLKOUT0.PHASE_MUX[1]": [
+   "const",
+   0,
+   133
+  ],
+  "CLKOUT0.PHASE_MUX[2]": [
+   "const",
+   0,
+   133
+  ],
+  "CLKOUT0.REG1_RESERVED[0]": [
+   "const",
+   0,
+   133
+  ],
+  "CLKOUT0.REG2_RESERVED[0]": [
+   "const",
+   0,
+   133
+  ],
+  "CLKOUT1.DELAY_TIME[0]": [
+   "bit",
+   "00_760",
+   134
+  ],
+  "CLKOUT1.DELAY_TIME[1]": [
+   "bit",
+   "01_760",
+   134
+  ],
+  "CLKOUT1.DELAY_TIME[2]": [
+   "bit",
+   "00_761",
+   134
+  ],
+  "CLKOUT1.DELAY_TIME[3]": [
+   "bit",
+   "01_761",
+   134
+  ],
+  "CLKOUT1.DELAY_TIME[4]": [
+   "bit",
+   "00_762",
+   134
+  ],
+  "CLKOUT1.DELAY_TIME[5]": [
+   "bit",
+   "01_762",
+   134
+  ],
+  "CLKOUT1.EDGE[0]": [
+   "bit",
+   "01_763",
+   134
+  ],
+  "CLKOUT1.FRAC[0]": [
+   "const",
+   0,
+   134
+  ],
+  "CLKOUT1.FRAC[1]": [
+   "const",
+   0,
+   134
+  ],
+  "CLKOUT1.FRAC[2]": [
+   "const",
+   0,
+   134
+  ],
+  "CLKOUT1.FRAC_EN[0]": [
+   "const",
+   0,
+   134
+  ],
+  "CLKOUT1.FRAC_WF_R[0]": [
+   "const",
+   0,
+   134
+  ],
+  "CLKOUT1.HIGH_TIME[0]": [
+   "bit",
+   "00_755",
+   134
+  ],
+  "CLKOUT1.HIGH_TIME[1]": [
+   "bit",
+   "01_755",
+   134
+  ],
+  "CLKOUT1.HIGH_TIME[2]": [
+   "bit",
+   "00_756",
+   134
+  ],
+  "CLKOUT1.HIGH_TIME[3]": [
+   "bit",
+   "01_756",
+   134
+  ],
+  "CLKOUT1.HIGH_TIME[4]": [
+   "bit",
+   "00_757",
+   134
+  ],
+  "CLKOUT1.HIGH_TIME[5]": [
+   "bit",
+   "01_757",
+   134
+  ],
+  "CLKOUT1.LOW_TIME[0]": [
+   "bit",
+   "00_752",
+   134
+  ],
+  "CLKOUT1.LOW_TIME[1]": [
+   "bit",
+   "01_752",
+   134
+  ],
+  "CLKOUT1.LOW_TIME[2]": [
+   "bit",
+   "00_753",
+   134
+  ],
+  "CLKOUT1.LOW_TIME[3]": [
+   "bit",
+   "01_753",
+   134
+  ],
+  "CLKOUT1.LOW_TIME[4]": [
+   "bit",
+   "00_754",
+   134
+  ],
+  "CLKOUT1.LOW_TIME[5]": [
+   "bit",
+   "01_754",
+   134
+  ],
+  "CLKOUT1.MX[0]": [
+   "const",
+   0,
+   134
+  ],
+  "CLKOUT1.MX[1]": [
+   "const",
+   0,
+   134
+  ],
+  "CLKOUT1.NO_COUNT[0]": [
+   "const",
+   0,
+   134
+  ],
+  "CLKOUT1.PHASE_MUX[0]": [
+   "const",
+   0,
+   134
+  ],
+  "CLKOUT1.PHASE_MUX[1]": [
+   "const",
+   0,
+   134
+  ],
+  "CLKOUT1.PHASE_MUX[2]": [
+   "const",
+   0,
+   134
+  ],
+  "CLKOUT1.REG1_RESERVED[0]": [
+   "const",
+   0,
+   134
+  ],
+  "CLKOUT1.REG2_RESERVED[0]": [
+   "const",
+   0,
+   134
+  ],
+  "DIVCLK.EDGE[0]": [
+   "bit",
+   "01_726",
+   160
+  ],
+  "DIVCLK.HIGH_TIME[0]": [
+   "bit",
+   "00_723",
+   160
+  ],
+  "DIVCLK.HIGH_TIME[1]": [
+   "bit",
+   "01_723",
+   160
+  ],
+  "DIVCLK.HIGH_TIME[2]": [
+   "bit",
+   "00_724",
+   160
+  ],
+  "DIVCLK.HIGH_TIME[3]": [
+   "const",
+   0,
+   160
+  ],
+  "DIVCLK.HIGH_TIME[4]": [
+   "const",
+   0,
+   160
+  ],
+  "DIVCLK.HIGH_TIME[5]": [
+   "const",
+   0,
+   160
+  ],
+  "DIVCLK.LOW_TIME[0]": [
+   "bit",
+   "00_720",
+   160
+  ],
+  "DIVCLK.LOW_TIME[1]": [
+   "bit",
+   "01_720",
+   160
+  ],
+  "DIVCLK.LOW_TIME[2]": [
+   "bit",
+   "00_721",
+   160
+  ],
+  "DIVCLK.LOW_TIME[3]": [
+   "const",
+   0,
+   160
+  ],
+  "DIVCLK.LOW_TIME[4]": [
+   "const",
+   0,
+   160
+  ],
+  "DIVCLK.LOW_TIME[5]": [
+   "const",
+   0,
+   160
+  ],
+  "DIVCLK.NO_COUNT[0]": [
+   "bit",
+   "00_726",
+   160
+  ],
+  "FILTER.TABLE[0]": [
+   "const",
+   1,
+   160
+  ],
+  "FILTER.TABLE[1]": [
+   "const",
+   1,
+   160
+  ],
+  "FILTER.TABLE[2]": [
+   "bit",
+   "00_1148",
+   160
+  ],
+  "FILTER.TABLE[3]": [
+   "bit",
+   "01_1149",
+   160
+  ],
+  "FILTER.TABLE[4]": [
+   "bit",
+   "00_1150",
+   160
+  ],
+  "FILTER.TABLE[5]": [
+   "bit",
+   "01_1151",
+   160
+  ],
+  "FILTER.TABLE[6]": [
+   "bit",
+   "00_1140",
+   160
+  ],
+  "FILTER.TABLE[7]": [
+   "bit",
+   "01_1141",
+   160
+  ],
+  "FILTER.TABLE[8]": [
+   "bit",
+   "00_1142",
+   160
+  ],
+  "FILTER.TABLE[9]": [
+   "bit",
+   "01_1143",
+   160
+  ],
+  "LOCK.LKTABLE[0]": [
+   "const",
+   1,
+   160
+  ],
+  "LOCK.LKTABLE[10]": [
+   "const",
+   1,
+   160
+  ],
+  "LOCK.LKTABLE[11]": [
+   "const",
+   0,
+   160
+  ],
+  "LOCK.LKTABLE[12]": [
+   "const",
+   0,
+   160
+  ],
+  "LOCK.LKTABLE[13]": [
+   "const",
+   1,
+   160
+  ],
+  "LOCK.LKTABLE[14]": [
+   "const",
+   0,
+   160
+  ],
+  "LOCK.LKTABLE[15]": [
+   "const",
+   1,
+   160
+  ],
+  "LOCK.LKTABLE[16]": [
+   "const",
+   1,
+   160
+  ],
+  "LOCK.LKTABLE[17]": [
+   "const",
+   1,
+   160
+  ],
+  "LOCK.LKTABLE[18]": [
+   "const",
+   1,
+   160
+  ],
+  "LOCK.LKTABLE[19]": [
+   "const",
+   1,
+   160
+  ],
+  "LOCK.LKTABLE[1]": [
+   "const",
+   0,
+   160
+  ],
+  "LOCK.LKTABLE[20]": [
+   "bit",
+   "00_816",
+   160
+  ],
+  "LOCK.LKTABLE[21]": [
+   "bit",
+   "01_816",
+   160
+  ],
+  "LOCK.LKTABLE[22]": [
+   "bit",
+   "00_817",
+   160
+  ],
+  "LOCK.LKTABLE[23]": [
+   "bit",
+   "01_817",
+   160
+  ],
+  "LOCK.LKTABLE[24]": [
+   "bit",
+   "00_818",
+   160
+  ],
+  "LOCK.LKTABLE[25]": [
+   "bit",
+   "01_818",
+   160
+  ],
+  "LOCK.LKTABLE[26]": [
+   "bit",
+   "00_819",
+   160
+  ],
+  "LOCK.LKTABLE[27]": [
+   "bit",
+   "01_819",
+   160
+  ],
+  "LOCK.LKTABLE[28]": [
+   "bit",
+   "00_820",
+   160
+  ],
+  "LOCK.LKTABLE[29]": [
+   "const",
+   1,
+   160
+  ],
+  "LOCK.LKTABLE[2]": [
+   "const",
+   0,
+   160
+  ],
+  "LOCK.LKTABLE[30]": [
+   "ambig",
+   [
+    "00_829",
+    "00_837"
+   ],
+   160
+  ],
+  "LOCK.LKTABLE[31]": [
+   "ambig",
+   [
+    "01_829",
+    "01_837"
+   ],
+   160
+  ],
+  "LOCK.LKTABLE[32]": [
+   "ambig",
+   [
+    "00_830",
+    "00_838"
+   ],
+   160
+  ],
+  "LOCK.LKTABLE[33]": [
+   "ambig",
+   [
+    "01_830",
+    "01_838"
+   ],
+   160
+  ],
+  "LOCK.LKTABLE[34]": [
+   "ambig",
+   [
+    "00_831",
+    "00_839"
+   ],
+   160
+  ],
+  "LOCK.LKTABLE[35]": [
+   "ambig",
+   [
+    "00_829",
+    "00_837"
+   ],
+   160
+  ],
+  "LOCK.LKTABLE[36]": [
+   "ambig",
+   [
+    "01_829",
+    "01_837"
+   ],
+   160
+  ],
+  "LOCK.LKTABLE[37]": [
+   "ambig",
+   [
+    "00_830",
+    "00_838"
+   ],
+   160
+  ],
+  "LOCK.LKTABLE[38]": [
+   "ambig",
+   [
+    "01_830",
+    "01_838"
+   ],
+   160
+  ],
+  "LOCK.LKTABLE[39]": [
+   "ambig",
+   [
+    "00_831",
+    "00_839"
+   ],
+   160
+  ],
+  "LOCK.LKTABLE[3]": [
+   "const",
+   0,
+   160
+  ],
+  "LOCK.LKTABLE[4]": [
+   "const",
+   0,
+   160
+  ],
+  "LOCK.LKTABLE[5]": [
+   "const",
+   0,
+   160
+  ],
+  "LOCK.LKTABLE[6]": [
+   "const",
+   0,
+   160
+  ],
+  "LOCK.LKTABLE[7]": [
+   "const",
+   0,
+   160
+  ],
+  "LOCK.LKTABLE[8]": [
+   "const",
+   0,
+   160
+  ],
+  "LOCK.LKTABLE[9]": [
+   "const",
+   0,
+   160
+  ]
+ }
+}
