@@ -20,6 +20,7 @@ ap = argparse.ArgumentParser()
 ap.add_argument("build", nargs="?", default=os.path.join(HERE, "build"))
 ap.add_argument("--dst", default=".")
 ap.add_argument("--json", default=os.path.join(HERE, "mux_solution.json"))
+ap.add_argument("--min", type=int, default=2, help="instances a label needs to choose the field")
 args = ap.parse_args()
 
 grid = json.load(open(os.path.join(solve.PART_DIR, "tilegrid.json")))
@@ -45,20 +46,25 @@ for d in dsts:
     labels = [p.get(d) for p, _ in inst]
     used = [i for i, l in enumerate(labels) if l]
     unused = [i for i, l in enumerate(labels) if not l]
-    cand = set().union(*(inst[i][1] for i in used))
-    cand -= set().union(*(inst[i][1] for i in unused)) if unused else set()
     bylabel = collections.defaultdict(list)
     for i in used:
         bylabel[labels[i]].append(i)
+    # A label seen once cannot tell its select bits from whatever else that
+    # instance had; only labels seen twice or more choose the field.
+    solid = [i for ix in bylabel.values() if len(ix) >= args.min for i in ix]
+    if not solid:
+        continue
+    cand = set().union(*(inst[i][1] for i in solid))
+    cand -= set().union(*(inst[i][1] for i in unused)) if unused else set()
     field = []
     for b in sorted(cand):
-        ok = all(len({b in inst[i][1] for i in ix}) == 1 for ix in bylabel.values())
+        ok = all(len({b in inst[i][1] for i in ix}) == 1 for ix in bylabel.values() if len(ix) >= args.min)
         if ok:
             field.append(b)
     pat = {}
     for l, ix in bylabel.items():
         pat[l] = ([solve.bitname(b) for b in field if b in inst[ix[0]][1]], len(ix))
-    out[d] = {l: v[0] for l, v in pat.items()}
+    out[d] = {l: {"bits": v[0], "n": v[1]} for l, v in pat.items()}
     print("%s  (%d used, %d unused) field %s" % (d, len(used), len(unused), " ".join(map(solve.bitname, field))))
     for l, (bits, n) in sorted(pat.items()):
         print("    %-45s %3d  %s" % (l, n, " ".join(bits) or "-"))

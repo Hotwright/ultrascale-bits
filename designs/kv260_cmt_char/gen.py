@@ -8,7 +8,10 @@ an MMCME4 and PLLE4s. Every buffer clocks its own small counter, kept in a
 random clock region (pblock), so its clock has to be distributed there.
 char.tcl dumps the features Vivado used; solve.py (kv260_clk_char) solves them.
 
-    gen.py <outdir> <count> [seed [first index]]
+    gen.py <outdir> <count> [seed [first index [mode]]]
+
+mode "ctrl" weights the specimen towards BUFGCTRL and BUFGCE_DIV (2-4 of
+each, 1-3 BUFGCE, no MMCM/PLL): their MUX_16_ENC selects are thin otherwise.
 """
 import os
 import random
@@ -44,7 +47,7 @@ class Spec:
         return ["IS_%s_INVERTED(1'b%d)" % (p, self.rng.randrange(2)) for p in pins]
 
 
-def specimen(rng, path):
+def specimen(rng, path, mode=""):
     s = Spec(rng)
     # Site rules Vivado enforces (2026-10-26 trial specimens):
     #  - BUFGCE_X0Y<24r+t> drives only HROUTE/HDISTR track t, and two clocks
@@ -79,7 +82,8 @@ def specimen(rng, path):
                 return "BUFGCE_X0Y%d" % (24 * c + t)
         raise RuntimeError("no BUFGCE track left")
 
-    nctrl, ndiv = rng.randint(0, 2), rng.randint(0, 2)
+    ctrl_mode = mode == "ctrl"
+    nctrl, ndiv = (rng.randint(2, 4), rng.randint(2, 4)) if ctrl_mode else (rng.randint(0, 2), rng.randint(0, 2))
     sites_ctrl = [take("BUFGCTRL") for _ in range(nctrl)]
     sites_div = [take("BUFGCE_DIV") for _ in range(ndiv)]
     srcs = ["fab", "fab", "ps"]
@@ -90,7 +94,7 @@ def specimen(rng, path):
 
     # MMCM / PLL: one CMT each at most, outputs into BUFGCEs.
     pll_outs = []
-    if rng.random() < 0.5:
+    if not ctrl_mode and rng.random() < 0.5:
         r = rng.randrange(4)
         outs = sorted(rng.sample(range(7), rng.randint(1, 3)))
         s.v += ["    wire mfb; wire [6:0] mo;",
@@ -106,7 +110,7 @@ def specimen(rng, path):
     pll_sites = ["PLL_X0Y%d" % i for i in range(8)]
     rng.shuffle(pll_sites)
     for p in range(2):
-        if rng.random() < 0.3:
+        if not ctrl_mode and rng.random() < 0.3:
             site = pll_sites.pop()
             r = int(site[-1]) // 2
             outs = sorted(rng.sample(range(2), rng.randint(1, 2)))
@@ -126,7 +130,7 @@ def specimen(rng, path):
         s.locs.append(("b%d_i" % b, site))
         s.load("b%d" % b)
         b += 1
-    for _ in range(rng.randint(3, 8)):
+    for _ in range(rng.randint(1, 3) if ctrl_mode else rng.randint(3, 8)):
         site = take("BUFGCE")
         ce = s.fab() if rng.random() < 0.7 else "1'b1"
         params = ["CE_TYPE(\"%s\")" % rng.choice(["SYNC", "ASYNC"])] + s.inv("I", "CE")
@@ -189,9 +193,10 @@ def main():
     out, count = sys.argv[1], int(sys.argv[2])
     seed = int(sys.argv[3]) if len(sys.argv) > 3 else 1
     first = int(sys.argv[4]) if len(sys.argv) > 4 else 0
+    mode = sys.argv[5] if len(sys.argv) > 5 else ""
     rng = random.Random(seed)
     for i in range(first, first + count):
-        specimen(rng, os.path.join(out, "specimen_%03d" % i))
+        specimen(rng, os.path.join(out, "specimen_%03d" % i), mode)
 
 
 if __name__ == "__main__":

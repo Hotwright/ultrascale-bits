@@ -1293,3 +1293,38 @@ could land beside FFs of another control set and abort on an assertion.
 
 `env/kv260_webcam.sh` photographs the Pmod
 LEDs, so a board test can be read without anyone watching the board.
+
+### BUFGCE: a fabric clock through the CMT works on the board
+
+A BUFGCE fed from fabric logic now lands on a CMT_L site (nextpnr used to
+put it on an HDIO bank's uncharacterised BUFGCE_HDIO), one per clock track:
+BUFGCE_X0Y<24r+t> drives only HROUTE/HDISTR track t. `designs/kv260_bufgce_test`
+(two BUFGCEs on one fabric clock and one slow CE, the second with
+IS_CE_INVERTED; their counters take turns on the LEDs) works on the board
+(2026-10-26).
+
+What it took, all from `designs/kv260_cmt_char` (100 random Vivado specimens
+of BUFGCE, BUFGCE_DIV, BUFGCTRL, MMCM, PLL; Vivado for characterisation only):
+
+- CMT_L's frame window is the whole frame (MMCM halfwords 84-171, PLLs
+  42-83); `segbits_cmt_l.corrections` moved up 1344 bits with it. The CMT
+  column's interface tiles INT_INTF_L_CMT/IO got windows (INT's, one column
+  left) and the same OUTPUTS_ENABLED (01_21 02_27 03_24) as the PCIe side;
+  RCLK_RCLK_XIPHY_INNER_FT got its clock-row window (USED bits per HDISTR
+  track).
+- The clock muxes. `CLK_CMT_MUX_16_ENC_<k>` (a track's source: its own
+  BUFGCE, any BUFGCTRL or BUFGCE_DIV) has one 5-bit select-code table for all
+  24 muxes and a regular placement (`enc.py`; every instance agrees). The
+  BUFGCE input muxes, MUX_2TO1/HROUTE chains and site attributes come from
+  per-mux label analysis (`mux.py`) and the set-intersection solve, written by
+  `emit_cmt.py` with a check that no bit is predicted that Vivado left clear.
+- BUFGCE: CE_TYPE ASYNC and IS_CE_INVERTED are a bit each; SYNC and being in
+  use set none; IS_I_INVERTED sets none (Vivado folds it into the driver) and
+  HARDSYNC is refused by Vivado 2024.2, so nextpnr refuses both.
+- Clocks from the CMT cross the X15 HROUTE buffers east to west: REV is
+  12_(47-2k) plus the R side's USED 13_(46-2k).
+
+Characterised but not yet written by nextpnr (still rejected by
+check_unsupported): BUFGCE_DIV (BUFGCE_DIVIDE is DIVIDE-1 in three bits),
+BUFGCTRL (INIT_OUT, PRESELECT, inversions), MMCM and PLL (their DRP
+registers need a pass of their own).

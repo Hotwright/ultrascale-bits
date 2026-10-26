@@ -1,0 +1,6 @@
+# INT_INTF_L_IO: the CMT column's interface tiles (window: INT's, one frame column
+# to the left, tools/fill_int_intf_tilegrid.py). designs/kv260_cmt_char: the
+# LOGIC_OUTS_CMT0 -> LOGIC_OUTS_R0 pip sets exactly 01_21 02_27 03_24, the
+# OUTPUTS_ENABLED of INT_INTF_R_PCIE4 and INT_INTF_LEFT_TERM_PSS; the IMUX and
+# BYPASS pips into the CMT set nothing (60 specimens, every bit explained).
+INT_INTF_L_IO.OUTPUTS_ENABLED add-feature 01_21 02_27 03_24
