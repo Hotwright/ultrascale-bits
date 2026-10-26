@@ -34,8 +34,17 @@ foreach line [split [read [open [file join $dir regions.txt]]] "\n"] {
     }
     add_cells_to_pblock [dict get $pbs $site] [get_cells [lindex $line 0]*]
 }
+# root.txt (optional): force the PS clock's clock root, "X<c>Y<r>" (the
+# ROW_MID sweep, build_root/).
+if {[file exists [file join $dir root.txt]]} {
+    set root [string trim [read [open [file join $dir root.txt]]]]
+    set_property USER_CLOCK_ROOT $root [get_nets -of [get_pins bufg_i/O]]
+}
 place_design
 route_design
+set fr [open [file join $dir clock_root.txt] w]
+foreach n [get_nets -hierarchical -filter {TYPE == GLOBAL_CLOCK}] { puts $fr "$n [get_property CLOCK_ROOT $n]" }
+close $fr
 write_bitstream -force [file join $dir design.bit]
 write_checkpoint -force [file join $dir design.dcp]
 

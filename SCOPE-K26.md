@@ -1346,3 +1346,39 @@ LED switches 1.5 Hz <-> slow with its select (2026-10-26).
 
 Still rejected by check_unsupported: MMCM and PLL, whose DRP registers need a
 pass of their own.
+
+### MMCME4_ADV / PLLE4_ADV: work on the board, one bit not bit-identical
+
+nextpnr ec8cde26, behind `-o unverified_cmt=1` (still refused without it).
+
+- **Registers.** `designs/kv260_mmcm_char` solved the DRP register file of
+  every MMCM/PLL site. nextpnr's `usp_drp.h` is a port of AMD's
+  `mmcm_pll_drp_func_us_plus_*.vh`, and it agrees with drp.py on all 7,360
+  registers of 480 cells. In `designs/kv260_mmcm_test`, the spec design
+  (fractional M and CLKOUT0, a phase, duty cycles, BANDWIDTH LOW, two MMCMs
+  and two PLLs) matches Vivado's DRP registers bit for bit at all four sites.
+- **Tied pins.** Vivado leaves tied RST/PWRDWN/PSEN/PSINCDEC unrouted and
+  writes the value as `!(tie ^ IS_INVERTED)` in
+  IS_RST_INVERTED / ZINV_*. It routes the DRP and PS clock pins as GND and
+  CLKINSEL=1 as VCC. nextpnr does the same.
+- **Board, 2026-10-27.** Every output blinks at its predicted rate (per-LED
+  FFT of a 25 s webcam video): 3.71 / 2.99 / 2.39 / 2.23 / 1.48 / 0.76 Hz,
+  against 3.73 / 2.98 / 2.38 / 2.24 / 1.49 / 0.75 Hz predicted.
+- **ROW_MID[0] (DRP 0x00 bit 0) is not reproducible by rule.** Vivado sets it
+  from the routed delay of CLKIN. Two sweeps show this:
+  - Forcing the PS clock's USER_CLOCK_ROOT to X1Y0..3 on one specimen
+    (`build_root/`) changes the flag per CMT row while the cell properties
+    stay identical.
+  - `delay.tcl` reads each CLKIN pin's net delay. Sorted by SLOW_MAX, the
+    flag alternates in bands about 270 ps wide (clear 1594, set 1856-1946,
+    clear 2118-2176, set 2380-2456, clear 2651-2718, set 2972, clear 3234 ps).
+
+  nextpnr has no US+ delay model, so it keeps the "middle rows" rule. The
+  board test ran with the flag opposite to Vivado's choice on all four cells
+  (set on the row-1 pair, clear on the row-3 pair), and every cell still
+  locked and ran at the right rate. If the bit is a CLKIN deskew tap, a wrong
+  value could move the input-to-output phase, which this test does not see.
+  It cannot affect frequency or lock.
+- **Other differences from Vivado's bits** are clock routing only. Vivado
+  feeds CLKIN through HDISTR tracks 3/4/15/22; nextpnr uses HDISTR_0_0 after
+  HROUTE. Both routes use characterised pips.
