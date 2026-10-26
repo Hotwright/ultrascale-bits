@@ -1,0 +1,8 @@
+patch/
+*.png
+*.json
+*.fasm
+*.bit
+*.bit.bin
+*.frames
+*.log

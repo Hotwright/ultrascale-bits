@@ -1324,7 +1324,25 @@ of BUFGCE, BUFGCE_DIV, BUFGCTRL, MMCM, PLL; Vivado for characterisation only):
 - Clocks from the CMT cross the X15 HROUTE buffers east to west: REV is
   12_(47-2k) plus the R side's USED 13_(46-2k).
 
-Characterised but not yet written by nextpnr (still rejected by
-check_unsupported): BUFGCE_DIV (BUFGCE_DIVIDE is DIVIDE-1 in three bits),
-BUFGCTRL (INIT_OUT, PRESELECT, inversions), MMCM and PLL (their DRP
-registers need a pass of their own).
+### BUFGCE_DIV and BUFGCTRL: work on the board
+
+nextpnr now writes both (BUFGCE_DIVIDE is DIVIDE-1 in three bits; BUFGCTRL's
+INIT_OUT, PRESELECT_I1 and pin inversions). `designs/kv260_bufgdiv_test`
+divides one fabric clock by 1, 2 and 4 and switches a BUFGCTRL between it and
+a clock four times slower every ~10 s. Measured from a 25 s webcam video
+(`env/kv260_webcam_rec.sh`, per-LED FFT): the LEDs blink at 3.00 / 1.50 /
+0.75 / 0.36 Hz against 2.98 / 1.49 / 0.745 / 0.37 predicted, and the BUFGCTRL
+LED switches 1.5 Hz <-> slow with its select (2026-10-26).
+
+- A tied-0 CLR or IGNORE is routed as VCC with IS_*_INVERTED set (pins.cc's
+  tie-one optimisation); this works on the board.
+- The router may not use two kinds of CMT_L pip that have no bits: a BUFGCE
+  CLK_IN -> CLK_OUT route-through, and HROUTE_0_t -> CMT_MUX_24_ENC for t > 0
+  (only the BUFG_PS track 0 is characterised). Without the block it fanned a
+  fabric clock out through both and the buffers lost their input
+  (`XilinxImpl::init`, 664 pips).
+- The BUFGCE -> BUFGCE_DIV CLK_IN_PIN pips are bitless (45 specimens, no
+  bits) and show as unknown features, like the HROUTE USED wires in CMT_L.
+
+Still rejected by check_unsupported: MMCM and PLL, whose DRP registers need a
+pass of their own.
