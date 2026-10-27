@@ -4,7 +4,11 @@ segbits_uram add-feature lines they solve to (as kv260_dsp_char/emit_dsp.py).
 
 Features, named per tile-relative site (URAM288_X0Y0..3, site Y mod 4):
 
-  IN_USE                 the site's own in-use bits (minors 1-4, 6-8)
+  IN_USE                 the site's own in-use bits (three, in minor 4)
+  OUT_<s>_ROW<r> (tile)  INT row r of the tile carries a used output of
+                         side s (A: port A outputs, to INT_INTF_R_X30; B:
+                         port B, to INT_INTF_L_X31); out_rows.txt says which
+                         pin leaves on which row
   <ENUM>.<value>         every enum value; the defaults solve to no bits
   AUTO_SLEEP_LATENCY[k], SELF_ADDR_<p>[k]
                          the binary value
@@ -35,6 +39,19 @@ sys.path.insert(0, HERE)
 import gen  # noqa: E402
 
 INV_PINS = gen.INVS
+# Output pin -> (side, INT row in the tile) per site position: a used output
+# sets OUT_<side>_ROW<row> (a tile feature) in minors 1-3 (A) or 6-8 (B).
+OUT_ROWS = {}
+for _line in open(os.path.join(HERE, "out_rows.txt")):
+    if _line.strip() and not _line.startswith("#"):
+        _y, _pin, _side, _row = _line.split()
+        OUT_ROWS[(int(_y), _pin)] = (_side, int(_row))
+# Their bits, from the single-pin specimens (gen_outmap.py) rather than the
+# random ones, which always use both sides together: one per INT row in each
+# of three minors.
+KNOWN = {"OUT_%s_ROW%d" % (side, r): [(m, r * 48 + o) for m, o in mo]
+         for side, mo in (("A", ((1, 21), (2, 27), (3, 24))), ("B", ((6, 21), (7, 27), (8, 24))))
+         for r in range(15)}
 INTS = {"AUTO_SLEEP_LATENCY": 4}
 VECS = {"SELF_ADDR_A": 11, "SELF_ADDR_B": 11}
 ZVECS = {"SELF_MASK_A": 11, "SELF_MASK_B": 11}
@@ -103,6 +120,13 @@ def load(build):
             pre = "URAM288_X0Y%d." % (y % 4)
             for k, v in effective(d["params"], pins[cell]).items():
                 per_tile[s2t[d["site"]]][pre + k] = v
+            # gen.py XORs every DOUT_A/DOUT_B bit into the Pmod.
+            f = per_tile[s2t[d["site"]]]
+            for side in "AB":
+                for r in range(15):
+                    f.setdefault("OUT_%s_ROW%d" % (side, r), False)
+                for b in range(72):
+                    f["OUT_%s_ROW%d" % OUT_ROWS[(y % 4, "DOUT_%s%d" % (side, b))]] = True
         frames = frames_of(spec)
         for t, f in per_tile.items():
             e = grid[t]["bits"]["CLB_IO_CLK"]
@@ -116,6 +140,12 @@ def main():
     ap.add_argument("--emit")
     args = ap.parse_args()
     tiles = [t for b in args.build for t in load(b)]
+    # Take the known features' bits out first; they must all be there.
+    for i, (spec, t, f, bits) in enumerate(tiles):
+        known = {b for n, v in f.items() if v and n in KNOWN for b in KNOWN[n]}
+        if not known <= bits:
+            print("%s %s: known OUT_ bits missing: %s" % (spec, t, sorted(known - bits)))
+        tiles[i] = (spec, t, {n: v for n, v in f.items() if n not in KNOWN}, bits - known)
     always = set.intersection(*(b for _, _, _, b in tiles))
     names = sorted(set().union(*(f.keys() for _, _, f, _ in tiles)))
     db = {"IN_USE": sorted(always)}
@@ -150,6 +180,7 @@ def main():
     for (k, b), n in miss.most_common(30):
         print("   %s %02d_%03d in %d tiles" % (k, b[0], b[1], n))
     if args.emit:
+        db.update(KNOWN)
         with open(args.emit, "w") as fo:
             for n in sorted(db):
                 if db[n]:

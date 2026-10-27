@@ -1455,3 +1455,43 @@ MULTSIGNIN driven, or their outputs used) are refused.
 - **Board.** Each DSP is checked against a LUT reference every 8 cycles and
   the result goes out as a pulse train on the LEDs (decoded from the
   webcam): 0xFFA5, all seven pass.
+
+### URAM288: bit-identical to Vivado, works on the board (still gated)
+
+nextpnr c603a6f2. URAM288 is supported behind `-o unverified_uram=1` until
+the gate is lifted by hand. Cascades (CASCADE_ORDER, REG_CAS, CAS_* pins)
+and URAM288_BASE are refused.
+
+- **Window.** `designs/kv260_uram_char/gen_window.py`: frame column 0x60
+  (INT_X30's + 1, 9 minors), INT_X30Y<y>'s offset, 45 halfwords for the
+  tile's four sites; URAM_URAM_FT and URAM_URAM_DELAY_FT share the layout.
+- **Bits.** `gen.py` builds random specimens (12 URAMs each, attributes and
+  every pin tie random). `emit_uram.py` predicts all 264 tile instances
+  exactly: the enums, AUTO_SLEEP_LATENCY, SELF_ADDR, SELF_MASK (stored
+  inverted, ZSELF_MASK), the seven pin inversions (a tied pin is fed VCC
+  and the bit makes the constant, as on the DSP) and a 3-bit IN_USE.
+  AVG_CONS_INACTIVE_CYCLES and pin ties set nothing.
+- **Output row enables.** A third of each tile's bits are not URAM
+  configuration. Each INT row of the tile has one enable (three bits, in
+  minors 1-3 for port A outputs, which leave through INT_INTF_R_X30, and
+  6-8 for port B, through INT_INTF_L_X31), set when any output on that row
+  is used. The random specimens always used both ports, so they could not
+  tell rows apart; `gen_outmap.py` (one output pin per URAM, every pin)
+  and Vivado's site-pin-to-INT_INTF map (`out_rows.txt`) settle it, and
+  agree on all 150 single-pin specimens. nextpnr writes
+  `OUT_<A|B>_ROW<r>` from the outputs it actually uses
+  (`usp_uram_rows.h`). Setting every row, as the first model did, does not
+  match Vivado.
+- **Spec design, 2026-10-27.** `designs/kv260_uram_test`: six LOC'd URAMs
+  in both tile types and every site position (defaults; OREG + IREG_PRE +
+  external CE + async reset; byte writes in PARITY_INDEPENDENT mode; ECC with
+  single-bit errors injected on odd addresses; EN/RDB_WR/RST inverted and EN_B
+  tied through its inversion; SELF_ADDR/SELF_MASK). Every URAM tile is
+  bit-identical to Vivado's.
+- **Board.** 0xFFA5: all six pass (ECC corrects and flags SBITERR exactly on
+  the injected addresses; the masked writes are ignored). Vivado's bitstream
+  of the same design passes too. The first nextpnr run failed only because
+  the test wrote in the same cycle its address and data changed: nextpnr has
+  no US+ timing model, and the data went through a multiplier and across the
+  whole URAM column. The test now writes two cycles later. Designs that need
+  timing closure are still at the mercy of that missing model.
