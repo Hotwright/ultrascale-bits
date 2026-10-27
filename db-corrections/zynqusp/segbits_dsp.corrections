@@ -6,6 +6,8 @@
 # Vivado's normalisation applied; see emit_dsp.py's docstring for each. With
 # them, every tile instance of every specimen is predicted exactly (no bit
 # missing, none extra). D_TIE1 has no bits for D[3], D[13] and D[23].
+# OUT_ROW<r> are tile features: INT row r carries a used output
+# (designs/kv260_dsp_char/out_rows.txt, from a single-pin specimen).
 # Regenerate:
 #   emit_dsp.py build build2 --emit x && (cat header; cat x) > this file
 DSP.DSP48E2_X0Y0.ACASCREG_EQ_AREG add-feature 05_114
@@ -536,4 +538,8 @@ DSP.DSP48E2_X0Y1.ZINV_RSTD add-feature 05_225
 DSP.DSP48E2_X0Y1.ZINV_RSTINMODE add-feature 05_218
 DSP.DSP48E2_X0Y1.ZINV_RSTM add-feature 04_145
 DSP.DSP48E2_X0Y1.ZINV_RSTP add-feature 04_200
-DSP.IN_USE add-feature 01_21 01_69 01_117 01_165 01_213 02_27 02_75 02_123 02_171 02_219 03_24 03_72 03_120 03_168 03_216
+DSP.OUT_ROW0 add-feature 01_21 02_27 03_24
+DSP.OUT_ROW1 add-feature 01_69 02_75 03_72
+DSP.OUT_ROW2 add-feature 01_117 02_123 03_120
+DSP.OUT_ROW3 add-feature 01_165 02_171 03_168
+DSP.OUT_ROW4 add-feature 01_213 02_219 03_216

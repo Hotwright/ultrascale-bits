@@ -1417,7 +1417,7 @@ differ from Vivado's by 180 degrees.
 
 ### DSP48E2: bit-identical to Vivado, works on the board (still gated)
 
-nextpnr 31604cd7. DSP48E2 is supported behind `-o unverified_dsp=1` until
+nextpnr 31604cd7, 6141b79a. DSP48E2 is supported behind `-o unverified_dsp=1` until
 the gate is lifted by hand. Cascades (ACIN/BCIN/PCIN/CARRYCASCIN/
 MULTSIGNIN driven, or their outputs used) are refused.
 
@@ -1428,9 +1428,16 @@ MULTSIGNIN driven, or their outputs used) are refused.
   and every control-pin tie random; `DATA_TIES=1` ties the data buses too).
   `emit_dsp.py` restates them as the features nextpnr writes, with Vivado's
   normalisation, and predicts all 1899 tile instances of 60 specimens
-  exactly: `segbits_dsp.corrections`, 529 features. Its docstring lists the
+  exactly: `segbits_dsp.corrections`, 533 features. Its docstring lists the
   normalisation (MASK under NO_PATDET, ZADREG/ZDREG, the CASCREG_EQ bits,
   ZINV for tied pins).
+- **Output enables, not IN_USE.** The 15 bits first taken as the tile's
+  IN_USE are one output enable per INT row (three bits each), set only for
+  rows carrying a used output, exactly as on URAM (below). The random
+  specimens used all of P, so they could not tell; `gen_outmap.py` (one
+  output pin per DSP) and Vivado's site-pin-to-INT_INTF map
+  (`out_rows.txt`) settle it. nextpnr writes `OUT_ROW<r>` from the outputs
+  in use (`usp_dsp_rows.h`).
 - **Tied pins, as Vivado does them** (the `kv260_dsp_test` reference,
   queried through the site pins, since a DSP48E2 is a macro whose own pins
   have no site pins):
@@ -1443,10 +1450,11 @@ MULTSIGNIN driven, or their outputs used) are refused.
   - an input the netlist leaves open takes the primitive default (CE 1,
     the rest 0), routed like a tie. An open D is how the first reference
     showed 27 bits per site we did not write.
-- **Spec design, 2026-10-27.** `designs/kv260_dsp_test`: seven LOC'd DSPs
+- **Spec design, 2026-10-27.** `designs/kv260_dsp_test`: eight LOC'd DSPs
   (A*B+C; pre-adder with INMODE tied through its inversion; SIMD FOUR12;
   pattern detect; subtract through ALUMODE inversion; W=RND; a constant D
-  in the pre-adder with C[47:32] tied). All four DSP tiles are
+  in the pre-adder with C[47:32] tied; a DSP alone in its tile using only
+  P[7:0], so only one output row). All five DSP tiles are
   bit-identical to Vivado's (`tools/diff_tile_bits.py`; decode the
   reference with `bitread -E`, since one Vivado frame fails bitread's ECC
   check and the dump stops there otherwise). Into the DSP side of the INT
@@ -1454,7 +1462,7 @@ MULTSIGNIN driven, or their outputs used) are refused.
   200 unused INT inputs high, which nextpnr does not.
 - **Board.** Each DSP is checked against a LUT reference every 8 cycles and
   the result goes out as a pulse train on the LEDs (decoded from the
-  webcam): 0xFFA5, all seven pass.
+  webcam): 0xFFA5, all eight pass.
 
 ### URAM288: bit-identical to Vivado, works on the board (still gated)
 

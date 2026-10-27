@@ -1,4 +1,4 @@
-// KV260 DSP48E2 board test: seven DSPs, each checked against a LUT-only
+// KV260 DSP48E2 board test: eight DSPs, each checked against a LUT-only
 // reference (built with yosys -nodsp) every 8 cycles. Inputs come from an
 // LFSR and are held for 8 cycles, so the DSP pipelines (up to 4 deep) have
 // settled when the check is made.
@@ -11,6 +11,8 @@
 //   t4  P = C - A:B                  ALUMODE tied 0 with IS_ALUMODE_INVERTED
 //                                    4'b0011: subtract
 //   t5  P = C + RND                  W = RND
+//   t7  P[7:0] of A*B + C            only eight outputs used: the DSP sets
+//                                    the output enable of their INT rows only
 //   t6  P = (D + A)*B + C            D tied to a constant (the DSP's own
 //                                    D_TIE0/TIE1 bits, not routed), C[47:32]
 //                                    tied (routed), INMODE tied 5'b00100
@@ -20,8 +22,9 @@
 // on every Pmod LED together as a pulse train (see kv260_mmcm_phase):
 // 16 slots of 0.67 s, MSB first, then 4 dark; a slot lit for a quarter is
 // 0, for three quarters 1. The word is
-//   {pass[6:0], t3_saw_match, 8'hA5}
-// where pass[i] = checks were made and none failed.
+//   {pass[7:0], 8'hA5}
+// where pass[i] = checks were made and none failed (and, for t3, the
+// pattern was seen at least once).
 module top (output wire [7:0] pmod);
     wire [3:0] plclk;
     PS8 ps8_i (.PLCLK(plclk));
@@ -44,6 +47,7 @@ module top (output wire [7:0] pmod);
     localparam [26:0] DC = 27'h4b5e3e9;  // D[3], D[13], D[23] set: no TIE1 bits
     wire [47:0] c6 = {16'h1234, c[31:0]};
     wire [47:0] p0, p1, p2, p3, p4, p5, p6;
+    wire [7:0] p7;
     wire pd3;
 
     (* LOC = "DSP48E2_X2Y10" *)
@@ -114,6 +118,17 @@ module top (output wire [7:0] pmod);
             .RSTA(1'b0), .RSTB(1'b0), .RSTC(1'b0), .RSTM(1'b0), .RSTP(1'b0), .RSTCTRL(1'b0),
             .RSTALUMODE(1'b0), .RSTINMODE(1'b0), .RSTALLCARRYIN(1'b0), .RSTD(1'b0), .P(p6));
 
+    wire [47:0] p7_all;
+    assign p7 = p7_all[7:0];
+    (* LOC = "DSP48E2_X2Y19" *)
+    DSP48E2 #(.AREG(1), .BREG(1), .CREG(1), .MREG(1), .PREG(1))
+        t7 (.CLK(clk), .A(a), .B(b), .C(c), .OPMODE(9'b00_011_01_01), .ALUMODE(4'b0000),
+            .INMODE(5'b00000), .CARRYINSEL(3'b000), .CARRYIN(1'b0),
+            .CEA1(1'b1), .CEA2(1'b1), .CEB1(1'b1), .CEB2(1'b1), .CEC(1'b1), .CEM(1'b1), .CEP(1'b1),
+            .CECTRL(1'b1), .CEALUMODE(1'b1), .CEINMODE(1'b1), .CECARRYIN(1'b1), .CED(1'b0), .CEAD(1'b0),
+            .RSTA(1'b0), .RSTB(1'b0), .RSTC(1'b0), .RSTM(1'b0), .RSTP(1'b0), .RSTCTRL(1'b0),
+            .RSTALUMODE(1'b0), .RSTINMODE(1'b0), .RSTALLCARRYIN(1'b0), .RSTD(1'b0), .P(p7_all));
+
     // The LUT references.
     wire signed [26:0] sa = a[26:0];
     wire signed [17:0] sb = b;
@@ -134,7 +149,7 @@ module top (output wire [7:0] pmod);
     wire [47:0] e4 = c - ab;
     wire [47:0] e5 = c + RND;
 
-    reg [6:0] fail = 0;
+    reg [7:0] fail = 0;
     reg checked = 0, saw = 0;
     always @(posedge clk)
         if (check) begin
@@ -146,9 +161,10 @@ module top (output wire [7:0] pmod);
             if (p4 != e4) fail[4] <= 1'b1;
             if (p5 != e5) fail[5] <= 1'b1;
             if (p6 != e6) fail[6] <= 1'b1;
+            if (p7 != e0[7:0]) fail[7] <= 1'b1;
             if (e3) saw <= 1'b1;
         end
-    wire [6:0] pass = checked ? ~fail : 7'd0;
+    wire [7:0] pass = checked ? ~fail & {4'hf, saw, 3'h7} : 8'd0;
 
     // Readout (as kv260_mmcm_phase).
     reg [4:0] sl = 0;
@@ -158,7 +174,7 @@ module top (output wire [7:0] pmod);
         if (ctr[25:0] == 26'h3ffffff) begin
             sl <= sl == 5'd19 ? 5'd0 : sl + 1'b1;
             if (sl == 5'd19)
-                word <= {pass, saw, 8'ha5};
+                word <= {pass, 8'ha5};
         end
         on <= sl < 5'd16 && (ctr[25:24] == 2'd0 || (word[15 - sl[3:0]] && ctr[25:24] != 2'd3));
     end

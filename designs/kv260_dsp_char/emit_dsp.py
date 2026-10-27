@@ -22,7 +22,9 @@ normalisation applied:
                          Vivado routes these constants all the same, and
                          feeds every tied invertible pin from VCC
   ZINV_CLK               !IS_CLK_INVERTED
-  IN_USE (tile)          15 bits set in every tile with a DSP in use
+  OUT_ROW<r> (tile)      INT row r of the tile carries a used output (one bit
+                         in each of minors 1-3); out_rows.txt says which pin
+                         leaves on which row. No other bit marks a DSP in use
 
 Features are named per tile-relative site (DSP48E2_X0Y0 is the lower, even
 global Y). Prints, for every specimen tile, whether the features predict the
@@ -41,6 +43,17 @@ sys.path.insert(0, os.path.join(HERE, "..", "kv260_clk_char"))
 from solve import PART_DIR, config_bits, frames_of, tile_bits  # noqa: E402
 sys.path.insert(0, HERE)
 import gen  # noqa: E402
+
+# Output site pin -> INT row in the tile, per site position: a used output
+# sets OUT_ROW<row> (a tile feature: one bit in each of minors 1-3). Its bits
+# come from the single-pin specimen (gen_outmap.py); the random specimens use
+# all of P, so they cannot tell the rows apart.
+OUT_ROWS = {}
+for _line in open(os.path.join(HERE, "out_rows.txt")):
+    if _line.strip() and not _line.startswith("#"):
+        _y, _pin, _row = _line.split()
+        OUT_ROWS[(int(_y), _pin)] = int(_row)
+KNOWN = {"OUT_ROW%d" % r: [(1, r * 48 + 21), (2, r * 48 + 27), (3, r * 48 + 24)] for r in range(5)}
 
 INV_PINS = {"ALUMODE": 4, "CARRYIN": 1, "INMODE": 5, "OPMODE": 9, "RSTA": 1, "RSTALLCARRYIN": 1, "RSTALUMODE": 1,
             "RSTB": 1, "RSTC": 1, "RSTCTRL": 1, "RSTD": 1, "RSTINMODE": 1, "RSTM": 1, "RSTP": 1}
@@ -121,6 +134,12 @@ def load(build):
             pre = "DSP48E2_X0Y%d." % (y % 2)
             for k, v in effective(d["params"], pins[cell]).items():
                 per_tile[s2t[d["site"]]][pre + k] = v
+            # gen.py XORs every bit of P into the Pmod.
+            f = per_tile[s2t[d["site"]]]
+            for r in range(5):
+                f.setdefault("OUT_ROW%d" % r, False)
+            for b in range(48):
+                f["OUT_ROW%d" % OUT_ROWS[(y % 2, "P%d" % b)]] = True
         frames = frames_of(spec)
         for t, f in per_tile.items():
             e = grid[t]["bits"]["CLB_IO_CLK"]
@@ -134,6 +153,12 @@ def main():
     ap.add_argument("--emit")
     args = ap.parse_args()
     tiles = [t for b in args.build for t in load(b)]
+    # Take the known features' bits out first; they must all be there.
+    for i, (spec, t, f, bits) in enumerate(tiles):
+        known = {b for n, v in f.items() if v and n in KNOWN for b in KNOWN[n]}
+        if not known <= bits:
+            print("%s %s: known OUT_ROW bits missing: %s" % (spec, t, sorted(known - bits)))
+        tiles[i] = (spec, t, {n: v for n, v in f.items() if n not in KNOWN}, bits - known)
     always = set.intersection(*(b for _, _, _, b in tiles))
     names = sorted(set().union(*(f.keys() for _, _, f, _ in tiles)))
     db = {"IN_USE": sorted(always)}
@@ -168,6 +193,7 @@ def main():
     for (k, b), n in miss.most_common(20):
         print("   %s %02d_%03d in %d tiles" % (k, b[0], b[1], n))
     if args.emit:
+        db.update(KNOWN)
         with open(args.emit, "w") as fo:
             for n in sorted(db):
                 if db[n]:
