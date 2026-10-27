@@ -12,6 +12,10 @@
 // each beat moves on by 1 << AxSIZE. One transaction at a time per direction;
 // IDs are echoed. The Pmod LEDs show r0[7:0] (LEDs are active-low: a 1 bit
 // is a dark LED).
+//
+// r1[7:0] drives PL_PS_IRQ0[7:0] (GIC SPI 121-128) and r1[15:8] drives
+// PL_PS_IRQ1[7:0] (SPI 136-143), so the PS can raise its own interrupts
+// through the PL and watch them in the GIC distributor.
 module top (output wire [7:0] pmod);
     wire [3:0] plclk;
     wire clk;
@@ -29,8 +33,11 @@ module top (output wire [7:0] pmod);
     reg [15:0] bid = 16'd0, rid = 16'd0;
     reg [127:0] rdata = 128'd0;
 
+    reg [31:0] r0 = 32'h000000ff, r1 = 32'd0, r2 = 32'd0, r3 = 32'd0;
+
     PS8 ps8_i (
         .PLCLK(plclk),
+        .PLPSIRQ0(r1[7:0]), .PLPSIRQ1(r1[15:8]),
         .MAXIGP0ACLK(clk),
         .MAXIGP0AWID(awid), .MAXIGP0AWADDR(awaddr), .MAXIGP0AWLEN(awlen),
         .MAXIGP0AWSIZE(awsize), .MAXIGP0AWVALID(awvalid), .MAXIGP0AWREADY(awready),
@@ -43,7 +50,6 @@ module top (output wire [7:0] pmod);
         .MAXIGP0RVALID(rvalid), .MAXIGP0RREADY(rready));
     BUFG_PS bufg_i (.I(plclk[0]), .O(clk));
 
-    reg [31:0] r0 = 32'h000000ff, r1 = 32'd0, r2 = 32'd0, r3 = 32'd0;
     reg [31:0] cyc = 32'd0, nwr = 32'd0, nrd = 32'd0;
     always @(posedge clk) cyc <= cyc + 1'b1;
 

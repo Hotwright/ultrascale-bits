@@ -1503,3 +1503,29 @@ and URAM288_BASE are refused.
   no US+ timing model, and the data went through a multiplier and across the
   whole URAM column. The test now writes two cycles later. Designs that need
   timing closure are still at the mercy of that missing model.
+
+### PS-PL AXI and PL->PS interrupts: work on the board
+
+- **Design.** `designs/kv260_ps_axi_test`: a PS8 whose M_AXI_HPM0_FPD
+  (0xA000_0000, 128-bit as the KV260 boot firmware sets FPD_AFI_FS) feeds a
+  small AXI4 slave: four registers with byte strobes, an ID, a cycle counter,
+  beat counters. `r1[15:0]` drives PL_PS_IRQ0/1. Built with yosys and
+  nextpnr-himbaechel only; nothing in the PS needed changing.
+- **One fix.** The PS's site -> fabric enable, prjuray's
+  `INT_INTF_LEFT_TERM_PSS.OUTPUTS_ENABLED.1`, is not valid FASM (a segment
+  cannot start with a digit), so no design using a PS8 output could
+  assemble. `db-corrections/zynqusp/segbits_int_intf_left_term_pss.corrections`
+  names the same bits `OUTPUTS_ENABLED`, as on INT_INTF_R_PCIE4 (nextpnr
+  37f764b4).
+- **Board, 2026-10-27.** `test.sh` (xsdb on the PSU target through
+  `env/kv260_xsdb.sh`): word writes to every lane, byte and halfword strobes,
+  the ID, the counter, an unmapped line; then each of the 16 interrupt lines
+  alone, which lands on exactly its SPI (121-128, 136-143) in the LPD GIC
+  proxy (GICP2/GICP3 status). PASS 41/41. The APU and RPU GICs themselves
+  cannot be read from the DAP (AXI-AP error; the R5 is held in reset).
+- **Not yet covered.** xsdb's DAP splits multi-word accesses into single
+  beats, so AXI bursts (AxLEN > 0) and 128-bit transfers need code on the
+  A53. The other PS ports (HPM1_FPD, HPM0_LPD, the slave HP/HPC/ACE ports,
+  EMIO) are wired the same way but untested. What Vivado ties the unused
+  PS8 inputs to is still unchecked: nextpnr ties them as nextpnr-xilinx did,
+  and the PS behaves.
