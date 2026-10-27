@@ -1349,7 +1349,7 @@ pass of their own.
 
 ### MMCME4_ADV / PLLE4_ADV: work on the board, one bit not bit-identical
 
-nextpnr ec8cde26, behind `-o unverified_cmt=1` (still refused without it).
+nextpnr ec8cde26 and 0d106be9, behind `-o unverified_cmt=1` (still refused without it).
 
 - **Registers.** `designs/kv260_mmcm_char` solved the DRP register file of
   every MMCM/PLL site. nextpnr's `usp_drp.h` is a port of AMD's
@@ -1376,9 +1376,32 @@ nextpnr ec8cde26, behind `-o unverified_cmt=1` (still refused without it).
   nextpnr has no US+ delay model, so it keeps the "middle rows" rule. The
   board test ran with the flag opposite to Vivado's choice on all four cells
   (set on the row-1 pair, clear on the row-3 pair), and every cell still
-  locked and ran at the right rate. If the bit is a CLKIN deskew tap, a wrong
-  value could move the input-to-output phase, which this test does not see.
-  It cannot affect frequency or lock.
+  locked and ran at the right rate.
+- **ROW_MID[0] moves the output by half a CLKIN period.**
+  `designs/kv260_mmcm_phase` builds one route into two bitstreams that
+  differ in that single bit of MMCM_X0Y1 (M 10, O 10, 100 MHz in and out).
+  It measures the CLKIN -> CLKOUT0 phase in fabric with a DDMTD: 50 MHz
+  toggles on each clock are sampled at 49.741 MHz from a second MMCM, giving
+  104 ps per sample, averaged over 65536 beats. The result is shown as a
+  pulse train on all the LEDs together and decoded from the webcam.
+
+  | ROW_MID[0] | Loads | Average d (mod 96 samples) |
+  | --- | --- | --- |
+  | set | 4 | 9.996, every load |
+  | clear | 4 | 58.016, every load |
+
+  The difference is 48.02 samples, or 5.00 ns: half the 10 ns CLKIN period,
+  180 degrees of the output. Lock and frequency are unaffected. So a design
+  that relies on the MMCM output's phase against its input (a synchronous
+  crossing between CLKIN and CLKOUT at the same frequency) sees a different
+  phase from the one Vivado would give it. Free-running derived clocks do
+  not care.
+- **A routing bug the phase test found.** Unconstrained, the router took
+  the CMT column's own VDISTR down to another row's BUFCE_ROW. Those pips
+  have no bits, so the MMCM outputs never reached their flops. nextpnr
+  0d106be9 now blocks every CMT_L clock pip without bits
+  (`usp_cmt_l_pips.h`, from `tools/gen_cmt_l_pips.py`), keeping the known
+  bitless ones. The earlier clock designs still route.
 - **Other differences from Vivado's bits** are clock routing only. Vivado
   feeds CLKIN through HDISTR tracks 3/4/15/22; nextpnr uses HDISTR_0_0 after
   HROUTE. Both routes use characterised pips.

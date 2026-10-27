@@ -1,0 +1,8 @@
+set/
+clr/
+*.json
+*.fasm
+*.bit
+*.bit.bin
+*.frames
+*.log
