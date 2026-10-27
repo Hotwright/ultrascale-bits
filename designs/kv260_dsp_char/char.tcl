@@ -12,6 +12,11 @@ foreach {p pin} {0 H12 1 E10 2 D10 3 C11 4 B10 5 E12 6 D11 7 B11} {
 }
 set_property SEVERITY {Warning} [get_drc_checks NSTD-1]
 set_property SEVERITY {Warning} [get_drc_checks UCIO-1]
+# Random attribute mixes are not all legal designs; Vivado still writes
+# their bits (as prjuray's DSP spec does).
+set_property SEVERITY {Warning} [get_drc_checks AVAL-*]
+set_property SEVERITY {Warning} [get_drc_checks REQP-*]
+foreach k {DSPS DPREG DPIP DPOP} { set_property SEVERITY {Warning} [get_drc_checks -quiet $k-*] }
 place_design
 route_design
 write_bitstream -force [file join $dir design.bit]
@@ -20,5 +25,9 @@ set f [open [file join $dir cells.txt] w]
 foreach c [get_cells -hierarchical -filter {REF_NAME =~ DSP*}] {
     puts $f "CELL $c [get_property REF_NAME $c] [get_property LOC $c] [get_property BEL $c]"
     foreach k [list_property $c] { puts $f "PROP $c $k [get_property $k $c]" }
+    foreach pin [get_pins -of_objects $c -filter {DIRECTION == IN}] {
+        set n [get_nets -quiet -of_objects $pin]
+        puts $f "PIN $c [get_property REF_PIN_NAME $pin] [expr {$n eq "" ? "- -" : "[get_property TYPE $n] $n"}]"
+    }
 }
 close $f
