@@ -1349,7 +1349,10 @@ pass of their own.
 
 ### MMCME4_ADV / PLLE4_ADV: work on the board, one bit not bit-identical
 
-nextpnr ec8cde26 and 0d106be9, behind `-o unverified_cmt=1` (still refused without it).
+nextpnr ec8cde26 and 0d106be9. The `-o unverified_cmt` gate was dropped
+(2026-10-27, with the user's approval) once the ROW_MID caveat below was
+measured: MMCM/PLL are supported, and the output phase against CLKIN may
+differ from Vivado's by 180 degrees.
 
 - **Registers.** `designs/kv260_mmcm_char` solved the DRP register file of
   every MMCM/PLL site. nextpnr's `usp_drp.h` is a port of AMD's

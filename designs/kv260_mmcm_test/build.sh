@@ -1,6 +1,6 @@
 #!/bin/bash
 # KV260 MMCM/PLL spec and board test (mmcm.v): two MMCMs and two PLLs,
-# each output on its own LED. MMCM/PLL are still behind -o unverified_cmt.
+# each output on its own LED.
 #
 # Built with nextpnr-himbaechel (branch usp-himbaechel in eda-tools/nextpnr).
 #
@@ -18,7 +18,7 @@ yosys -q -p "read_verilog mmcm.v
 "$NEXTPNR" --device xck26-sfvc784-2LV-c \
     --json mmcm.json \
     -o xdc=kv260_ps.xdc \
-    -o fasm=mmcm.fasm -o unverified_cmt=1 \
+    -o fasm=mmcm.fasm \
     --write mmcm_routed.json
 
 # The features this drops are the documented bitless ones (SCOPE-K26.md):

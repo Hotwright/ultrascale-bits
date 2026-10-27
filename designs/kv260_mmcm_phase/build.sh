@@ -16,7 +16,7 @@ yosys -q -p "read_verilog ${DEFS:-} phase.v
 "$NEXTPNR" --device xck26-sfvc784-2LV-c \
     --json phase.json \
     -o xdc=kv260_ps.xdc \
-    -o fasm=phase.fasm -o unverified_cmt=1
+    -o fasm=phase.fasm
 
 python3 "$ROOT/tools/check_fasm_vs_uraydb.py" phase.fasm --filter phase.filtered.fasm
 
