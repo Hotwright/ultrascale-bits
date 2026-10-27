@@ -1,6 +1,5 @@
 #!/bin/bash
-# KV260 URAM288 board test (uram.v). URAM288 is behind -o unverified_uram
-# until its spec design matches Vivado.
+# KV260 URAM288 board test (uram.v).
 #
 # Then: ../make_bitstream.sh . && ../../env/kv260_jtag_load.sh uram.bit
 set -e
@@ -17,6 +16,6 @@ yosys -q -p "read_verilog uram.v
 "$NEXTPNR" --device xck26-sfvc784-2LV-c \
     --json uram.json \
     -o xdc=kv260_ps.xdc \
-    -o fasm=uram.fasm -o unverified_uram=1
+    -o fasm=uram.fasm
 
 python3 "$ROOT/tools/check_fasm_vs_uraydb.py" uram.fasm --filter uram.filtered.fasm

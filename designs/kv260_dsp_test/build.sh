@@ -1,6 +1,5 @@
 #!/bin/bash
-# KV260 DSP48E2 board test (dsp.v). DSP48E2 is behind -o unverified_dsp
-# until its spec design matches Vivado.
+# KV260 DSP48E2 board test (dsp.v).
 #
 # Then: ../make_bitstream.sh . && ../../env/kv260_jtag_load.sh dsp.bit
 set -e
@@ -17,6 +16,6 @@ yosys -q -p "read_verilog dsp.v
 "$NEXTPNR" --device xck26-sfvc784-2LV-c \
     --json dsp.json \
     -o xdc=kv260_ps.xdc \
-    -o fasm=dsp.fasm -o unverified_dsp=1
+    -o fasm=dsp.fasm
 
 python3 "$ROOT/tools/check_fasm_vs_uraydb.py" dsp.fasm --filter dsp.filtered.fasm

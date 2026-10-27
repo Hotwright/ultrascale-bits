@@ -1415,10 +1415,10 @@ differ from Vivado's by 180 degrees.
   feeds CLKIN through HDISTR tracks 3/4/15/22; nextpnr uses HDISTR_0_0 after
   HROUTE. Both routes use characterised pips.
 
-### DSP48E2: bit-identical to Vivado, works on the board (still gated)
+### DSP48E2: bit-identical to Vivado, works on the board
 
-nextpnr 31604cd7, 6141b79a. DSP48E2 is supported behind `-o unverified_dsp=1` until
-the gate is lifted by hand. Cascades (ACIN/BCIN/PCIN/CARRYCASCIN/
+nextpnr 31604cd7, 6141b79a. DSP48E2 is supported (the `-o unverified_dsp`
+gate was lifted 2026-10-27 with the user's approval). Cascades (ACIN/BCIN/PCIN/CARRYCASCIN/
 MULTSIGNIN driven, or their outputs used) are refused.
 
 - **Window.** `designs/kv260_dsp_char/gen_window.py`: DSP_X<n>Y<y> is
@@ -1464,10 +1464,10 @@ MULTSIGNIN driven, or their outputs used) are refused.
   the result goes out as a pulse train on the LEDs (decoded from the
   webcam): 0xFFA5, all eight pass.
 
-### URAM288: bit-identical to Vivado, works on the board (still gated)
+### URAM288: bit-identical to Vivado, works on the board
 
-nextpnr c603a6f2. URAM288 is supported behind `-o unverified_uram=1` until
-the gate is lifted by hand. Cascades (CASCADE_ORDER, REG_CAS, CAS_* pins)
+nextpnr c603a6f2. URAM288 is supported (the `-o unverified_uram` gate was
+lifted 2026-10-27 with the user's approval). Cascades (CASCADE_ORDER, REG_CAS, CAS_* pins)
 and URAM288_BASE are refused.
 
 - **Window.** `designs/kv260_uram_char/gen_window.py`: frame column 0x60
