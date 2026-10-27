@@ -1414,3 +1414,44 @@ differ from Vivado's by 180 degrees.
   bits; everything else is in frames 6-11. Vivado
   feeds CLKIN through HDISTR tracks 3/4/15/22; nextpnr uses HDISTR_0_0 after
   HROUTE. Both routes use characterised pips.
+
+### DSP48E2: bit-identical to Vivado, works on the board (still gated)
+
+nextpnr 31604cd7. DSP48E2 is supported behind `-o unverified_dsp=1` until
+the gate is lifted by hand. Cascades (ACIN/BCIN/PCIN/CARRYCASCIN/
+MULTSIGNIN driven, or their outputs used) are refused.
+
+- **Window.** `designs/kv260_dsp_char/gen_window.py`: DSP_X<n>Y<y> is
+  INT_X<n>Y<y>'s frame column + 1 (8 minors), at the INT tile's offset,
+  15 halfwords; site 0 low, site 1 high (`tilegrid.windows`, 624 tiles).
+- **Bits.** `gen.py` builds random specimens (32 DSPs each, every attribute
+  and every control-pin tie random; `DATA_TIES=1` ties the data buses too).
+  `emit_dsp.py` restates them as the features nextpnr writes, with Vivado's
+  normalisation, and predicts all 1899 tile instances of 60 specimens
+  exactly: `segbits_dsp.corrections`, 529 features. Its docstring lists the
+  normalisation (MASK under NO_PATDET, ZADREG/ZDREG, the CASCREG_EQ bits,
+  ZINV for tied pins).
+- **Tied pins, as Vivado does them** (the `kv260_dsp_test` reference,
+  queried through the site pins, since a DSP48E2 is a macro whose own pins
+  have no site pins):
+  - an invertible pin (ALUMODE, CARRYIN, INMODE, OPMODE, RST*) is always fed
+    from VCC (`INT.VCC_WIRE`) and its ZINV bit makes the constant;
+  - CARRYINSEL and D are routed from their own constant **and** set tie
+    bits in the DSP tile (CARRYINSEL_TIE0/1, D_TIE0/1). D_TIE1 has no bit
+    for D[3], D[13] and D[23] (over 200 ties each);
+  - A, B, C and the CEs are just routed; they have no tie bits;
+  - an input the netlist leaves open takes the primitive default (CE 1,
+    the rest 0), routed like a tie. An open D is how the first reference
+    showed 27 bits per site we did not write.
+- **Spec design, 2026-10-27.** `designs/kv260_dsp_test`: seven LOC'd DSPs
+  (A*B+C; pre-adder with INMODE tied through its inversion; SIMD FOUR12;
+  pattern detect; subtract through ALUMODE inversion; W=RND; a constant D
+  in the pre-adder with C[47:32] tied). All four DSP tiles are
+  bit-identical to Vivado's (`tools/diff_tile_bits.py`; decode the
+  reference with `bitread -E`, since one Vivado frame fails bitread's ECC
+  check and the dump stops there otherwise). Into the DSP side of the INT
+  tiles both tools route the same 301 pins from VCC; Vivado also ties about
+  200 unused INT inputs high, which nextpnr does not.
+- **Board.** Each DSP is checked against a LUT reference every 8 cycles and
+  the result goes out as a pulse train on the LEDs (decoded from the
+  webcam): 0xFFA5, all seven pass.

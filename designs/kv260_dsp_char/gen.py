@@ -40,6 +40,10 @@ CTRL = {"ALUMODE": 4, "INMODE": 5, "OPMODE": 9, "CARRYINSEL": 3, "CARRYIN": 1,
         "RSTA": 1, "RSTALLCARRYIN": 1, "RSTALUMODE": 1, "RSTB": 1, "RSTC": 1, "RSTCTRL": 1, "RSTD": 1,
         "RSTINMODE": 1, "RSTM": 1, "RSTP": 1}
 DATA = {"A": 30, "B": 18, "C": 48, "D": 27}
+# The first batch drove every data pin from a signal. Vivado leaves a tied data
+# pin unrouted and sets a bit for it (kv260_dsp_test, D tied 0), so a second
+# batch (DATA_TIES=1) ties data buses too.
+DATA_TIES = os.environ.get("DATA_TIES") == "1"
 POOL = 64
 
 
@@ -47,12 +51,21 @@ def sig(rng):
     return "pool[%d]" % rng.randrange(POOL)
 
 
-def vec(rng, w, tie_ok=True):
-    """A bus: every bit a pool signal, or (for control buses) a constant per bit."""
+def vec(rng, w, tie_ok=True, mode=None):
+    """A bus: every bit a pool signal, or (for control buses) a constant per bit.
+
+    mode, for a data bus in a DATA_TIES batch: "bits" ties bits at random like
+    a control bus, "gnd"/"vcc" ties the whole bus.
+    """
     bits = []
     for _ in range(w):
         r = rng.random()
-        bits.append(sig(rng) if not tie_ok or r < 0.5 else ("1'b1" if r < 0.75 else "1'b0"))
+        if mode in ("gnd", "vcc"):
+            bits.append("1'b0" if mode == "gnd" else "1'b1")
+        elif mode == "bits":
+            bits.append(sig(rng) if r < 0.4 else ("1'b1" if r < 0.7 else "1'b0"))
+        else:
+            bits.append(sig(rng) if not tie_ok or r < 0.5 else ("1'b1" if r < 0.75 else "1'b0"))
     return "{%s}" % ", ".join(reversed(bits))
 
 
@@ -73,7 +86,8 @@ def dsp(rng, i, site):
         p[k] = "48'h%012x" % rng.getrandbits(48)
     ports = {"CLK": "clk"}
     for k, w in DATA.items():
-        ports[k] = vec(rng, w, tie_ok=False)
+        ports[k] = vec(rng, w, tie_ok=False,
+                       mode=rng.choice([None, "bits", "bits", "gnd", "vcc"]) if DATA_TIES else None)
     for k, w in CTRL.items():
         ports[k] = vec(rng, w)
     ports["P"] = "p%d" % i

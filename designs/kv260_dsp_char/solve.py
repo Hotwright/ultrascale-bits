@@ -70,8 +70,14 @@ def load(build):
         if not os.path.exists(os.path.join(spec, "design.bit")):
             continue
         intent = json.load(open(os.path.join(spec, "intent.json")))
+        cells = os.path.join(spec, "cells.txt")
+        # Vivado writes cells.txt after the bitstream: skip a specimen still
+        # being written.
+        if not os.path.exists(cells) or open(cells).read().count("\nCELL ") + 1 < 9 * len(intent) \
+                or not open(cells).read().endswith("\n"):
+            continue
         pins = collections.defaultdict(dict)
-        for line in open(os.path.join(spec, "cells.txt")):
+        for line in open(cells):
             w = line.split()
             if w[0] == "PIN" and "/" not in w[1]:
                 pins[w[1]][w[2]] = {"GROUND": "GND", "POWER": "VCC"}.get(w[3], "SIG")
