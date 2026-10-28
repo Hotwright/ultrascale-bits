@@ -1523,9 +1523,28 @@ and URAM288_BASE are refused.
   alone, which lands on exactly its SPI (121-128, 136-143) in the LPD GIC
   proxy (GICP2/GICP3 status). PASS 41/41. The APU and RPU GICs themselves
   cannot be read from the DAP (AXI-AP error; the R5 is held in reset).
-- **Not yet covered.** xsdb's DAP splits multi-word accesses into single
-  beats, so AXI bursts (AxLEN > 0) and 128-bit transfers need code on the
-  A53. The other PS ports (HPM1_FPD, HPM0_LPD, the slave HP/HPC/ACE ports,
+- **Bursts and the PS boundary, 2026-10-28.** `bursttest_bm.py` runs
+  AArch64 code (assembled with keystone) on A53 #0 from OCM, EL3 with the MMU
+  off, through xsdb: `str`/`ldr q` are single 128-bit beats, `ldp q` a
+  2-beat INCR read, `ld1`/`st1` x4 and `stp q` single beats. Some builds hung
+  on a write or the second read (wedging the DAP until a power cycle), stored
+  wrong bits, or returned a first beat with bits of the second; others passed
+  41/41. Cause: the routes between the PS8 pins and our registers ran up to
+  74 pips, placed anywhere, and nextpnr has no UltraScale+ timing model, so
+  each side caught bits of the other's *next* value. The LEDs (`dbg` in
+  `axi.v`) showed one hung read completed on our side; another build stored
+  ARSIZE 4 as 5. Fix, in the design: every HPM0 signal axi.v uses crosses
+  through a falling-edge FDRE_1 pinned beside the INT row where its PS8 pin
+  enters the fabric (`gen_ps_stage.py` -> `ps_stage.vh`, rows from routed
+  builds in `ps_rows.txt`; 394 FFs in X161/X164, rows 137-154). This is
+  transparent to the protocol and keeps every pin half a cycle from the
+  rising edge the PS uses. Three placer seeds at 100 MHz: 41/41 twice each,
+  clean `ldp q` and `ld1` data, and r0..r3 equal to the last stores. A
+  falling-edge copy of the outputs alone was not enough. nextpnr 0985bf3f:
+  HeAP no longer aborts on FFs pinned outside its fast-bel table.
+- **Next.** Do this in nextpnr instead of by hand (place the cells on PS8
+  pins beside their INT row), and give it a timing model.
+- **Not yet covered.** The other PS ports (HPM1_FPD, HPM0_LPD, the slave HP/HPC/ACE ports,
   EMIO) are wired the same way but untested. What Vivado ties the unused
   PS8 inputs to is still unchecked: nextpnr ties them as nextpnr-xilinx did,
   and the PS behaves.
