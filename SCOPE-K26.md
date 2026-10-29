@@ -1523,10 +1523,11 @@ and URAM288_BASE are refused.
   alone, which lands on exactly its SPI (121-128, 136-143) in the LPD GIC
   proxy (GICP2/GICP3 status). PASS 41/41. The APU and RPU GICs themselves
   cannot be read from the DAP (AXI-AP error; the R5 is held in reset).
-- **Bursts and the PS boundary, 2026-10-28.** `bursttest_bm.py` runs
-  AArch64 code (assembled with keystone) on A53 #0 from OCM, EL3 with the MMU
-  off, through xsdb: `str`/`ldr q` are single 128-bit beats, `ldp q` a
-  2-beat INCR read, `ld1`/`st1` x4 and `stp q` single beats. Some builds hung
+- **Bursts and the PS boundary, 2026-10-28.** `bursttest.c` (first as
+  keystone-assembled code, now C; see "ARM software" below) runs on A53 #0
+  from OCM, EL3 with the MMU off: `str`/`ldr q` are single 128-bit beats,
+  `ldp q` a 2-beat INCR read, `ld1` x4 eight single-beat reads and `stp q`
+  two single-beat writes. Some builds hung
   on a write or the second read (wedging the DAP until a power cycle), stored
   wrong bits, or returned a first beat with bits of the second; others passed
   41/41. Cause: the routes between the PS8 pins and our registers ran up to
@@ -1548,7 +1549,31 @@ and URAM288_BASE are refused.
   was pinned by hand, 3e20acc.) nextpnr 0985bf3f: HeAP no longer aborts on
   FFs pinned outside its fast-bel table.
 - **Next.** A timing model; the other PS ports on the board.
-- **Not yet covered.** The other PS ports (HPM1_FPD, HPM0_LPD, the slave HP/HPC/ACE ports,
+- **Not yet covered.** Running `bursttest` under Linux (built, not yet run). The other PS ports (HPM1_FPD, HPM0_LPD, the slave HP/HPC/ACE ports,
   EMIO) are wired the same way but untested. What Vivado ties the unused
   PS8 inputs to is still unchecked: nextpnr ties them as nextpnr-xilinx did,
   and the PS behaves.
+
+### ARM software without Vitis (2026-10-29)
+
+`sw/build.sh` builds A53 code with `zig cc` (clang, lld and musl for
+aarch64 in one `pip install ziglang`; no Vivado, Vitis or cross gcc):
+
+- `sw/build.sh linux <out> <src.c...>`: a static aarch64-linux-musl
+  binary for the board's Ubuntu (`bursttest` is 32 KB stripped).
+- `sw/build.sh baremetal <out.elf> <src.c...>`: an EL3 program in OCM at
+  0xFFFC0000 with the MMU and caches off (`sw/baremetal/lib`: `start.S`
+  enables FP/SIMD, sets the stack, zeroes bss, calls `main`; `bm.c` has a
+  UART1 console with a small `bm_printf`, also kept in an OCM ring).
+  Built with `-mstrict-align`: every access is Device memory, and an
+  unaligned one faults (a 4-byte-aligned buffer for `str q` did, vector 0x200).
+- `env/kv260_run_bm.sh <prog.elf> [seconds]` resets A53 #0, loads the ELF
+  over JTAG, runs it, then prints its log and `main`'s return value. Linux or
+  U-Boot on the board stops; a power cycle brings Linux back.
+
+`designs/kv260_ps_axi_test/bursttest.c` is one source for both: bare metal
+on the board it prints PASS, every data check right, with the AXI counts
+above. It also showed the clear write is not in the AW count (the slave
+zeroes the counters after counting it), which the first version had off by
+one. Not yet: running it under Linux, and booting a bare-metal program from
+the SD card or QSPI instead of JTAG.
