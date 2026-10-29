@@ -14,6 +14,17 @@ trap 'rm -f "$TCL"' EXIT
 {
     echo 'connect'
     echo 'after 1500'
+    cat <<'TCL'
+# Linux on the board idles cores by powering them down, and hw_server
+# holds a core that comes back out of reset ("Reset Catch"): Linux then
+# waits on it forever (soft lockup). Let any such core go, and say so.
+foreach t [split [targets] \n] {
+    if {[regexp {^\s*(\d+)\*?\s+(Cortex-A53 #\d) \(Reset Catch} $t -> id name]} {
+        targets $id; catch {con}
+        puts "warning: released $name from Reset Catch (on the board: disable cpuidle state1)"
+    }
+}
+TCL
     echo "targets -set -nocase -filter {name =~ \"PSU\" && jtag_cable_serial =~ \"$CABLE\"}"
     cat
 } > "$TCL"

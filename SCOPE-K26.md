@@ -1581,9 +1581,13 @@ PL is 65 reads. The binary went over the console (base64, checked with
 sha256sum), since the board has no network yet. Not yet: booting a
 bare-metal program from the SD card or QSPI instead of JTAG.
 
-One hazard seen once (2026-10-29): after a JTAG load and `test.sh` under
-Linux, CPU 3 sat in a soft lockup in `smp_call_function_many_cond` for
-~15 min, waiting on cores parked in the secure firmware's WFI (EL3,
-0xFFFEA16C). Halting and resuming those cores over JTAG woke them and Linux
-carried on. The cause is unproven; `test.sh` clears the LPD GIC proxy
-status (GICP2/GICP3), which the PMU also uses to wake powered-down cores.
+JTAG under Linux hangs Linux (2026-10-29, seen twice): Linux idles cores
+in `cpu-sleep-0` (powered down through the secure firmware), and the
+`hw_server` that xsdb starts, which keeps running afterwards, holds any A53
+that comes back out of reset ("Reset Catch" in `targets`). Linux then waits
+on it in `smp_call_function_many_cond` for good (soft lockup; once for
+11 hours). `con` on the caught cores lets Linux carry on. Fixes: on the
+board, `echo 1 > /sys/devices/system/cpu/cpu*/cpuidle/state1/disable` (as
+root; lost at reboot); `env/kv260_xsdb.sh` and `kv260_jtag_load.sh` now
+release any caught A53 and warn. (`test.sh` clearing every bit of the LPD
+GIC proxy status was a first guess; it now clears only the PL bits anyway.)
