@@ -32,8 +32,10 @@ for {set i 0} {$i < 16} {incr i} {
     set id [expr {$i < 8 ? 121 + $i : 136 + $i - 8}]
     set e2 [expr {$id < 128 ? 1 << ($id - 96) : 0}]
     set e3 [expr {$id < 128 ? 0 : 1 << ($id - 128)}]
-    check "IRQ line $i (SPI $id) GICP2" [rd $G2] $e2
-    check "IRQ line $i (SPI $id) GICP3" [rd $G3] $e3
+    # Only the PL lines (SPI 121-128, 136-143): under Linux other PS
+    # peripherals (SPI 151, 154) can be pending too.
+    check "IRQ line $i (SPI $id) GICP2" [expr {[rd $G2] & 0xFE000000}] $e2
+    check "IRQ line $i (SPI $id) GICP3" [expr {[rd $G3] & 0x0000FF01}] $e3
 }
 mwr -force 0xA0000004 0; mwr -force $G2 0xffffffff; mwr -force $G3 0xffffffff
 mwr -force 0xA0000000 0x000000ff
