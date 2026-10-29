@@ -27,7 +27,7 @@ check "halfword write" [rd 0xA0000008] 0x5555f00d
 check "unmapped" [rd 0xA0000100] 0xdead0100
 set G2 0xFF418028; set G3 0xFF41803C
 for {set i 0} {$i < 16} {incr i} {
-    mwr -force 0xA0000004 0; mwr -force $G2 0xffffffff; mwr -force $G3 0xffffffff
+    mwr -force 0xA0000004 0; mwr -force $G2 0xFE000000; mwr -force $G3 0x0000FF01
     mwr -force 0xA0000004 [expr 1 << $i]
     set id [expr {$i < 8 ? 121 + $i : 136 + $i - 8}]
     set e2 [expr {$id < 128 ? 1 << ($id - 96) : 0}]
@@ -37,7 +37,7 @@ for {set i 0} {$i < 16} {incr i} {
     check "IRQ line $i (SPI $id) GICP2" [expr {[rd $G2] & 0xFE000000}] $e2
     check "IRQ line $i (SPI $id) GICP3" [expr {[rd $G3] & 0x0000FF01}] $e3
 }
-mwr -force 0xA0000004 0; mwr -force $G2 0xffffffff; mwr -force $G3 0xffffffff
+mwr -force 0xA0000004 0; mwr -force $G2 0xFE000000; mwr -force $G3 0x0000FF01
 mwr -force 0xA0000000 0x000000ff
 puts [expr {$ok == $n ? "PASS $ok/$n" : "FAIL $ok/$n"}]
 TCL
