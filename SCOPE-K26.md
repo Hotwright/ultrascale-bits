@@ -1533,17 +1533,21 @@ and URAM288_BASE are refused.
   74 pips, placed anywhere, and nextpnr has no UltraScale+ timing model, so
   each side caught bits of the other's *next* value. The LEDs (`dbg` in
   `axi.v`) showed one hung read completed on our side; another build stored
-  ARSIZE 4 as 5. Fix, in the design: every HPM0 signal axi.v uses crosses
-  through a falling-edge FDRE_1 pinned beside the INT row where its PS8 pin
-  enters the fabric (`gen_ps_stage.py` -> `ps_stage.vh`, rows from routed
-  builds in `ps_rows.txt`; 394 FFs in X161/X164, rows 137-154). This is
-  transparent to the protocol and keeps every pin half a cycle from the
-  rising edge the PS uses. Three placer seeds at 100 MHz: 41/41 twice each,
-  clean `ldp q` and `ld1` data, and r0..r3 equal to the last stores. A
-  falling-edge copy of the outputs alone was not enough. nextpnr 0985bf3f:
-  HeAP no longer aborts on FFs pinned outside its fast-bel table.
-- **Next.** Do this in nextpnr instead of by hand (place the cells on PS8
-  pins beside their INT row), and give it a timing model.
+  ARSIZE 4 as 5. Fix: every HPM0 signal axi.v uses crosses through a
+  falling-edge register (two `always @(negedge clk)` blocks), and nextpnr
+  places those registers beside the INT rows where their PS8 pins enter the
+  fabric (`place_ps_boundary`, nextpnr 89de708b: any flip-flop wired straight
+  to a MAXIGP/SAXIGP/SAXIACP/SACEFPD pin, rows read from the chipdb). The
+  stage is transparent to the protocol and keeps every pin half a cycle from
+  the rising edge the PS uses. Three placer seeds at 100 MHz: 41/41 twice
+  each, clean `ldp q` and `ld1` data, r0..r3 equal to the last stores. Either
+  half alone was not enough: a falling-edge copy of the outputs alone hung,
+  and placing without the stage is untested. The pass leaves interrupts
+  alone; pulling `r1` to the PL_PS_IRQ0 pins, ninety rows from its logic,
+  made its one-cycle CE late enough to be missed. (Before the pass the stage
+  was pinned by hand, 3e20acc.) nextpnr 0985bf3f: HeAP no longer aborts on
+  FFs pinned outside its fast-bel table.
+- **Next.** A timing model; the other PS ports on the board.
 - **Not yet covered.** The other PS ports (HPM1_FPD, HPM0_LPD, the slave HP/HPC/ACE ports,
   EMIO) are wired the same way but untested. What Vivado ties the unused
   PS8 inputs to is still unchecked: nextpnr ties them as nextpnr-xilinx did,

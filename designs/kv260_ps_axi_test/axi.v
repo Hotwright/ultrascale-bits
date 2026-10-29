@@ -24,8 +24,8 @@ module top (output wire [7:0] pmod);
     wire [3:0] plclk;
     wire clk;
 
-    // The PS8's outputs as they leave it (_p), and as the logic sees them:
-    // captured by the falling-edge stage in ps_stage.vh (below).
+    // The PS8's outputs as they leave it (_p); the logic sees them through
+    // the falling-edge stage below.
     wire [39:0] awaddr_p, araddr_p;
     wire [15:0] awid_p, arid_p;
     wire [7:0] awlen_p, arlen_p;
@@ -33,13 +33,6 @@ module top (output wire [7:0] pmod);
     wire awvalid_p, arvalid_p, wvalid_p, wlast_p, bready_p, rready_p;
     wire [127:0] wdata_p;
     wire [15:0] wstrb_p;
-    wire [11:0] awaddr, araddr;
-    wire [15:0] awid, arid;
-    wire [7:0] awlen, arlen;
-    wire [2:0] awsize, arsize;
-    wire awvalid, arvalid, wvalid, wlast, bready, rready;
-    wire [127:0] wdata;
-    wire [15:0] wstrb;
 
     reg awready = 1'b0, wready = 1'b0, bvalid = 1'b0;
     reg arready = 1'b0, rvalid = 1'b0, rlast = 1'b0;
@@ -49,18 +42,36 @@ module top (output wire [7:0] pmod);
     reg [31:0] r0 = 32'h000000ff, r1 = 32'd0, r2 = 32'd0, r3 = 32'd0;
 
     // Every M_AXI_HPM0_FPD signal crosses between the PS8 and the logic
-    // through a falling-edge register beside the PS (ps_stage.vh, made by
-    // gen_ps_stage.py from ps_rows.txt): the copies of our outputs (_n), and
+    // through a falling-edge register: the copies of our outputs (_n), and
     // the captures of the PS's. The PS works on the rising edge, so each pin
-    // now changes half a cycle away from the edge it is sampled on. Before
-    // this the PS caught bits of our next value (the first beat of a 2-beat
-    // read had bits of the second) and we caught bits of its next value
-    // (writes stored wrong bits; ARSIZE 4 was read as 5): the routes ran up
-    // to 74 pips and nextpnr has no UltraScale+ timing model.
-    wire awready_n, wready_n, bvalid_n, arready_n, rvalid_n, rlast_n;
-    wire [15:0] bid_n, rid_n;
-    wire [127:0] rdata_n;
-`include "ps_stage.vh"
+    // changes half a cycle away from the edge it is sampled on, and what each
+    // side sees at a rising edge is what it would see without the stage.
+    // nextpnr (place_ps_boundary) puts these registers beside the INT rows
+    // where their PS8 pins cross into the fabric. Without both, the routes
+    // ran up to 74 pips (there is no UltraScale+ timing model) and the PS and
+    // the logic each caught bits of the other's next value: a 2-beat read's
+    // first beat had bits of the second, writes stored wrong bits, ARSIZE 4
+    // was read as 5.
+    reg awready_n = 1'b0, wready_n = 1'b0, bvalid_n = 1'b0, arready_n = 1'b0, rvalid_n = 1'b0, rlast_n = 1'b0;
+    reg [15:0] bid_n = 16'd0, rid_n = 16'd0;
+    reg [127:0] rdata_n = 128'd0;
+    always @(negedge clk) begin
+        awready_n <= awready; wready_n <= wready; bvalid_n <= bvalid; bid_n <= bid;
+        arready_n <= arready; rvalid_n <= rvalid; rlast_n <= rlast; rid_n <= rid; rdata_n <= rdata;
+    end
+    reg [11:0] awaddr = 12'd0, araddr = 12'd0;
+    reg [15:0] awid = 16'd0, arid = 16'd0;
+    reg [7:0] awlen = 8'd0, arlen = 8'd0;
+    reg [2:0] awsize = 3'd0, arsize = 3'd0;
+    reg awvalid = 1'b0, arvalid = 1'b0, wvalid = 1'b0, wlast = 1'b0, bready = 1'b0, rready = 1'b0;
+    reg [127:0] wdata = 128'd0;
+    reg [15:0] wstrb = 16'd0;
+    always @(negedge clk) begin
+        awaddr <= awaddr_p[11:0]; awid <= awid_p; awlen <= awlen_p; awsize <= awsize_p; awvalid <= awvalid_p;
+        wdata <= wdata_p; wstrb <= wstrb_p; wlast <= wlast_p; wvalid <= wvalid_p; bready <= bready_p;
+        araddr <= araddr_p[11:0]; arid <= arid_p; arlen <= arlen_p; arsize <= arsize_p; arvalid <= arvalid_p;
+        rready <= rready_p;
+    end
 
     PS8 ps8_i (
         .PLCLK(plclk),
