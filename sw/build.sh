@@ -4,8 +4,9 @@
 #
 #   sw/build.sh linux     <out> <src.c...>   static aarch64 Linux binary (run as root
 #                                            on the board for /dev/mem)
-#   sw/build.sh baremetal <out.elf> <src.c...>  EL3 program in OCM, MMU off; run it with
-#                                            env/kv260_run_bm.sh
+#   sw/build.sh baremetal <out.elf> <src.c...>  program in OCM, MMU off; run it with
+#                                            env/kv260_run_bm.sh (JTAG), or boot
+#                                            <out>.bin from U-Boot (baremetal/README.md)
 #
 # zig: $ZIG if set, else `zig` on PATH, else `python3 -m ziglang`
 # (pip install ziglang).
@@ -33,6 +34,7 @@ baremetal)
         -ffreestanding -fno-builtin -mstrict-align -nostdlib \
         -I"$lib" -T "$lib/link.ld" -Wl,--build-id=none \
         -o "$out" "$lib/start.S" "$lib/bm.c" "$@"
+    "${zig[@]}" objcopy -O binary "$out" "${out%.elf}.bin"
     ;;
 *) echo "unknown mode $mode" >&2; exit 1 ;;
 esac

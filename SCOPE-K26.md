@@ -1578,8 +1578,15 @@ zeroes the counters after counting it), which the first version had off by
 one. Under Linux (`sudo ./bursttest`, /dev/mem with O_SYNC, also Device
 memory) it passes with the same counts; musl's `memcpy` of 1 KiB from the
 PL is 65 reads. The binary went over the console (base64, checked with
-sha256sum), since the board has no network yet. Not yet: booting a
-bare-metal program from the SD card or QSPI instead of JTAG.
+sha256sum), since the board has no network yet.
+
+From the SD card, no JTAG (2026-10-29): U-Boot loads our bitstream
+(`fpga loadb`, header "Generator=xc7frames2bit", accepted by the PMU
+firmware) and the program's `.bin`, and jumps to it at EL2 with its caches
+off; `bursttest` passes the same way. `sw/baremetal/mkscr.py` writes the U-Boot
+script image (no mkimage needed), `sw/baremetal/README.md` has the steps.
+Not done: making this the board's default boot (Linux's boot files are
+left alone), or a boot image in QSPI.
 
 JTAG under Linux hangs Linux (2026-10-29, seen twice): Linux idles cores
 in `cpu-sleep-0` (powered down through the secure firmware), and the
