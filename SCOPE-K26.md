@@ -1549,7 +1549,7 @@ and URAM288_BASE are refused.
   was pinned by hand, 3e20acc.) nextpnr 0985bf3f: HeAP no longer aborts on
   FFs pinned outside its fast-bel table.
 - **Next.** A timing model; the other PS ports on the board.
-- **Not yet covered.** Running `bursttest` under Linux (built, not yet run). The other PS ports (HPM1_FPD, HPM0_LPD, the slave HP/HPC/ACE ports,
+- **Not yet covered.** The other PS ports (HPM1_FPD, HPM0_LPD, the slave HP/HPC/ACE ports,
   EMIO) are wired the same way but untested. What Vivado ties the unused
   PS8 inputs to is still unchecked: nextpnr ties them as nextpnr-xilinx did,
   and the PS behaves.
@@ -1575,5 +1575,15 @@ aarch64 in one `pip install ziglang`; no Vivado, Vitis or cross gcc):
 on the board it prints PASS, every data check right, with the AXI counts
 above. It also showed the clear write is not in the AW count (the slave
 zeroes the counters after counting it), which the first version had off by
-one. Not yet: running it under Linux, and booting a bare-metal program from
-the SD card or QSPI instead of JTAG.
+one. Under Linux (`sudo ./bursttest`, /dev/mem with O_SYNC, also Device
+memory) it passes with the same counts; musl's `memcpy` of 1 KiB from the
+PL is 65 reads. The binary went over the console (base64, checked with
+sha256sum), since the board has no network yet. Not yet: booting a
+bare-metal program from the SD card or QSPI instead of JTAG.
+
+One hazard seen once (2026-10-29): after a JTAG load and `test.sh` under
+Linux, CPU 3 sat in a soft lockup in `smp_call_function_many_cond` for
+~15 min, waiting on cores parked in the secure firmware's WFI (EL3,
+0xFFFEA16C). Halting and resuming those cores over JTAG woke them and Linux
+carried on. The cause is unproven; `test.sh` clears the LPD GIC proxy
+status (GICP2/GICP3), which the PMU also uses to wake powered-down cores.

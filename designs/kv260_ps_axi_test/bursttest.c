@@ -100,7 +100,10 @@ int main(void)
     step("memcpy");
     uint32_t big[256] __attribute__((aligned(16)));
     memcpy(big, (const void *)p, sizeof big);
+    __asm__ volatile("" :: "r"(big) : "memory"); /* keep the whole copy */
     counters("memcpy 1 KiB from PL", ~0u, ~0u);
+    check("memcpy ID", big[4], 0xC0DE0A51);
+    check("memcpy line 3", big[12], 0xDEAD0030);
 
     printf(fails ? "FAIL (%d)\n" : "PASS\n", fails);
     return fails != 0;
