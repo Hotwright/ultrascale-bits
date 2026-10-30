@@ -1548,7 +1548,8 @@ and URAM288_BASE are refused.
   made its one-cycle CE late enough to be missed. (Before the pass the stage
   was pinned by hand, 3e20acc.) nextpnr 0985bf3f: HeAP no longer aborts on
   FFs pinned outside its fast-bel table.
-- **Next.** A timing model; the other PS ports on the board.
+- **Next.** The other PS ports on the board. (The timing model is in: see
+  "Timing model" below.)
 - **Not yet covered.** The other PS ports (HPM1_FPD, HPM0_LPD, the slave HP/HPC/ACE ports,
   EMIO) are wired the same way but untested. What Vivado ties the unused
   PS8 inputs to is still unchecked: nextpnr ties them as nextpnr-xilinx did,
@@ -1598,3 +1599,30 @@ board, `echo 1 > /sys/devices/system/cpu/cpu*/cpuidle/state1/disable` (as
 root; lost at reboot); `env/kv260_xsdb.sh` and `kv260_jtag_load.sh` now
 release any caught A53 and warn. (`test.sh` clearing every bit of the LPD
 GIC proxy status was a first guess; it now clears only the PL bits anyway.)
+
+### Timing model (2026-10-30, nextpnr 50a82a9d)
+
+nextpnr now has UltraScale+ delays, all from RapidWright's model (the one
+RWRoute's timing-driven mode uses: one corner, ps, `timing/ultrascaleplus`
+in the RapidWright checkout). Before this every pip cost the same and the
+cell timings were stubs, so nothing was timing-driven in fact.
+
+- **Routing.** `run_usp_dump.sh` now needs `RAPIDWRIGHT_PATH` and writes
+  `nodes_delay.bin`: each node's delay from `DelayEstimatorBase` (43-515 ps;
+  singles ~46, quads 61-85, longs 86-96, IMUX pinfeeds 43-74). U-turn mode
+  is on: without it the estimator gives the nodes that run off the die edge
+  (the west INT column beside the PS) 16383 ps, and nextpnr does route them.
+- **Cells.** LUT (A1->O6 150 ... A6->O6 35 ps), LUT RAM, FF (clk->Q 77,
+  setup 75 including the 100 ps site-pin->D wire), F7/F8/F9MUX and CARRY8
+  in SINGLE_CY8 mode. **BRAM, URAM and DSP are still untimed**: paths
+  through them are not analysed.
+- **Placement estimate.** `distance_delay()` for US+ is fitted to the lower
+  envelope of routed delays (150 ps + 25/row and 28/column near, flatter
+  far).
+- **Result.** kv260_ps_axi_test at 100 MHz, three seeds: 285-294 MHz routed,
+  17% fewer FASM features than the untimed build, PASS 41/41 on the board.
+- **What the numbers are.** Estimates, not sign-off. RapidWright calibrated
+  the model against Vivado on other UltraScale+ parts. The K26 is -2LV
+  (0.72 V), which is slower than -2 at 0.85 V, and this has not been
+  compared with Vivado's report for the same design. Keep test designs'
+  multi-cycle slack until it has been.
