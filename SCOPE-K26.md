@@ -1621,8 +1621,27 @@ cell timings were stubs, so nothing was timing-driven in fact.
   far).
 - **Result.** kv260_ps_axi_test at 100 MHz, three seeds: 285-294 MHz routed,
   17% fewer FASM features than the untimed build, PASS 41/41 on the board.
-- **What the numbers are.** Estimates, not sign-off. RapidWright calibrated
-  the model against Vivado on other UltraScale+ parts. The K26 is -2LV
-  (0.72 V), which is slower than -2 at 0.85 V, and this has not been
-  compared with Vivado's report for the same design. Keep test designs'
-  multi-cycle slack until it has been.
+- **Calibrated against Vivado (2026-10-30, nextpnr 2f9effc3).** Vivado
+  2024.2 built kv260_ps_axi_test twice: from RTL, and from the same yosys
+  netlist nextpnr gets. Scripts are in `tools/timing_cal`.
+  - Falling-edge FFs had been timed on the rising edge, so their half-cycle
+    paths got a full cycle. Fixed.
+  - Cells: the -2LV K26 is ~1.5x RapidWright's model (FF clk->Q 112-118 vs
+    77 ps; LUT 56-228 vs 35-150). `CELL_SCALE = 1.5`. CE/SR setup is
+    Vivado's 80 ps.
+  - Routing: each of Vivado's 880 single-load routes, priced node by node
+    with the model, fits Vivado = 1.34 x model + 107 ps into an FF D pin
+    (RMS 76 ps). `ROUTE_SCALE = 1.35`; the 107 ps is in the FF's D setup.
+  - Clock uncertainty: PL_CLK (through BUFG_PS) gets 0.454 ns in Vivado
+    rise->rise (the PS PLL's 0.905 ns discrete jitter) and 0.654 ns between
+    opposite edges (+0.2 ns duty-cycle distortion). nextpnr now charges
+    the same: 454 ps in setup, and 200 ps on the falling-edge FF's side.
+    Other clocks get only TSJ/2 (36 ps); MMCM jitter is not modelled.
+  - Result, same netlist at 100 MHz: nextpnr 158.6-159.4 MHz (three seeds).
+    Vivado's worst half-cycle path uses 2.676 of 5 ns (187 MHz equivalent),
+    and its worst path starts at the same FF. The gap is Vivado's better
+    placement, not the delay model. The calibrated build passes 41/41 on
+    the board.
+  - Still not modelled: BRAM/URAM/DSP arcs, the PS8's own pin timing, clock
+    skew, hold. One design calibrates this; a second design would be a
+    check worth making before trusting a few-percent margin.
