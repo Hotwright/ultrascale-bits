@@ -1631,17 +1631,30 @@ cell timings were stubs, so nothing was timing-driven in fact.
     Vivado's 80 ps.
   - Routing: each of Vivado's 880 single-load routes, priced node by node
     with the model, fits Vivado = 1.34 x model + 107 ps into an FF D pin
-    (RMS 76 ps). `ROUTE_SCALE = 1.35`; the 107 ps is in the FF's D setup.
-  - Clock uncertainty: PL_CLK (through BUFG_PS) gets 0.454 ns in Vivado
-    rise->rise (the PS PLL's 0.905 ns discrete jitter) and 0.654 ns between
-    opposite edges (+0.2 ns duty-cycle distortion). nextpnr now charges
-    the same: 454 ps in setup, and 200 ps on the falling-edge FF's side.
+    (RMS 76 ps). The second design (hotc's tokenizer engine, below; 3000
+    routes, all into LUTs) alone fits k 1.16-1.19. Weighting the two
+    equally gives `ROUTE_SCALE = 1.26` and 128 ps into an FF D pin (in the
+    FF's D setup): mean error +4 / -14 ps, RMS 77 / 52 ps.
+  - Clock uncertainty: with the PS set up by its IP (zynq_ultra_ps_e, PL0
+    from the IOPLL as on the KV260; tools/timing_cal/ps_ip), Vivado gives PL_CLK
+    0.160 ns rise->rise (TSJ 71 ps, DJ 312 ps) and 0.360 ns between
+    opposite edges (+0.2 ns duty-cycle distortion). A bare PS8 primitive,
+    as in the calibration builds, gets a default DJ of 0.905 ns (0.454 /
+    0.654 ns), which no real board clock has. nextpnr charges the IP
+    numbers: 160 ps in setup, and 200 ps on the falling-edge FF's side.
     Other clocks get only TSJ/2 (36 ps); MMCM jitter is not modelled.
   - Result, same netlist at 100 MHz: nextpnr 158.6-159.4 MHz (three seeds).
     Vivado's worst half-cycle path uses 2.676 of 5 ns (187 MHz equivalent),
     and its worst path starts at the same FF. The gap is Vivado's better
     placement, not the delay model. The calibrated build passes 41/41 on
     the board.
+    With the two-design calibration below and 160 ps PS uncertainty:
+    155.7 MHz (one seed).
+  - Second design (2026-10-31): hotc's tokenizer engine, same yosys
+    netlist in both tools. Vivado: WNS 1.930 ns at 10 ns with 0.454 ns
+    uncertainty, ~129 MHz at 0.160 ns. nextpnr: 108.5 MHz (placement
+    300 s, routing 375 s, 2.2 GB). Before the HeAP timeout fix (nextpnr
+    placer_heap.cc: cells^2 overflowed int above ~46k cells, leaving the
+    10000-attempt floor) nextpnr could not place it at all.
   - Still not modelled: BRAM/URAM/DSP arcs, the PS8's own pin timing, clock
-    skew, hold. One design calibrates this; a second design would be a
-    check worth making before trusting a few-percent margin.
+    skew, hold.

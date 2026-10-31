@@ -16,3 +16,7 @@ Run Vivado from /mnt/i (the Windows install; see the env notes).
    Vivado = k x model fit. Needs RAPIDWRIGHT_PATH.
 4. `arcs.py`: nextpnr `--post-route` script, writing every connection's routed
    delay; `cmp.py <vivado arcs.txt> <arcs.csv>` compares delay against distance.
+5. `ps_ip/ps_ip.tcl`: the clock uncertainty Vivado gives PL_CLK0 when the PS
+   is set up through zynq_ultra_ps_e (IOPLL, as on the KV260): 160 ps
+   rise->rise, 360 ps between opposite edges. The calibration builds above use
+   a bare PS8 and so get Vivado's default 454 / 654 ps.
