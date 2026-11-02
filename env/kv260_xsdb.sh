@@ -29,4 +29,4 @@ TCL
     cat
 } > "$TCL"
 cd /mnt/c && cmd.exe /c "$XSDB $(wslpath -w "$TCL")" 2>&1 | tr -d '\r' \
-    | grep -vE '^\s*$|hw_server|Copyright|Build date|Ctrl-C|url: TCP|cygwin'
+    | grep -avE '^\s*$|hw_server|Copyright|Build date|Ctrl-C|url: TCP|cygwin'

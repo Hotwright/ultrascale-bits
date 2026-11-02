@@ -112,3 +112,15 @@ BRAM.RAMB36E2.WRITE_WIDTH_B.W4 add-feature 04_45 04_197
 BRAM.RAMB36E2.WRITE_WIDTH_B.W9 add-feature 04_46 04_134 04_196
 BRAM.RAMB36E2.WRITE_WIDTH_B.W18 add-feature 04_45 04_46 04_196 04_197
 BRAM.RAMB36E2.WRITE_WIDTH_B.W36 add-feature 04_47 04_194
+
+# --- Simple dual port, renamed. prjuray names the SDP bits READ_WIDTH_A.36 /
+# WRITE_WIDTH_B.36 (RAMB36E2: .72), but a FASM feature segment cannot start
+# with a digit, so nothing can write those names (the textx parser stops at
+# them: a 512x32 FIFO, yosys's RAMB18E2 SDP, in designs/kv260_tokenizer_sm).
+# Same bits, named SDP; nextpnr writes <port>.W<full> plus <port>.SDP. ---
+BRAM.RAMB18E2_L.READ_WIDTH_A.SDP add-feature 05_49
+BRAM.RAMB18E2_L.WRITE_WIDTH_B.SDP add-feature 05_64
+BRAM.RAMB18E2_U.READ_WIDTH_A.SDP add-feature 05_208
+BRAM.RAMB18E2_U.WRITE_WIDTH_B.SDP add-feature 05_214
+BRAM.RAMB36E2.READ_WIDTH_A.SDP add-feature 05_49 05_208
+BRAM.RAMB36E2.WRITE_WIDTH_B.SDP add-feature 05_64 05_214
